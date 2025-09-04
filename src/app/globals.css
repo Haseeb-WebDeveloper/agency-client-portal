@@ -1,26 +1,617 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-poppins: var(--font-poppins);
+  --font-inter: var(--font-inter);
+
+  /* Figma Typography System */
+
+  /* Figma Typography Sizes */
+  --text-h1: 56px;
+  --text-h2: 48px;
+  --text-h3: 40px;
+  --text-paragraph: 16px;
+  --text-small: 14px;
+  --text-x-small: 12px;
+  --text-2x-small: 10px;
+
+  /* Figma Colors */
+  --color-figma-primary: var(--figma-primary-default);
+  --color-figma-primary-purple-1: var(--figma-primary-purple-1);
+  --color-figma-primary-purple-2: var(--figma-primary-purple-2);
+  --color-figma-primary-purple-3: var(--figma-primary-purple-3);
+  --color-figma-primary-purple-4: var(--figma-primary-purple-4);
+  --color-figma-primary-purple-5: var(--figma-primary-purple-5);
+  --color-figma-success: var(--figma-success);
+  --color-figma-warning: var(--figma-warning);
+  --color-figma-alert: var(--figma-alert);
+  --color-figma-text-black: var(--figma-text-black);
+  --color-figma-text-grey: var(--figma-text-grey);
+  --color-figma-text-neutral-violet: var(--figma-text-neutral-violet);
+  --color-figma-text-white: var(--figma-text-white);
+
+  /* Existing design tokens */
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --color-background: var(--foreground);
+  --color-foreground: var(--background);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-poppins: var(--font-poppins);
+  --font-inter: var(--font-inter);
+
+  --radius: 0.625rem;
+
+  /* Figma Design System Colors */
+  /* Primary Colors from Figma */
+  --figma-primary-default: #5b4bff;
+  --figma-primary-purple-1: #7f70ff;
+  --figma-primary-purple-2: #a395ff;
+  --figma-primary-purple-3: #c7baff;
+  --figma-primary-purple-4: #ebe0ff;
+  --figma-primary-gradient: linear-gradient(90deg, #5b4bff 0%, #7f70ff 100%);
+  --figma-active-sidebar-gradient: linear-gradient(
+    90deg,
+    #6b42d1 0%,
+    #ff2aff 100%
+  );
+  --figma-sidebar-gradient: linear-gradient(90deg, #0a031c 0%, #000000 100%);
+
+  /* Status Colors from Figma */
+  --figma-success: #00c896;
+  --figma-warning: #ffa726;
+  --figma-alert: #E74C3C;
+
+  /* Text Colors from Figma */
+  --figma-text-black: #000000;
+  --figma-text-grey: #6b7280;
+  --figma-text-neutral-violet: #8b5cf6;
+  --figma-text-white: #ffffff;
+
+  /* Transparency Scales from Figma */
+  --figma-transparency-5: rgba(91, 75, 255, 0.05);
+  --figma-transparency-10: rgba(91, 75, 255, 0.1);
+  --figma-transparency-20: rgba(91, 75, 255, 0.2);
+  --figma-transparency-30: rgba(91, 75, 255, 0.3);
+  --figma-transparency-40: rgba(91, 75, 255, 0.4);
+  --figma-transparency-50: rgba(91, 75, 255, 0.5);
+  --figma-transparency-60: rgba(91, 75, 255, 0.6);
+  --figma-transparency-70: rgba(91, 75, 255, 0.7);
+  --figma-transparency-80: rgba(91, 75, 255, 0.8);
+  --figma-transparency-90: rgba(91, 75, 255, 0.9);
+
+  /* Mapped to existing design tokens */
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --primary: #5b4bff;
+  --primary-foreground: #ffffff;
+  --secondary: #ebe0ff;
+  --secondary-foreground: #5b4bff;
+  --muted: #f9fafb;
+  --muted-foreground: #6b7280;
+  --accent: #7f70ff;
+  --accent-foreground: #ffffff;
+  --destructive: #E74C3C;
+  --destructive-foreground: #ffffff;
+  --success: #00c896;
+  --success-foreground: #ffffff;
+  --warning: #ffa726;
+  --warning-foreground: #ffffff;
+  --border: #e5e7eb;
+  --input: #f3f4f6;
+  --ring: #5b4bff;
+  --chart-1: #5b4bff;
+  --chart-2: #7f70ff;
+  --chart-3: #a395ff;
+  --chart-4: #00c896;
+  --chart-5: #ffa726;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #000000;
+  --sidebar-primary: #5b4bff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ebe0ff;
+  --sidebar-accent-foreground: #5b4bff;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #5b4bff;
+}
+
+.dark {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-poppins: var(--font-poppins);
+  --font-inter: var(--font-inter);
+  --radius: 0.625rem;
+
+  /* Figma Design System Colors (DARK) */
+  /* Primary Colors from Figma */
+  --figma-primary-default: #6b42d1;
+  --figma-primary-purple-1: #a395ff;
+  --figma-primary-purple-2: #c7baff;
+  --figma-primary-purple-3: #ebe0ff;
+  --figma-primary-purple-4: #2d2d2d;
+  --figma-primary-purple-5: #ff2aff;
+  --figma-primary-gradient: linear-gradient(90deg, #7f70ff 0%, #a395ff 100%);
+  --figma-active-sidebar-gradient: linear-gradient(
+    90deg,
+    #6b42d1 0%,
+    #ff2aff 100%
+  );
+  --figma-sidebar-gradient: linear-gradient(90deg, #0a031c 0%, #000000 100%);
+
+  /* Status Colors from Figma */
+  --figma-success: #00c896;
+  --figma-warning: #ffa726;
+  --figma-alert: #E74C3C;
+
+  /* Text Colors from Figma */
+  --figma-text-black: #ffffff;
+  --figma-text-grey: #9ca3af;
+  --figma-text-neutral-violet: #a395ff;
+  --figma-text-white: #ffffff;
+
+  /* Transparency Scales from Figma */
+  --figma-transparency-5: rgba(127, 112, 255, 0.05);
+  --figma-transparency-10: rgba(127, 112, 255, 0.1);
+  --figma-transparency-20: rgba(127, 112, 255, 0.2);
+  --figma-transparency-30: rgba(127, 112, 255, 0.3);
+  --figma-transparency-40: rgba(127, 112, 255, 0.4);
+  --figma-transparency-50: rgba(127, 112, 255, 0.5);
+  --figma-transparency-60: rgba(127, 112, 255, 0.6);
+  --figma-transparency-70: rgba(127, 112, 255, 0.7);
+  --figma-transparency-80: rgba(127, 112, 255, 0.8);
+  --figma-transparency-90: rgba(127, 112, 255, 0.9);
+
+  /* Mapped to existing design tokens */
+  --background: #0a0a0a;
+  --foreground: #ffffff;
+  --card: #1a1a1a;
+  --card-foreground: #ffffff;
+  --popover: #1a1a1a;
+  --popover-foreground: #ffffff;
+  --primary: #7f70ff;
+  --primary-foreground: #ffffff;
+  --secondary: #2d2d2d;
+  --secondary-foreground: #ffffff;
+  --muted: #2d2d2d;
+  --muted-foreground: #9ca3af;
+  --accent: #a395ff;
+  --accent-foreground: #ffffff;
+  --destructive: #E74C3C;
+  --destructive-foreground: #ffffff;
+  --success: #00c896;
+  --success-foreground: #ffffff;
+  --warning: #ffa726;
+  --warning-foreground: #ffffff;
+  --border: #374151;
+  --input: #374151;
+  --ring: #7f70ff;
+  --chart-1: #7f70ff;
+  --chart-2: #a395ff;
+  --chart-3: #c7baff;
+  --chart-4: #00c896;
+  --chart-5: #ffa726;
+  --sidebar: #1a1a1a;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #7f70ff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2d2d2d;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #374151;
+  --sidebar-ring: #7f70ff;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-inter);
+  }
+
+  /* Figma Typography Classes */
+  .figma-h1 {
+    font-family: var(--font-poppins);
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .figma-h2 {
+    font-family: var(--font-poppins);
+    font-size: 48px;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .figma-h3 {
+    font-family: var(--font-poppins);
+    font-size: 40px;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  .figma-paragraph {
+    font-family: var(--font-inter);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+
+  .figma-paragraph-bold {
+    font-family: var(--font-inter);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  .figma-small {
+    font-family: var(--font-inter);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.4;
+  }
+
+  .figma-x-small {
+    font-family: var(--font-inter);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.4;
+  }
+
+  .figma-2x-small {
+    font-family: var(--font-inter);
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  /* Figma Button Styles */
+  .figma-btn-primary {
+    background: var(--figma-primary-default);
+    color: var(--figma-text-white);
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-family: var(--font-inter);
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .figma-btn-primary:hover {
+    background: var(--figma-primary-purple-1);
+    transform: translateY(-1px);
+  }
+
+  .figma-btn-secondary {
+    background: var(--figma-primary-purple-4);
+    color: var(--figma-primary-default);
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-family: var(--font-inter);
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid var(--figma-primary-purple-3);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .figma-btn-secondary:hover {
+    background: var(--figma-primary-purple-3);
+  }
+
+  /* Status Badge Styles */
+  .figma-badge-success {
+    background: var(--figma-success);
+    color: var(--figma-text-white);
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .figma-badge-warning {
+    background: var(--figma-warning);
+    color: var(--figma-text-white);
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .figma-badge-alert {
+    background: var(--figma-alert);
+    color: var(--figma-text-white);
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* Figma Gradient Classes */
+  .bg-figma-primary-gradient {
+    background: var(--figma-primary-gradient);
+  }
+
+  .bg-figma-sidebar-gradient {
+    background: var(--figma-sidebar-gradient);
+  }
+
+  .bg-figma-active-sidebar-gradient {
+    background: var(--figma-active-sidebar-gradient);
+  }
+
+  /* Figma Transparency Classes */
+  .bg-figma-transparency-5 {
+    background: var(--figma-transparency-5);
+  }
+
+  .bg-figma-transparency-10 {
+    background: var(--figma-transparency-10);
+  }
+
+  .bg-figma-transparency-20 {
+    background: var(--figma-transparency-20);
+  }
+
+  .bg-figma-transparency-30 {
+    background: var(--figma-transparency-30);
+  }
+
+  .bg-figma-transparency-40 {
+    background: var(--figma-transparency-40);
+  }
+
+  .bg-figma-transparency-50 {
+    background: var(--figma-transparency-50);
+  }
+
+  .bg-figma-transparency-60 {
+    background: var(--figma-transparency-60);
+  }
+
+  .bg-figma-transparency-70 {
+    background: var(--figma-transparency-70);
+  }
+
+  .bg-figma-transparency-80 {
+    background: var(--figma-transparency-80);
+  }
+
+  .bg-figma-transparency-90 {
+    background: var(--figma-transparency-90);
+  }
+
+  /* Figma Text Color Classes */
+  .text-figma-primary {
+    color: var(--figma-primary-default);
+  }
+
+  .text-figma-primary-purple-1 {
+    color: var(--figma-primary-purple-1);
+  }
+
+  .text-figma-primary-purple-2 {
+    color: var(--figma-primary-purple-2);
+  }
+
+  .text-figma-primary-purple-3 {
+    color: var(--figma-primary-purple-3);
+  }
+
+  .text-figma-primary-purple-4 {
+    color: var(--figma-primary-purple-4);
+  }
+
+  .text-figma-success {
+    color: var(--figma-success);
+  }
+
+  .text-figma-warning {
+    color: var(--figma-warning);
+  }
+
+  .text-figma-alert {
+    color: var(--figma-alert);
+  }
+
+  .text-figma-text-black {
+    color: var(--figma-text-black);
+  }
+
+  .text-figma-text-grey {
+    color: var(--figma-text-grey);
+  }
+
+  .text-figma-text-neutral-violet {
+    color: var(--figma-text-neutral-violet);
+  }
+
+  .text-figma-text-white {
+    color: var(--figma-text-white);
+  }
+
+  /* Figma Background Color Classes */
+  .bg-figma-primary {
+    background: var(--figma-primary-default);
+  }
+
+  .bg-figma-primary-purple-1 {
+    background: var(--figma-primary-purple-1);
+  }
+
+  .bg-figma-primary-purple-2 {
+    background: var(--figma-primary-purple-2);
+  }
+
+  .bg-figma-primary-purple-3 {
+    background: var(--figma-primary-purple-3);
+  }
+
+  .bg-figma-primary-purple-4 {
+    background: var(--figma-primary-purple-4);
+  }
+
+  .bg-figma-success {
+    background: var(--figma-success);
+  }
+
+  .bg-figma-warning {
+    background: var(--figma-warning);
+  }
+
+  .bg-figma-alert {
+    background: var(--figma-alert);
+  }
+
+  /* Figma Border Color Classes */
+  .border-figma-primary {
+    border-color: var(--figma-primary-default);
+  }
+
+  .border-figma-primary-purple-1 {
+    border-color: var(--figma-primary-purple-1);
+  }
+
+  .border-figma-primary-purple-2 {
+    border-color: var(--figma-primary-purple-2);
+  }
+
+  .border-figma-primary-purple-3 {
+    border-color: var(--figma-primary-purple-3);
+  }
+
+  .border-figma-primary-purple-4 {
+    border-color: var(--figma-primary-purple-4);
+  }
+
+  .border-figma-success {
+    border-color: var(--figma-success);
+  }
+
+  .border-figma-warning {
+    border-color: var(--figma-warning);
+  }
+
+  .border-figma-alert {
+    border-color: var(--figma-alert);
+  }
+
+  /* Figma Hover States */
+  .hover\:bg-figma-primary:hover {
+    background: var(--figma-primary-default);
+  }
+
+  .hover\:bg-figma-primary-purple-1:hover {
+    background: var(--figma-primary-purple-1);
+  }
+
+  .hover\:bg-figma-primary-purple-2:hover {
+    background: var(--figma-primary-purple-2);
+  }
+
+  .hover\:bg-figma-primary-purple-3:hover {
+    background: var(--figma-primary-purple-3);
+  }
+
+  .hover\:text-figma-primary:hover {
+    color: var(--figma-primary-default);
+  }
+
+  .hover\:text-figma-text-white:hover {
+    color: var(--figma-text-white);
+  }
+
+  .hover\:border-figma-primary:hover {
+    border-color: var(--figma-primary-default);
+  }
+
+  /* Dark mode variants for Figma classes */
+  .dark .text-figma-text-black {
+    color: var(--figma-text-white);
+  }
+
+  .dark .bg-figma-primary-purple-4 {
+    background: var(--figma-primary-purple-4);
+  }
+
+  /* Focus states for accessibility */
+  .focus\:ring-figma-primary:focus {
+    --tw-ring-color: var(--figma-primary-default);
+  }
+
+  .focus\:border-figma-primary:focus {
+    border-color: var(--figma-primary-default);
+  }
+
+  /* Active states */
+  .active\:bg-figma-primary-purple-1:active {
+    background: var(--figma-primary-purple-1);
+  }
+
+  .active\:scale-95:active {
+    transform: scale(0.95);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Hide default sidebar on all devices */
+/** Hide default browser sidebar (scrollbar) */
+::-webkit-scrollbar {
+  display: none;
+}
+
+html {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }

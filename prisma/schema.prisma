@@ -1,0 +1,518 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ==============================================
+// ENUMS
+// ==============================================
+
+enum UserRole {
+  PLATFORM_ADMIN
+  CLIENT
+  CLIENT_MEMBER
+  AGENCY_MEMBER
+}
+
+enum AgencyMemberFunction {
+  DESIGNER
+  DEVELOPER
+  SALES
+  PROJECT_MANAGER
+  ACCOUNT_MANAGER
+  CREATIVE_DIRECTOR
+  TECHNICAL_LEAD
+}
+
+enum ProjectStatus {
+  DRAFT
+  PLANNING
+  IN_PROGRESS
+  REVIEW
+  COMPLETED
+  ON_HOLD
+  CANCELLED
+}
+
+enum ContractStatus {
+  DRAFT
+  PENDING_APPROVAL
+  ACTIVE
+  COMPLETED
+  TERMINATED
+  EXPIRED
+}
+
+enum OfferStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  WITHDRAWN
+}
+
+enum RoomType {
+  GENERAL
+  PROJECT_SPECIFIC
+  CLIENT_SPECIFIC
+  AGENCY_INTERNAL
+}
+
+enum ActivityVerb {
+  CREATED
+  UPDATED
+  DELETED
+  STATUS_CHANGED
+  ASSIGNED
+  UNASSIGNED
+  MESSAGE_SENT
+  FILE_UPLOADED
+  FILE_DOWNLOADED
+  CONTRACT_SIGNED
+  OFFER_ACCEPTED
+  OFFER_DECLINED
+}
+
+enum PermissionType {
+  READ
+  WRITE
+  ADMIN
+  NONE
+}
+
+// ==============================================
+// CORE USER & ORGANIZATION TABLES
+// ==============================================
+
+model User {
+  id        String   @id @default(uuid())
+  authId    String   @unique // Maps to auth.users.id
+  email     String   @unique
+  firstName String
+  lastName  String
+  avatar    String?
+  role      UserRole
+  isActive  Boolean  @default(true)
+
+  // Audit fields
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+
+  // Relations
+  clientMemberships  ClientMembership[]
+  agencyMembership   AgencyMembership?
+  roomParticipants   RoomParticipant[]
+  projectAssignments ProjectAssignment[]
+  activities         Activity[]
+  messages           Message[]
+  createdContracts   Contract[]          @relation("ContractCreator")
+  createdProjects    Project[]           @relation("ProjectCreator")
+  createdOffers      Offer[]             @relation("OfferCreator")
+  grantedPermissions Permission[]        @relation("PermissionGranter")
+  permissions        Permission[]
+
+  @@index([authId])
+  @@index([email])
+  @@index([role])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+model Client {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  website     String?
+  logo        String?
+  isActive    Boolean @default(true)
+
+  // Audit fields
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+
+  // Relations
+  memberships ClientMembership[]
+  contracts   Contract[]
+  offers      Offer[]
+  projects    Project[]
+  rooms       Room[]
+
+  @@index([name])
+  @@index([deletedAt])
+  @@map("clients")
+}
+
+model ClientMembership {
+  id       String  @id @default(uuid())
+  userId   String
+  clientId String
+  role     String  @default("member") // client-specific role
+  isActive Boolean @default(true)
+
+  // Audit fields
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, clientId])
+  @@index([userId])
+  @@index([clientId])
+  @@index([deletedAt])
+  @@map("client_memberships")
+}
+
+model AgencyMembership {
+  id       String               @id @default(uuid())
+  userId   String               @unique
+  function AgencyMemberFunction
+  isActive Boolean              @default(true)
+
+  // Audit fields
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([function])
+  @@index([deletedAt])
+  @@map("agency_memberships")
+}
+
+// ==============================================
+// PROJECTS & CONTRACTS
+// ==============================================
+
+model Contract {
+  id          String         @id @default(uuid())
+  clientId    String
+  title       String
+  description String?
+  status      ContractStatus @default(DRAFT)
+  startDate   DateTime?
+  endDate     DateTime?
+  value       Decimal?       @db.Decimal(10, 2)
+  currency    String         @default("USD")
+
+  // Audit fields
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+
+  // Relations
+  client   Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  creator  User?     @relation("ContractCreator", fields: [createdBy], references: [id])
+  projects Project[]
+  offers   Offer[]   @relation("OfferToContract")
+
+  @@index([clientId])
+  @@index([status])
+  @@index([deletedAt])
+  @@map("contracts")
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  contractId  String?
+  clientId    String
+  title       String
+  description String?
+  status      ProjectStatus @default(DRAFT)
+  startDate   DateTime?
+  endDate     DateTime?
+  budget      Decimal?      @db.Decimal(10, 2)
+  currency    String        @default("USD")
+
+  // Audit fields
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+
+  // Relations
+  contract    Contract?           @relation(fields: [contractId], references: [id])
+  client      Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  creator     User?               @relation("ProjectCreator", fields: [createdBy], references: [id])
+  assignments ProjectAssignment[]
+  rooms       Room[]
+  messages    Message[]
+  activities  Activity[]
+
+  @@index([contractId])
+  @@index([clientId])
+  @@index([status])
+  @@index([deletedAt])
+  @@map("projects")
+}
+
+model ProjectAssignment {
+  id        String  @id @default(uuid())
+  projectId String
+  userId    String
+  role      String // project-specific role
+  isActive  Boolean @default(true)
+
+  // Audit fields
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+  @@index([deletedAt])
+  @@map("project_assignments")
+}
+
+// ==============================================
+// OFFERS
+// ==============================================
+
+model Offer {
+  id          String      @id @default(uuid())
+  clientId    String
+  title       String
+  description String?
+  status      OfferStatus @default(DRAFT)
+  value       Decimal?    @db.Decimal(10, 2)
+  currency    String      @default("USD")
+  validUntil  DateTime?
+
+  // Audit fields
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+
+  // Relations
+  client    Client     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  creator   User?      @relation("OfferCreator", fields: [createdBy], references: [id])
+  contracts Contract[] @relation("OfferToContract")
+
+  @@index([clientId])
+  @@index([status])
+  @@index([validUntil])
+  @@index([deletedAt])
+  @@map("offers")
+}
+
+// ==============================================
+// MESSAGING SYSTEM
+// ==============================================
+
+model Room {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  type        RoomType
+  projectId   String? // null for general rooms
+  clientId    String? // for client-specific rooms
+  isActive    Boolean  @default(true)
+
+  // Audit fields
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+
+  // Relations
+  project      Project?          @relation(fields: [projectId], references: [id])
+  client       Client?           @relation(fields: [clientId], references: [id])
+  participants RoomParticipant[]
+  messages     Message[]
+  activities   Activity[]
+
+  @@index([type])
+  @@index([projectId])
+  @@index([clientId])
+  @@index([deletedAt])
+  @@map("rooms")
+}
+
+model RoomParticipant {
+  id         String         @id @default(uuid())
+  roomId     String
+  userId     String
+  permission PermissionType @default(READ)
+  joinedAt   DateTime       @default(now())
+  isActive   Boolean        @default(true)
+
+  // Audit fields
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+
+  // Relations
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@index([roomId])
+  @@index([userId])
+  @@index([permission])
+  @@index([deletedAt])
+  @@map("room_participants")
+}
+
+model Message {
+  id        String  @id @default(uuid())
+  roomId    String
+  userId    String
+  content   String
+  projectId String? // optional project linkage
+  parentId  String? // for replies
+  isEdited  Boolean @default(false)
+
+  // Audit fields
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+
+  // Relations
+  room        Room                @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project     Project?            @relation(fields: [projectId], references: [id])
+  parent      Message?            @relation("MessageReplies", fields: [parentId], references: [id])
+  replies     Message[]           @relation("MessageReplies")
+  attachments MessageAttachment[]
+
+  @@index([roomId, createdAt])
+  @@index([userId])
+  @@index([projectId])
+  @@index([parentId])
+  @@index([deletedAt])
+  @@map("messages")
+}
+
+model MessageAttachment {
+  id        String @id @default(uuid())
+  messageId String
+  fileName  String
+  filePath  String
+  fileSize  Int
+  mimeType  String
+
+  // Audit fields
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+
+  // Relations
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@index([deletedAt])
+  @@map("message_attachments")
+}
+
+// ==============================================
+// ACTIVITY TRACKING
+// ==============================================
+
+model Activity {
+  id         String       @id @default(uuid())
+  actorId    String // User who performed the action
+  verb       ActivityVerb
+  targetType String // "project", "contract", "offer", "message", etc.
+  targetId   String // ID of the target entity
+  metadata   Json? // Additional context data
+  projectId  String? // Optional project context
+  roomId     String? // Optional room context
+
+  // Audit fields
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+
+  // Relations
+  actor   User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id])
+  room    Room?    @relation(fields: [roomId], references: [id])
+
+  @@index([actorId])
+  @@index([targetType, targetId])
+  @@index([projectId])
+  @@index([roomId])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("activities")
+}
+
+// ==============================================
+// PERMISSIONS & ACCESS CONTROL
+// ==============================================
+
+model Permission {
+  id           String         @id @default(uuid())
+  userId       String
+  resourceType String // "room", "project", "contract", etc.
+  resourceId   String
+  permission   PermissionType
+  grantedBy    String
+  expiresAt    DateTime?
+
+  // Audit fields
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+
+  // Relations
+  user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  granter User @relation("PermissionGranter", fields: [grantedBy], references: [id])
+
+  @@unique([userId, resourceType, resourceId])
+  @@index([userId])
+  @@index([resourceType, resourceId])
+  @@index([permission])
+  @@index([expiresAt])
+  @@index([deletedAt])
+  @@map("permissions")
+}
