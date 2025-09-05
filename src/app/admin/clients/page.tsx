@@ -7,7 +7,6 @@ import { ClientCard } from '@/components/admin/client-card';
 import { ClientsSearchFilters } from '@/components/admin/clients-search-filters';
 import { ClientsPagination } from '@/components/admin/clients-pagination';
 import { CreateClientModal } from '@/components/admin/create-client-modal';
-import { requireAdmin } from '@/lib/auth';
 
 interface TeamMember {
   id: string;
@@ -90,14 +89,21 @@ function ClientsContent() {
     // Get user data
     const getUser = async () => {
       try {
-        const userData = await requireAdmin();
-        setUser({
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          avatar: userData.avatar,
-        });
+        const response = await fetch('/api/auth/me');
+        if (response.ok) {
+          const userData = await response.json();
+          setUser({
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            avatar: userData.avatar,
+          });
+        } else {
+          // Redirect to login if unauthorized
+          window.location.href = '/login';
+        }
       } catch (err) {
         console.error('Error getting user:', err);
+        window.location.href = '/login';
       }
     };
     

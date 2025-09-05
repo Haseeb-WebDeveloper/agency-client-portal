@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AdminLayout } from "@/components/admin/admin-layout";
 import { OfferForm } from "@/components/admin/offer-form";
-import { requireAdmin } from "@/lib/auth";
 import { MediaFile } from "@/types/models";
 import Link from "next/link";
 
@@ -100,14 +99,21 @@ export default function OfferPage() {
   useEffect(() => {
     const getUser = async () => {
       try {
-        const userData = await requireAdmin();
-        setUser({
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          avatar: userData.avatar,
-        });
+        const response = await fetch('/api/auth/me');
+        if (response.ok) {
+          const userData = await response.json();
+          setUser({
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            avatar: userData.avatar,
+          });
+        } else {
+          // Redirect to login if unauthorized
+          window.location.href = '/login';
+        }
       } catch (err) {
         console.error("Error getting user:", err);
+        window.location.href = '/login';
       }
     };
 

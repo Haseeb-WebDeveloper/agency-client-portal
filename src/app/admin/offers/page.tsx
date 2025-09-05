@@ -6,7 +6,6 @@ import { AdminLayout } from '@/components/admin/admin-layout';
 import { OfferCard } from '@/components/admin/offer-card';
 import { OffersSearchFilters } from '@/components/admin/offers-search-filters';
 import { OffersPagination } from '@/components/admin/offers-pagination';
-import { requireAdmin } from '@/lib/auth';
 import { MediaFile } from '@/types/models';
 
 interface Offer {
@@ -84,14 +83,21 @@ function OffersContent() {
     // Get user data
     const getUser = async () => {
       try {
-        const userData = await requireAdmin();
-        setUser({
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          avatar: userData.avatar,
-        });
+        const response = await fetch('/api/auth/me');
+        if (response.ok) {
+          const userData = await response.json();
+          setUser({
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            avatar: userData.avatar,
+          });
+        } else {
+          // Redirect to login if unauthorized
+          window.location.href = '/login';
+        }
       } catch (err) {
         console.error('Error getting user:', err);
+        window.location.href = '/login';
       }
     };
     

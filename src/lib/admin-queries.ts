@@ -81,8 +81,8 @@ export async function getAdminDashboardStats() {
     logo: client.logo,
     website: client.website,
     activeContracts: parseInt(client.active_contracts) || 0,
-    pendingOffers: parseInt(client.pending_contracts) || 0,
-    lastActivity: client.updatedAt, // Keep as string for serialization
+    pendingContracts: parseInt(client.pending_contracts) || 0, // Fixed: was pendingOffers
+    lastActivity: client.updatedAt ? new Date(client.updatedAt).toISOString() : new Date().toISOString(),
     teamMembers: [], // Empty array for now - will be populated when needed
     totalTeamMembers: 0, // Will be populated when needed
   }));

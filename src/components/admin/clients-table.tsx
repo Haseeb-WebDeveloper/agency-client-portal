@@ -8,7 +8,7 @@ interface Client {
   logo: string | null;
   activeContracts: number;
   pendingContracts: number;
-  lastActivity: Date;
+  lastActivity: string | Date;
 }
 
 interface ClientsTableProps {
@@ -52,7 +52,19 @@ export function ClientsTable({ clients }: ClientsTableProps) {
               </div>
               <div className="text-center min-w-[120px]">
                 <div className="text-xs text-foreground/60">
-                  {formatDistanceToNow(client.lastActivity, { addSuffix: true })}
+                  {(() => {
+                    try {
+                      const date = typeof client.lastActivity === 'string' 
+                        ? new Date(client.lastActivity) 
+                        : client.lastActivity;
+                      if (isNaN(date.getTime())) {
+                        return 'Unknown';
+                      }
+                      return formatDistanceToNow(date, { addSuffix: true });
+                    } catch (error) {
+                      return 'Unknown';
+                    }
+                  })()}
                 </div>
               </div>
             </div>

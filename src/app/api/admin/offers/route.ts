@@ -34,15 +34,15 @@ export async function GET(request: NextRequest) {
     const endIndex = startIndex + limit;
     const paginatedOffers = offers.slice(startIndex, endIndex);
 
-    // Transform offers to match expected format
+    // Transform offers to match expected format and ensure proper serialization
     const transformedOffers = paginatedOffers.map(offer => ({
       id: offer.id,
       title: offer.title,
       description: offer.description,
       status: offer.status,
       media: offer.media ? JSON.parse(offer.media as string) : null,
-      validUntil: offer.validUntil,
-      createdAt: offer.createdAt,
+      validUntil: offer.validUntil ? new Date(offer.validUntil).toISOString() : null,
+      createdAt: new Date(offer.createdAt).toISOString(),
       client_name: offer.client_name,
       client_logo: offer.client_logo,
       creator_first_name: offer.creator_first_name,
