@@ -72,8 +72,8 @@ export function OngoingContracts({ contracts }: OngoingContractsProps) {
         <div className="space-y-4">
           {contracts.map((contract) => {
             const progressPercentage = getProgressPercentage(
-              parseInt(contract.completed_tasks),
-              parseInt(contract.total_tasks)
+              contract.completed_tasks,
+              contract.total_tasks
             );
 
             return (

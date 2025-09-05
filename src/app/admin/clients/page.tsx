@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useEffect, useTransition, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { ClientCard } from '@/components/admin/client-card';
@@ -40,7 +40,7 @@ interface ClientsData {
   };
 }
 
-export default function ClientsPage() {
+function ClientsContent() {
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   
@@ -241,5 +241,28 @@ export default function ClientsPage() {
         )}
       </div>
     </AdminLayout>
+  );
+}
+
+export default function ClientsPage() {
+  return (
+    <Suspense fallback={
+      <AdminLayout user={{ firstName: 'Admin', lastName: 'User', avatar: null }}>
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="figma-h3">Our Clients</h1>
+            </div>
+          </div>
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    }>
+      <ClientsContent />
+    </Suspense>
   );
 }

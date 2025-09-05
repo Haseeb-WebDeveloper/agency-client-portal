@@ -3,11 +3,11 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const offer = await prisma.offer.findUnique({
-      where: { id: params.id },
+      where: { id: (await params).id },
       include: {
         client: true,
         creator: {
@@ -31,7 +31,7 @@ export async function GET(
       title: offer.title,
       description: offer.description,
       status: offer.status,
-      media: offer.media ? JSON.parse(offer.media) : null,
+      media: offer.media ? JSON.parse(offer.media as string) : null,
       validUntil: offer.validUntil,
       hasReviewed: offer.hasReviewed,
       createdAt: offer.createdAt,
@@ -57,7 +57,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const body = await request.json();
@@ -72,13 +72,13 @@ export async function PUT(
 
     // Update the offer
     const offer = await prisma.offer.update({
-      where: { id: params.id },
+      where: { id: (await params).id },
       data: {
         title,
         description,
         status,
         clientId,
-        media: media ? JSON.stringify(media) : null,
+        media: media ? JSON.stringify(media) : undefined,
         validUntil: validUntil ? new Date(validUntil) : null,
         hasReviewed: hasReviewed || false,
       },
@@ -91,7 +91,7 @@ export async function PUT(
         title: offer.title,
         description: offer.description,
         status: offer.status,
-        media: offer.media ? JSON.parse(offer.media) : null,
+        media: offer.media ? JSON.parse(offer.media as string) : null,
         validUntil: offer.validUntil,
         hasReviewed: offer.hasReviewed,
         updatedAt: offer.updatedAt,
@@ -108,12 +108,12 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Soft delete the offer
     await prisma.offer.update({
-      where: { id: params.id },
+      where: { id: (await params).id },
       data: {
         deletedAt: new Date(),
       },
