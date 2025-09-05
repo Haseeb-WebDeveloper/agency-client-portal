@@ -35,7 +35,7 @@ export function AdminLayout({ children, user }: AdminLayoutProps) {
   const isMobile = useIsMobile();
 
   const SidebarContent = () => (
-    <div className="p-3 h-full flex flex-col bg-gradient-to-b from-[#0A031C] to-[#000000] bg-sidebar ">
+    <div className="pl-3 h-full flex flex-col bg-gradient-to-b from-[#0A031C] to-[#000000] bg-sidebar ">
       {/* Logo */}
       <div className="flex items-center space-x-2 mb-8">
         <Image
@@ -96,22 +96,22 @@ export function AdminLayout({ children, user }: AdminLayoutProps) {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0A031C] to-[#000000] text-foreground">
+    <div className="min-h-screen h-full bg-gradient-to-b from-[#0A031C] to-[#000000] text-foreground">
       {/* Mobile sidebar */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent side="left" className="p-0 w-64">
           <SidebarContent />
         </SheetContent>
-      </Sheet>
+      </Sheet>  
 
-      <div className="flex h-screen">
+      <div className="flex min-h-screen h-full">
         {/* Desktop sidebar */}
         <div className="hidden lg:flex lg:w-64 lg:flex-col">
           <SidebarContent />
         </div>
 
         {/* Main content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 h-full flex flex-col overflow-hidden">
           {/* Top navbar */}
           <header
             className="bg-[#00000066] px-4 py-4 lg:px-12 lg:py-8"

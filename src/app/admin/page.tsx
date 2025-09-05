@@ -21,12 +21,8 @@ export default async function AdminDashboard() {
         {/* Header with greeting and quick actions */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              {getGreeting(user.firstName)}
-            </h1>
-            <p className="mt-1">
-              {getGreetingSubtitle()}
-            </p>
+            <h1 className="figma-h3">{getGreeting(user.firstName)}</h1>
+            <p className="mt-1">{getGreetingSubtitle()}</p>
           </div>
           <QuickActions />
         </div>
@@ -36,7 +32,7 @@ export default async function AdminDashboard() {
           {/* Left column - Main content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Stats cards */}
-            <StatsCards 
+            <StatsCards
               contracts={dashboardData.contracts}
               offers={dashboardData.offers}
             />
@@ -59,7 +55,9 @@ export default async function AdminDashboard() {
                   width={20}
                   height={20}
                 />
-                <p className="figma-paragraph text-foreground">Recent News Posted</p>
+                <p className="figma-paragraph text-foreground">
+                  Recent News Posted
+                </p>
               </div>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
@@ -75,7 +73,7 @@ export default async function AdminDashboard() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <div className="w-12 h-8 bg-gradient-to-r from-figma-warning to-orange-400 rounded flex items-center justify-center">
                     <span className="text-xs text-figma-text-white">VR</span>
@@ -89,7 +87,7 @@ export default async function AdminDashboard() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="pt-2">
                   <button className="text-sm text-figma-primary hover:text-figma-primary-purple-1 transition-colors">
                     View all news
