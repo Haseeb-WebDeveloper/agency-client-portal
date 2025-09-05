@@ -20,7 +20,7 @@ This guide explains how to create a platform admin account for the Agency Client
 
 ```bash
 # Create a platform admin
-bun run src/scripts/create-admin.ts admin@yourcompany.com "John" "Doe" "CREATIVE_DIRECTOR"
+bun run scripts/create-admin.ts admin@yourcompany.com "John" "Doe" "CREATIVE_DIRECTOR"
 ```
 
 **Parameters:**

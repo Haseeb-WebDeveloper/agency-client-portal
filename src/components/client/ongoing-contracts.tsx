@@ -26,8 +26,6 @@ export function OngoingContracts({ contracts }: OngoingContractsProps) {
         return 'text-figma-primary';
       case 'PENDING_APPROVAL':
         return 'text-figma-success';
-      case 'COMPLETED':
-        return 'text-green-500';
       default:
         return 'text-foreground';
     }
@@ -41,12 +39,6 @@ export function OngoingContracts({ contracts }: OngoingContractsProps) {
         return 'Active';
       case 'PENDING_APPROVAL':
         return 'Pending Approval';
-      case 'COMPLETED':
-        return 'Completed';
-      case 'TERMINATED':
-        return 'Terminated';
-      case 'EXPIRED':
-        return 'Expired';
       default:
         return status;
     }
@@ -56,7 +48,7 @@ export function OngoingContracts({ contracts }: OngoingContractsProps) {
     <div className="bg-transparent border-primary/20 px-7 py-6 border rounded-lg space-y-6">
       <div className="flex items-center gap-3">
         <Image
-          src="/icons/contract.svg"
+          src="/icons/stop-watch.svg"
           alt="Ongoing Contracts"
           width={20}
           height={20}
@@ -72,8 +64,8 @@ export function OngoingContracts({ contracts }: OngoingContractsProps) {
         <div className="space-y-4">
           {contracts.map((contract) => {
             const progressPercentage = getProgressPercentage(
-              contract.completed_tasks,
-              contract.total_tasks
+              Number(contract.completed_tasks),
+              Number(contract.total_tasks)
             );
 
             return (
@@ -90,7 +82,7 @@ export function OngoingContracts({ contracts }: OngoingContractsProps) {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs text-foreground/60">
                     <span>
-                      {contract.completed_tasks} of {contract.total_tasks} tasks completed
+                      {Number(contract.completed_tasks)} of {Number(contract.total_tasks)} tasks completed
                     </span>
                     <span>{progressPercentage}%</span>
                   </div>

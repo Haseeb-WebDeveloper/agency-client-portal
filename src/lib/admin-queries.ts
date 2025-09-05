@@ -77,10 +77,14 @@ export async function getAdminDashboardStats() {
   const clientsWithStats = clientsData.map(client => ({
     id: client.id,
     name: client.name,
-    logo: null, // No logo field in current schema
+    description: client.description || '',
+    logo: client.logo,
+    website: client.website,
     activeContracts: parseInt(client.active_contracts) || 0,
-    pendingContracts: parseInt(client.pending_contracts) || 0,
-    lastActivity: new Date(client.updatedAt),
+    pendingOffers: parseInt(client.pending_contracts) || 0,
+    lastActivity: client.updatedAt, // Keep as string for serialization
+    teamMembers: [], // Empty array for now - will be populated when needed
+    totalTeamMembers: 0, // Will be populated when needed
   }));
 
   // Process messages data

@@ -22,19 +22,23 @@ interface ClientCardProps {
     website?: string | null;
     activeContracts: number;
     pendingOffers: number;
-    lastActivity: string;
-    teamMembers: TeamMember[];
-    totalTeamMembers: number;
+    lastActivity: string; // ISO date string
+    teamMembers?: TeamMember[];
+    totalTeamMembers?: number;
   };
 }
 
 export function ClientCard({ client }: ClientCardProps) {
   const [showAllMembers, setShowAllMembers] = useState(false);
 
+  // Ensure teamMembers is always an array
+  const teamMembers = client.teamMembers || [];
+  const totalTeamMembers = client.totalTeamMembers || 0;
+
   const displayMembers = showAllMembers
-    ? client.teamMembers
-    : client.teamMembers.slice(0, 4);
-  const remainingCount = client.totalTeamMembers - 4;
+    ? teamMembers
+    : teamMembers.slice(0, 4);
+  const remainingCount = totalTeamMembers - 4;
 
   return (
     <div className="border border-border rounded-xl p-6 hover:border-primary/40 transition-all duration-200 group">
@@ -103,9 +107,19 @@ export function ClientCard({ client }: ClientCardProps) {
         />
         <span className=" font-medium">Last Activity : </span>
         <span className="text-foreground italic underline">
-          {formatDistanceToNow(new Date(client.lastActivity), {
-            addSuffix: true,
-          })}
+          {(() => {
+            try {
+              const date = new Date(client.lastActivity);
+              if (isNaN(date.getTime())) {
+                return 'Unknown';
+              }
+              return formatDistanceToNow(date, {
+                addSuffix: true,
+              });
+            } catch (error) {
+              return 'Unknown';
+            }
+          })()}
         </span>
       </div>
 

@@ -102,6 +102,23 @@ export async function getClientDashboardStats(userId: string) {
     LIMIT 5
   `;
 
+  // Process messages data to ensure serialization
+  const messagesData = recentMessages as any[];
+  const processedMessages = messagesData.map(message => ({
+    id: message.id,
+    content: message.content,
+    createdAt: message.createdAt, // Keep as string
+    user: {
+      id: message.userId,
+      firstName: message.firstName || 'Unknown',
+      lastName: message.lastName || 'User',
+      avatar: message.avatar,
+    },
+    room: {
+      name: 'General', // Default room name
+    },
+  }));
+
   return {
     contracts: {
       active: parseInt(activeContracts),
@@ -111,6 +128,6 @@ export async function getClientDashboardStats(userId: string) {
       pending: offersPendingCount,
     },
     ongoingContracts: ongoingContracts as any[],
-    recentMessages: recentMessages as any[],
+    recentMessages: processedMessages,
   };
 }
