@@ -35,16 +35,6 @@ enum AgencyMemberFunction {
   TECHNICAL_LEAD
 }
 
-enum ProjectStatus {
-  DRAFT
-  PLANNING
-  IN_PROGRESS
-  REVIEW
-  COMPLETED
-  ON_HOLD
-  CANCELLED
-}
-
 enum ContractStatus {
   DRAFT
   PENDING_APPROVAL
@@ -65,7 +55,7 @@ enum OfferStatus {
 
 enum RoomType {
   GENERAL
-  PROJECT_SPECIFIC
+  CONTRACT_SPECIFIC
   CLIENT_SPECIFIC
   AGENCY_INTERNAL
 }
@@ -128,20 +118,19 @@ model User {
   deletedAt DateTime?
 
   // Relations
-  clientMemberships  ClientMembership[]
-  agencyMembership   AgencyMembership?
-  roomParticipants   RoomParticipant[]
-  projectAssignments ProjectAssignment[]
-  activities         Activity[]
-  messages           Message[]
-  createdContracts   Contract[]          @relation("ContractCreator")
-  createdProjects    Project[]           @relation("ProjectCreator")
-  createdOffers      Offer[]             @relation("OfferCreator")
-  grantedPermissions Permission[]        @relation("PermissionGranter")
-  permissions        Permission[]
-  assignedTasks      Task[]              @relation("TaskAssignee")
-  createdTasks       Task[]              @relation("TaskCreator")
-  updatedTasks       Task[]              @relation("TaskUpdater")
+  clientMemberships    ClientMembership[]
+  agencyMembership     AgencyMembership?
+  roomParticipants     RoomParticipant[]
+  contractAssignments  ContractAssignment[]
+  activities           Activity[]
+  messages             Message[]
+  createdContracts     Contract[]          @relation("ContractCreator")
+  createdOffers        Offer[]             @relation("OfferCreator")
+  grantedPermissions   Permission[]        @relation("PermissionGranter")
+  permissions          Permission[]
+  assignedTasks        Task[]              @relation("TaskAssignee")
+  createdTasks         Task[]              @relation("TaskCreator")
+  updatedTasks         Task[]              @relation("TaskUpdater")
 
   @@index([authId])
   @@index([email])
@@ -169,7 +158,6 @@ model Client {
   memberships ClientMembership[]
   contracts   Contract[]
   offers      Offer[]
-  projects    Project[]
   rooms       Room[]
 
   @@index([name])
@@ -224,7 +212,7 @@ model AgencyMembership {
 }
 
 // ==============================================
-// PROJECTS & CONTRACTS
+// CONTRACTS
 // ==============================================
 
 model Contract {
@@ -237,6 +225,14 @@ model Contract {
   endDate     DateTime?
   value       Decimal?       @db.Decimal(10, 2)
   currency    String         @default("USD")
+  budget      Decimal?       @db.Decimal(10, 2) // Moved from Project
+  
+  // Progress tracking fields
+  progressPercentage Int     @default(0) // 0-100
+  estimatedHours     Int?    // Total estimated hours
+  actualHours        Int     @default(0) // Hours actually worked
+  priority           Int     @default(3) // 1=High, 2=Medium, 3=Low
+  tags               String[] // Contract tags for categorization
 
   // Audit fields
   createdAt DateTime  @default(now())
@@ -246,28 +242,29 @@ model Contract {
   deletedAt DateTime?
 
   // Relations
-  client   Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  creator  User?     @relation("ContractCreator", fields: [createdBy], references: [id])
-  projects Project[]
-  offers   Offer[]   @relation("OfferToContract")
+  client       Client                @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  creator      User?                 @relation("ContractCreator", fields: [createdBy], references: [id])
+  offers       Offer[]               @relation("OfferToContract")
+  assignments  ContractAssignment[]  // Replaces ProjectAssignment
+  tasks        Task[]                // Moved from Project
+  rooms        Room[]                // Moved from Project
+  messages     Message[]             // Moved from Project
+  activities   Activity[]            // Moved from Project
 
   @@index([clientId])
   @@index([status])
+  @@index([progressPercentage])
+  @@index([priority])
   @@index([deletedAt])
   @@map("contracts")
 }
 
-model Project {
-  id          String        @id @default(uuid())
-  contractId  String?
-  clientId    String
-  title       String
-  description String?
-  status      ProjectStatus @default(DRAFT)
-  startDate   DateTime?
-  endDate     DateTime?
-  budget      Decimal?      @db.Decimal(10, 2)
-  currency    String        @default("USD")
+model ContractAssignment {
+  id          String  @id @default(uuid())
+  contractId  String
+  userId      String
+  role        String // contract-specific role
+  isActive    Boolean @default(true)
 
   // Audit fields
   createdAt DateTime  @default(now())
@@ -277,45 +274,14 @@ model Project {
   deletedAt DateTime?
 
   // Relations
-  contract    Contract?           @relation(fields: [contractId], references: [id])
-  client      Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  creator     User?               @relation("ProjectCreator", fields: [createdBy], references: [id])
-  assignments ProjectAssignment[]
-  tasks       Task[]
-  rooms       Room[]
-  messages    Message[]
-  activities  Activity[]
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([contractId, userId])
   @@index([contractId])
-  @@index([clientId])
-  @@index([status])
-  @@index([deletedAt])
-  @@map("projects")
-}
-
-model ProjectAssignment {
-  id        String  @id @default(uuid())
-  projectId String
-  userId    String
-  role      String // project-specific role
-  isActive  Boolean @default(true)
-
-  // Audit fields
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  createdBy String?
-  updatedBy String?
-  deletedAt DateTime?
-
-  // Relations
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([projectId, userId])
-  @@index([projectId])
   @@index([userId])
   @@index([deletedAt])
-  @@map("project_assignments")
+  @@map("contract_assignments")
 }
 
 // ==============================================
@@ -324,14 +290,14 @@ model ProjectAssignment {
 
 model Task {
   id          String     @id @default(uuid())
-  projectId   String
+  contractId  String
   title       String
   description String?
   status      TaskStatus @default(TODO)
   priority    String?    @default("medium") // low, medium, high, urgent
   dueDate     DateTime?
   assignedTo  String?    // User ID who is assigned to this task
-  order       Int?       // For task ordering within project
+  order       Int?       // For task ordering within contract
 
   // Audit fields
   createdAt DateTime  @default(now())
@@ -341,12 +307,12 @@ model Task {
   deletedAt DateTime?
 
   // Relations
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  assignee  User?   @relation("TaskAssignee", fields: [assignedTo], references: [id])
-  creator   User?   @relation("TaskCreator", fields: [createdBy], references: [id])
-  updater   User?   @relation("TaskUpdater", fields: [updatedBy], references: [id])
+  contract  Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  assignee  User?    @relation("TaskAssignee", fields: [assignedTo], references: [id])
+  creator   User?    @relation("TaskCreator", fields: [createdBy], references: [id])
+  updater   User?    @relation("TaskUpdater", fields: [updatedBy], references: [id])
 
-  @@index([projectId])
+  @@index([contractId])
   @@index([status])
   @@index([assignedTo])
   @@index([dueDate])
@@ -365,9 +331,9 @@ model Offer {
   title       String
   description String?
   status      OfferStatus @default(DRAFT)
-  value       Decimal?    @db.Decimal(10, 2)
-  currency    String      @default("USD")
+  media       Json?       // Array of media files with url, type, etc.
   validUntil  DateTime?
+  hasReviewed Boolean     @default(false)
 
   // Audit fields
   createdAt DateTime  @default(now())
@@ -384,6 +350,7 @@ model Offer {
   @@index([clientId])
   @@index([status])
   @@index([validUntil])
+  @@index([hasReviewed])
   @@index([deletedAt])
   @@map("offers")
 }
@@ -397,7 +364,7 @@ model Room {
   name        String
   description String?
   type        RoomType
-  projectId   String? // null for general rooms
+  contractId  String? // null for general rooms
   clientId    String? // for client-specific rooms
   isActive    Boolean  @default(true)
 
@@ -409,14 +376,14 @@ model Room {
   deletedAt DateTime?
 
   // Relations
-  project      Project?          @relation(fields: [projectId], references: [id])
-  client       Client?           @relation(fields: [clientId], references: [id])
+  contract     Contract?          @relation(fields: [contractId], references: [id])
+  client       Client?            @relation(fields: [clientId], references: [id])
   participants RoomParticipant[]
   messages     Message[]
   activities   Activity[]
 
   @@index([type])
-  @@index([projectId])
+  @@index([contractId])
   @@index([clientId])
   @@index([deletedAt])
   @@map("rooms")
@@ -450,13 +417,13 @@ model RoomParticipant {
 }
 
 model Message {
-  id        String  @id @default(uuid())
-  roomId    String
-  userId    String
-  content   String
-  projectId String? // optional project linkage
-  parentId  String? // for replies
-  isEdited  Boolean @default(false)
+  id         String  @id @default(uuid())
+  roomId     String
+  userId     String
+  content    String
+  contractId String? // optional contract linkage
+  parentId   String? // for replies
+  isEdited   Boolean @default(false)
 
   // Audit fields
   createdAt DateTime  @default(now())
@@ -468,14 +435,14 @@ model Message {
   // Relations
   room        Room                @relation(fields: [roomId], references: [id], onDelete: Cascade)
   user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  project     Project?            @relation(fields: [projectId], references: [id])
+  contract    Contract?           @relation(fields: [contractId], references: [id])
   parent      Message?            @relation("MessageReplies", fields: [parentId], references: [id])
   replies     Message[]           @relation("MessageReplies")
   attachments MessageAttachment[]
 
   @@index([roomId, createdAt])
   @@index([userId])
-  @@index([projectId])
+  @@index([contractId])
   @@index([parentId])
   @@index([deletedAt])
   @@map("messages")
@@ -512,10 +479,10 @@ model Activity {
   id         String       @id @default(uuid())
   actorId    String // User who performed the action
   verb       ActivityVerb
-  targetType String // "project", "contract", "offer", "message", etc.
+  targetType String // "contract", "offer", "message", etc.
   targetId   String // ID of the target entity
   metadata   Json? // Additional context data
-  projectId  String? // Optional project context
+  contractId String? // Optional contract context
   roomId     String? // Optional room context
 
   // Audit fields
@@ -526,13 +493,13 @@ model Activity {
   deletedAt DateTime?
 
   // Relations
-  actor   User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
-  project Project? @relation(fields: [projectId], references: [id])
-  room    Room?    @relation(fields: [roomId], references: [id])
+  actor    User      @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  contract Contract? @relation(fields: [contractId], references: [id])
+  room     Room?     @relation(fields: [roomId], references: [id])
 
   @@index([actorId])
   @@index([targetType, targetId])
-  @@index([projectId])
+  @@index([contractId])
   @@index([roomId])
   @@index([createdAt])
   @@index([deletedAt])

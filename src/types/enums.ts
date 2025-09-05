@@ -19,15 +19,7 @@ export enum AgencyMemberFunction {
   TECHNICAL_LEAD = 'TECHNICAL_LEAD',
 }
 
-export enum ProjectStatus {
-  DRAFT = 'DRAFT',
-  PLANNING = 'PLANNING',
-  IN_PROGRESS = 'IN_PROGRESS',
-  REVIEW = 'REVIEW',
-  COMPLETED = 'COMPLETED',
-  ON_HOLD = 'ON_HOLD',
-  CANCELLED = 'CANCELLED',
-}
+// ProjectStatus removed - using ContractStatus instead
 
 export enum ContractStatus {
   DRAFT = 'DRAFT',
@@ -49,7 +41,7 @@ export enum OfferStatus {
 
 export enum RoomType {
   GENERAL = 'GENERAL',
-  PROJECT_SPECIFIC = 'PROJECT_SPECIFIC',
+  CONTRACT_SPECIFIC = 'CONTRACT_SPECIFIC',
   CLIENT_SPECIFIC = 'CLIENT_SPECIFIC',
   AGENCY_INTERNAL = 'AGENCY_INTERNAL',
 }

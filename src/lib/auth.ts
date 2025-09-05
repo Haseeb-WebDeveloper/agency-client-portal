@@ -45,3 +45,13 @@ export async function requireAdmin() {
 
   return user;
 }
+
+export async function requireClient() {
+  const user = await getCurrentUser();
+  
+  if (user.role !== 'CLIENT' && user.role !== 'CLIENT_MEMBER') {
+    redirect('/unauthorized');
+  }
+
+  return user;
+}

@@ -5,7 +5,6 @@
 import {
   UserRole,
   AgencyMemberFunction,
-  ProjectStatus,
   ContractStatus,
   OfferStatus,
   RoomType,
@@ -74,7 +73,7 @@ export interface AgencyMembership {
 }
 
 // ==============================================
-// PROJECTS & CONTRACTS
+// CONTRACTS
 // ==============================================
 
 export interface Contract {
@@ -87,24 +86,12 @@ export interface Contract {
   endDate?: Date | null;
   value?: number | null; // Decimal as number for simplicity
   currency: string;
-  createdAt: Date;
-  updatedAt: Date;
-  createdBy?: string | null;
-  updatedBy?: string | null;
-  deletedAt?: Date | null;
-}
-
-export interface Project {
-  id: string;
-  contractId?: string | null;
-  clientId: string;
-  title: string;
-  description?: string | null;
-  status: ProjectStatus;
-  startDate?: Date | null;
-  endDate?: Date | null;
   budget?: number | null; // Decimal as number for simplicity
-  currency: string;
+  progressPercentage: number;
+  estimatedHours?: number | null;
+  actualHours: number;
+  priority: number;
+  tags: string[];
   createdAt: Date;
   updatedAt: Date;
   createdBy?: string | null;
@@ -112,9 +99,9 @@ export interface Project {
   deletedAt?: Date | null;
 }
 
-export interface ProjectAssignment {
+export interface ContractAssignment {
   id: string;
-  projectId: string;
+  contractId: string;
   userId: string;
   role: string;
   isActive: boolean;
@@ -131,7 +118,7 @@ export interface ProjectAssignment {
 
 export interface Task {
   id: string;
-  projectId: string;
+  contractId: string;
   title: string;
   description?: string | null;
   status: TaskStatus;
@@ -150,15 +137,22 @@ export interface Task {
 // OFFERS
 // ==============================================
 
+export interface MediaFile {
+  url: string;
+  type: 'image' | 'video' | 'pdf' | 'document' | 'other';
+  name?: string;
+  size?: number;
+}
+
 export interface Offer {
   id: string;
   clientId: string;
   title: string;
   description?: string | null;
   status: OfferStatus;
-  value?: number | null; // Decimal as number for simplicity
-  currency: string;
+  media?: MediaFile[] | null;
   validUntil?: Date | null;
+  hasReviewed: boolean; 
   createdAt: Date;
   updatedAt: Date;
   createdBy?: string | null;
@@ -175,7 +169,7 @@ export interface Room {
   name: string;
   description?: string | null;
   type: RoomType;
-  projectId?: string | null;
+  contractId?: string | null;
   clientId?: string | null;
   isActive: boolean;
   createdAt: Date;
@@ -204,7 +198,7 @@ export interface Message {
   roomId: string;
   userId: string;
   content: string;
-  projectId?: string | null;
+  contractId?: string | null;
   parentId?: string | null;
   isEdited: boolean;
   createdAt: Date;
@@ -239,7 +233,7 @@ export interface Activity {
   targetType: string;
   targetId: string;
   metadata?: any | null; // JSON type
-  projectId?: string | null;
+  contractId?: string | null;
   roomId?: string | null;
   createdAt: Date;
   updatedAt: Date;

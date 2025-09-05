@@ -17,10 +17,10 @@ import {
   MenuIcon,
   Search,
 } from "lucide-react";
-import { adminSidebarItems } from "@/constants/navigation";
+import { clientSidebarItems } from "@/constants/navigation";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-interface AdminLayoutProps {
+interface ClientLayoutProps {
   children: React.ReactNode;
   user: {
     firstName: string;
@@ -29,13 +29,13 @@ interface AdminLayoutProps {
   };
 }
 
-export function AdminLayout({ children, user }: AdminLayoutProps) {
+export function ClientLayout({ children, user }: ClientLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
   const isMobile = useIsMobile();
 
   const SidebarContent = () => (
-    <div className="pl-3 py-4 h-full flex flex-col bg-gradient-to-b from-[#0A031C] to-[#000000] bg-sidebar ">
+    <div className="pl-3 h-full flex flex-col bg-gradient-to-b from-[#0A031C] to-[#000000] bg-sidebar ">
       {/* Logo */}
       <div className="flex items-center space-x-2 mb-8">
         <Image
@@ -43,13 +43,13 @@ export function AdminLayout({ children, user }: AdminLayoutProps) {
           alt="Logo"
           width={200}
           height={200}
-          className="object-contain h-12"
+          className="object-contain h-16"
         />
       </div>
 
       {/* Navigation */}
       <nav className="space-y-2 flex-1">
-        {adminSidebarItems.map((item) => {
+        {clientSidebarItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
@@ -73,8 +73,6 @@ export function AdminLayout({ children, user }: AdminLayoutProps) {
           );
         })}
       </nav>
-
-      {/* divider   */}
 
       {/* User Profile */}
       <div className="pr-3">
@@ -117,7 +115,7 @@ export function AdminLayout({ children, user }: AdminLayoutProps) {
         <div className="flex-1 h-full flex flex-col overflow-hidden lg:ml-64">
           {/* Top navbar */}
           <header
-            className="bg-[#00000066] px-4 py-4 lg:px-12"
+            className="bg-[#00000066] px-4 py-4 lg:px-12 lg:py-8"
             style={{
               borderTopLeftRadius: !isMobile ? "70px" : "0px",
             }}

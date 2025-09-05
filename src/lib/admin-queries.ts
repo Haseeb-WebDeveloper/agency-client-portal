@@ -22,6 +22,7 @@ export async function getAdminDashboardStats() {
     prisma.$queryRaw`
       SELECT status, COUNT(*) as count
       FROM offers
+      WHERE "deletedAt" IS NULL
       GROUP BY status
     `,
     
@@ -34,15 +35,15 @@ export async function getAdminDashboardStats() {
       FROM clients c
       LEFT JOIN (
         SELECT 
-          co.client_id,
+          co."clientId",
           SUM(CASE WHEN co.status = 'ACTIVE' THEN 1 ELSE 0 END) as active_contracts,
           SUM(CASE WHEN co.status = 'DRAFT' THEN 1 ELSE 0 END) as pending_contracts
         FROM contracts co
-        WHERE co.deleted_at IS NULL
-        GROUP BY co.client_id
-      ) contract_stats ON c.id = contract_stats.client_id
-      WHERE c.deleted_at IS NULL
-      ORDER BY c.updated_at DESC
+        WHERE co."deletedAt" IS NULL
+        GROUP BY co."clientId"
+      ) contract_stats ON c.id = contract_stats."clientId"
+      WHERE c."deletedAt" IS NULL
+      ORDER BY c."updatedAt" DESC
       LIMIT 10
     `,
     
@@ -50,13 +51,13 @@ export async function getAdminDashboardStats() {
     prisma.$queryRaw`
       SELECT 
         m.*,
-        u.first_name,
-        u.last_name,
+        u."firstName",
+        u."lastName",
         u.avatar
       FROM messages m
-      LEFT JOIN users u ON m.user_id = u.id
-      WHERE m.created_at >= NOW() - INTERVAL '7 days' AND m.deleted_at IS NULL
-      ORDER BY m.created_at DESC
+      LEFT JOIN users u ON m."userId" = u.id
+      WHERE m."createdAt" >= NOW() - INTERVAL '7 days' AND m."deletedAt" IS NULL
+      ORDER BY m."createdAt" DESC
       LIMIT 5
     `,
   ]);
@@ -79,7 +80,7 @@ export async function getAdminDashboardStats() {
     logo: null, // No logo field in current schema
     activeContracts: parseInt(client.active_contracts) || 0,
     pendingContracts: parseInt(client.pending_contracts) || 0,
-    lastActivity: new Date(client.updated_at),
+    lastActivity: new Date(client.updatedAt),
   }));
 
   // Process messages data
@@ -87,11 +88,11 @@ export async function getAdminDashboardStats() {
   const processedMessages = messagesData.map(message => ({
     id: message.id,
     content: message.content,
-    createdAt: message.created_at,
+    createdAt: message.createdAt,
     user: {
-      id: message.user_id,
-      firstName: message.first_name || 'Unknown',
-      lastName: message.last_name || 'User',
+      id: message.userId,
+      firstName: message.firstName || 'Unknown',
+      lastName: message.lastName || 'User',
       avatar: message.avatar,
     },
     room: {
@@ -111,4 +112,46 @@ export async function getAdminDashboardStats() {
     clients: clientsWithStats,
     unreadMessages: processedMessages,
   };
+}
+
+/**
+ * Get all offers with client information and media
+ */
+export async function getOffersWithDetails() {
+  const offers = await prisma.$queryRaw`
+    SELECT 
+      o.*,
+      c.name as client_name,
+      c.logo as client_logo,
+      u."firstName" as creator_first_name,
+      u."lastName" as creator_last_name
+    FROM offers o
+    LEFT JOIN clients c ON o."clientId" = c.id
+    LEFT JOIN users u ON o."createdBy" = u.id
+    WHERE o."deletedAt" IS NULL
+    ORDER BY o."createdAt" DESC
+  `;
+
+  return offers as any[];
+}
+
+/**
+ * Get offers by status
+ */
+export async function getOffersByStatus(status: string) {
+  const offers = await prisma.$queryRaw`
+    SELECT 
+      o.*,
+      c.name as client_name,
+      c.logo as client_logo,
+      u."firstName" as creator_first_name,
+      u."lastName" as creator_last_name
+    FROM offers o
+    LEFT JOIN clients c ON o."clientId" = c.id
+    LEFT JOIN users u ON o."createdBy" = u.id
+    WHERE o."deletedAt" IS NULL AND o.status = ${status}
+    ORDER BY o."createdAt" DESC
+  `;
+
+  return offers as any[];
 }
