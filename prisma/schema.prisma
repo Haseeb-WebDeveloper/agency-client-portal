@@ -245,11 +245,11 @@ model Contract {
   client       Client                @relation(fields: [clientId], references: [id], onDelete: Cascade)
   creator      User?                 @relation("ContractCreator", fields: [createdBy], references: [id])
   offers       Offer[]               @relation("OfferToContract")
-  assignments  ContractAssignment[]  // Replaces ProjectAssignment
-  tasks        Task[]                // Moved from Project
-  rooms        Room[]                // Moved from Project
-  messages     Message[]             // Moved from Project
-  activities   Activity[]            // Moved from Project
+  assignments  ContractAssignment[] 
+  tasks        Task[]               
+  rooms        Room[]               
+  messages     Message[]            
+  activities   Activity[]           
 
   @@index([clientId])
   @@index([status])

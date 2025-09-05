@@ -6,6 +6,12 @@ export const adminSidebarItems = [
     href: "/admin",
   },
   {
+    id: "messages",
+    label: "Messages",
+    icon: "/messages.svg",
+    href: "/admin/messages",
+  },
+  {
     id: "clients",
     label: "Client List",
     icon: "/list.svg",
@@ -18,10 +24,10 @@ export const adminSidebarItems = [
     href: "/admin/offers",
   },
   {
-    id: "messages",
-    label: "Messages",
-    icon: "/messages.svg",
-    href: "/admin/messages",
+    id: "contracts",
+    label: "Contracts",
+    icon: "/list.svg",
+    href: "/admin/contracts",
   },
   { id: "news", label: "News", icon: "/news.svg", href: "/admin/news" },
 ];
@@ -45,5 +51,10 @@ export const clientSidebarItems = [
     icon: "/contract.svg",
     href: "/client/contracts",
   },
-  { id: "messages", label: "Messages", icon: "/messages.svg", href: "/client/messages" },
+  {
+    id: "messages",
+    label: "Messages",
+    icon: "/messages.svg",
+    href: "/client/messages",
+  },
 ];

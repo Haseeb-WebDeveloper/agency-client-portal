@@ -159,3 +159,65 @@ export async function getOffersByStatus(status: string) {
 
   return offers as any[];
 }
+
+/**
+ * Get all contracts with client information and task progress
+ */
+export async function getContractsWithDetails() {
+  const contracts = await prisma.$queryRaw`
+    SELECT 
+      c.*,
+      cl.name as client_name,
+      cl.logo as client_logo,
+      u."firstName" as creator_first_name,
+      u."lastName" as creator_last_name,
+      COALESCE(media_files.file_count, 0) as media_files_count
+    FROM contracts c
+    LEFT JOIN clients cl ON c."clientId" = cl.id
+    LEFT JOIN users u ON c."createdBy" = u.id
+    LEFT JOIN (
+      SELECT 
+        m."contractId",
+        COUNT(ma.id) as file_count
+      FROM messages m
+      LEFT JOIN message_attachments ma ON m.id = ma."messageId"
+      WHERE m."contractId" IS NOT NULL AND m."deletedAt" IS NULL
+      GROUP BY m."contractId"
+    ) media_files ON c.id = media_files."contractId"
+    WHERE c."deletedAt" IS NULL
+    ORDER BY c."createdAt" DESC
+  `;
+
+  return contracts as any[];
+}
+
+/**
+ * Get contracts by status
+ */
+export async function getContractsByStatus(status: string) {
+  const contracts = await prisma.$queryRaw`
+    SELECT 
+      c.*,
+      cl.name as client_name,
+      cl.logo as client_logo,
+      u."firstName" as creator_first_name,
+      u."lastName" as creator_last_name,
+      COALESCE(media_files.file_count, 0) as media_files_count
+    FROM contracts c
+    LEFT JOIN clients cl ON c."clientId" = cl.id
+    LEFT JOIN users u ON c."createdBy" = u.id
+    LEFT JOIN (
+      SELECT 
+        m."contractId",
+        COUNT(ma.id) as file_count
+      FROM messages m
+      LEFT JOIN message_attachments ma ON m.id = ma."messageId"
+      WHERE m."contractId" IS NOT NULL AND m."deletedAt" IS NULL
+      GROUP BY m."contractId"
+    ) media_files ON c.id = media_files."contractId"
+    WHERE c."deletedAt" IS NULL AND c.status = ${status}
+    ORDER BY c."createdAt" DESC
+  `;
+
+  return contracts as any[];
+}
