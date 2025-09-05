@@ -19,8 +19,8 @@ interface MagicLinkLoginProps {
 
 export function MagicLinkLogin({
   redirectTo = "/dashboard",
-  title = "Welcome Back",
-  description = "Sign in to your account using your email address",
+  title = "",
+  description = "",
 }: MagicLinkLoginProps) {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);

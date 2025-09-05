@@ -37,7 +37,7 @@ export default function LoginPage() {
       {/* Right Column - Form */}
       <div className="flex-1 min-h-[80vh] w-full bg-foreground text-background flex items-center justify-center p-8 lg:p-12">
         <div className="w-full max-w-md relative">
-          <MagicLinkLogin title="Welcome Back" description="Sign in to your account using your email address" redirectTo="/dashboard" />
+          <MagicLinkLogin  redirectTo="/dashboard" />
         </div>
       </div>
     </div>

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { AdminLayout } from "@/components/admin/admin-layout";
 import { OfferForm } from "@/components/admin/offer-form";
 import { MediaFile } from "@/types/models";
 import Link from "next/link";
@@ -46,11 +45,6 @@ export default function OfferPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<{
-    firstName: string;
-    lastName: string;
-    avatar: string | null;
-  } | null>(null);
 
   // Fetch offer data (if editing)
   useEffect(() => {
@@ -95,30 +89,6 @@ export default function OfferPage() {
     fetchClients();
   }, []);
 
-  // Get user data
-  useEffect(() => {
-    const getUser = async () => {
-      try {
-        const response = await fetch('/api/auth/me');
-        if (response.ok) {
-          const userData = await response.json();
-          setUser({
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            avatar: userData.avatar,
-          });
-        } else {
-          // Redirect to login if unauthorized
-          window.location.href = '/login';
-        }
-      } catch (err) {
-        console.error("Error getting user:", err);
-        window.location.href = '/login';
-      }
-    };
-
-    getUser();
-  }, []);
 
   const handleSave = async (offerData: any) => {
     try {
@@ -163,53 +133,42 @@ export default function OfferPage() {
 
   if (isLoading) {
     return (
-      <AdminLayout
-        user={user || { firstName: "Admin", lastName: "User", avatar: null }}
-      >
-        <div className="space-y-6">
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-foreground/60">Loading offer...</p>
-            </div>
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-foreground/60">Loading offer...</p>
           </div>
         </div>
-      </AdminLayout>
+      </div>
     );
   }
 
   if (error && !isNew) {
     return (
-      <AdminLayout
-        user={user || { firstName: "Admin", lastName: "User", avatar: null }}
-      >
-        <div className="space-y-6">
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-destructive text-xl">!</span>
-              </div>
-              <h3 className="text-lg font-medium text-foreground mb-2">
-                Error Loading Offer
-              </h3>
-              <p className="text-foreground/60 mb-4">{error}</p>
-              <button
-                onClick={() => router.back()}
-                className="figma-btn-primary"
-              >
-                Go Back
-              </button>
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-destructive text-xl">!</span>
             </div>
+            <h3 className="text-lg font-medium text-foreground mb-2">
+              Error Loading Offer
+            </h3>
+            <p className="text-foreground/60 mb-4">{error}</p>
+            <button
+              onClick={() => router.back()}
+              className="figma-btn-primary"
+            >
+              Go Back
+            </button>
           </div>
         </div>
-      </AdminLayout>
+      </div>
     );
   }
 
   return (
-    <AdminLayout
-      user={user || { firstName: "Admin", lastName: "User", avatar: null }}
-    >
       <div className="space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -248,6 +207,5 @@ export default function OfferPage() {
           />
         </div>
       </div>
-    </AdminLayout>
   );
 }

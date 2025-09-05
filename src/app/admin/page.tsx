@@ -1,7 +1,6 @@
 import NextImage from "next/image";
 import { getAdminDashboardStats } from "@/lib/admin-queries";
 import { requireAdmin } from "@/lib/auth";
-import { AdminLayout } from "@/components/admin/admin-layout";
 import { StatsCards } from "@/components/admin/stats-cards";
 import { ClientsTable } from "@/components/admin/clients-table";
 import { MessagesCard } from "@/components/admin/messages-card";
@@ -15,18 +14,7 @@ export default async function AdminDashboard() {
   // Get dashboard data
   const dashboardData = await getAdminDashboardStats();
 
-  // Serialize user data to ensure it's safe for client components
-  const serializedUser = {
-    id: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    avatar: user.avatar,
-    role: user.role,
-    isActive: user.isActive,
-  };
-
   return (
-    <AdminLayout user={serializedUser}>
       <div className="space-y-6">
         {/* Header with greeting and quick actions */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -108,6 +96,5 @@ export default async function AdminDashboard() {
           </div>
         </div>
       </div>
-    </AdminLayout>
   );
 }

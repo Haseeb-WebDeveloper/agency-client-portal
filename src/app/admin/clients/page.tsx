@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useTransition, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { AdminLayout } from '@/components/admin/admin-layout';
 import { ClientCard } from '@/components/admin/client-card';
 import { ClientsSearchFilters } from '@/components/admin/clients-search-filters';
 import { ClientsPagination } from '@/components/admin/clients-pagination';
@@ -46,11 +45,6 @@ function ClientsContent() {
   const [clientsData, setClientsData] = useState<ClientsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<{
-    firstName: string;
-    lastName: string;
-    avatar: string | null;
-  } | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const page = parseInt(searchParams.get('page') || '1');
@@ -86,28 +80,6 @@ function ClientsContent() {
   };
 
   useEffect(() => {
-    // Get user data
-    const getUser = async () => {
-      try {
-        const response = await fetch('/api/auth/me');
-        if (response.ok) {
-          const userData = await response.json();
-          setUser({
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            avatar: userData.avatar,
-          });
-        } else {
-          // Redirect to login if unauthorized
-          window.location.href = '/login';
-        }
-      } catch (err) {
-        console.error('Error getting user:', err);
-        window.location.href = '/login';
-      }
-    };
-    
-    getUser();
     fetchClients();
   }, [page, search, sortBy]);
 
@@ -125,56 +97,51 @@ function ClientsContent() {
 
   if (isLoading && !clientsData) {
     return (
-      <AdminLayout user={user || { firstName: 'Admin', lastName: 'User', avatar: null }}>
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="figma-h3">Our Clients</h1>
-            </div>
-          </div>
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              {/* <p className="text-foreground/60">Loading clients...</p> */}
-            </div>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="figma-h3">Our Clients</h1>
           </div>
         </div>
-      </AdminLayout>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            {/* <p className="text-foreground/60">Loading clients...</p> */}
+          </div>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <AdminLayout user={user || { firstName: 'Admin', lastName: 'User', avatar: null }}>
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="figma-h3">Our Clients</h1>
-            </div>
-          </div>
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-destructive text-xl">!</span>
-              </div>
-              <h3 className="text-lg font-medium text-foreground mb-2">Error Loading Clients</h3>
-              <p className="text-foreground/60 mb-4">{error}</p>
-              <button
-                onClick={() => fetchClients()}
-                className="figma-btn-primary"
-              >
-                Try Again
-              </button>
-            </div>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="figma-h3">Our Clients</h1>
           </div>
         </div>
-      </AdminLayout>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-destructive text-xl">!</span>
+            </div>
+            <h3 className="text-lg font-medium text-foreground mb-2">Error Loading Clients</h3>
+            <p className="text-foreground/60 mb-4">{error}</p>
+            <button
+              onClick={() => fetchClients()}
+              className="figma-btn-primary"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <AdminLayout user={user || { firstName: 'Admin', lastName: 'User', avatar: null }}>
-      <div className="space-y-12">
+    <div className="space-y-12">
         {/* Header with Search, Filter, and Add */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex-1">
@@ -246,27 +213,24 @@ function ClientsContent() {
           />
         )}
       </div>
-    </AdminLayout>
   );
 }
 
 export default function ClientsPage() {
   return (
     <Suspense fallback={
-      <AdminLayout user={{ firstName: 'Admin', lastName: 'User', avatar: null }}>
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="figma-h3">Our Clients</h1>
-            </div>
-          </div>
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            </div>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="figma-h3">Our Clients</h1>
           </div>
         </div>
-      </AdminLayout>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          </div>
+        </div>
+      </div>
     }>
       <ClientsContent />
     </Suspense>

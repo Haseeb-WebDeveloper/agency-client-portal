@@ -166,7 +166,7 @@ export function AdminLayout({ children, user }: AdminLayoutProps) {
           <main
             className={`${
               isMobile ? "px-4 py-6" : "px-12 py-8"
-            } bg-[#0F0A1D] h-full min-h-[calc(100vh-100px)]`}
+            } bg-[#0F0A1D] h-full min-h-[calc(100vh-68px)]`}
           >
             {children}
           </main>

@@ -1,7 +1,6 @@
 import NextImage from "next/image";
 import { getClientDashboardStats } from "@/lib/client-queries";
 import { requireClient } from "@/lib/auth";
-import { ClientLayout } from "@/components/client/client-layout";
 import { ClientStatsCards } from "@/components/client/client-stats-cards";
 import { OngoingContracts } from "@/components/client/ongoing-contracts";
 import { MessagesCard } from "@/components/client/messages-card";
@@ -15,7 +14,6 @@ export default async function ClientDashboard() {
   const dashboardData = await getClientDashboardStats(user.id);
 
   return (
-    <ClientLayout user={user}>
       <div className="space-y-6">
         {/* Header with greeting */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -96,6 +94,5 @@ export default async function ClientDashboard() {
           </div>
         </div>
       </div>
-    </ClientLayout>
   );
 }
