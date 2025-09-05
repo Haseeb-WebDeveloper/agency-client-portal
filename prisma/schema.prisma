@@ -83,6 +83,11 @@ enum ActivityVerb {
   CONTRACT_SIGNED
   OFFER_ACCEPTED
   OFFER_DECLINED
+  TASK_CREATED
+  TASK_UPDATED
+  TASK_COMPLETED
+  TASK_ASSIGNED
+  TASK_UNASSIGNED
 }
 
 enum PermissionType {
@@ -90,6 +95,15 @@ enum PermissionType {
   WRITE
   ADMIN
   NONE
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  COMPLETED
+  CANCELLED
+  ON_HOLD
 }
 
 // ==============================================
@@ -125,6 +139,9 @@ model User {
   createdOffers      Offer[]             @relation("OfferCreator")
   grantedPermissions Permission[]        @relation("PermissionGranter")
   permissions        Permission[]
+  assignedTasks      Task[]              @relation("TaskAssignee")
+  createdTasks       Task[]              @relation("TaskCreator")
+  updatedTasks       Task[]              @relation("TaskUpdater")
 
   @@index([authId])
   @@index([email])
@@ -264,6 +281,7 @@ model Project {
   client      Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
   creator     User?               @relation("ProjectCreator", fields: [createdBy], references: [id])
   assignments ProjectAssignment[]
+  tasks       Task[]
   rooms       Room[]
   messages    Message[]
   activities  Activity[]
@@ -298,6 +316,43 @@ model ProjectAssignment {
   @@index([userId])
   @@index([deletedAt])
   @@map("project_assignments")
+}
+
+// ==============================================
+// TASKS
+// ==============================================
+
+model Task {
+  id          String     @id @default(uuid())
+  projectId   String
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  priority    String?    @default("medium") // low, medium, high, urgent
+  dueDate     DateTime?
+  assignedTo  String?    // User ID who is assigned to this task
+  order       Int?       // For task ordering within project
+
+  // Audit fields
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+
+  // Relations
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee  User?   @relation("TaskAssignee", fields: [assignedTo], references: [id])
+  creator   User?   @relation("TaskCreator", fields: [createdBy], references: [id])
+  updater   User?   @relation("TaskUpdater", fields: [updatedBy], references: [id])
+
+  @@index([projectId])
+  @@index([status])
+  @@index([assignedTo])
+  @@index([dueDate])
+  @@index([order])
+  @@index([deletedAt])
+  @@map("tasks")
 }
 
 // ==============================================

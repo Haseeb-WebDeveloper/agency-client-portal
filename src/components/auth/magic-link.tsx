@@ -28,6 +28,7 @@ export function MagicLinkLogin({
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -37,41 +38,19 @@ export function MagicLinkLogin({
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          // shouldCreateUser: false,
-          emailRedirectTo: `${
-            window.location.origin
-          }/auth/callback?next=${encodeURIComponent(redirectTo)}`,
-        },
+          emailRedirectTo: `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`
+        }
       });
 
-      // console.log("error", error);
-
       if (error) {
-        // Provide more helpful error messages
-        if (error.message.includes("Failed to fetch")) {
-          setError(
-            "Unable to connect to authentication service. Please check your Supabase configuration and internet connection."
-          );
-        } else if (error.message.includes("Invalid API key")) {
-          setError(
-            "Invalid Supabase credentials. Please check your .env.local file and ensure you're using the correct project keys."
-          );
-        } else {
-          setError(error.message);
-        }
-      } else {
-        setIsEmailSent(true);
+        setError(error.message);
+        setIsLoading(false);
+        return;
       }
+
+      setIsEmailSent(true);
     } catch (err) {
-      console.error("Magic link error:", err);
-      if (err instanceof Error && err.message.includes("fetch")) {
-        setError(
-          "Unable to connect to authentication service. This might be due to placeholder Supabase credentials. Please check your .env.local file."
-        );
-      } else {
-        setError("An unexpected error occurred. Please try again.");
-      }
-    } finally {
+      setError('An unexpected error occurred. Please try again.');
       setIsLoading(false);
     }
   };
