@@ -80,7 +80,7 @@ export function ContractCard({ contract }: ContractCardProps) {
   return (
     <>
       <div
-        className="relative cursor-pointer hover:shadow-lg transition-all duration-200 rounded-lg border border-primary/20 bg-card hover:border-primary/40"
+        className="relative cursor-pointer hover:shadow-lg transition-all duration-200 rounded-lg border border-primary/20 hover:border-primary/40"
         onClick={handleCardClick}
       >
         {/* Status Badge - Top Right */}

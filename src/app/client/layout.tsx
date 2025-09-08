@@ -1,3 +1,4 @@
+
 import { getCurrentUser } from '@/lib/auth';
 import { AppLayout } from '@/components/shared/app-layout';
 
