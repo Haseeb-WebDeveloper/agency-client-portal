@@ -1,5 +1,5 @@
 import { getCurrentUser } from '@/lib/auth';
-import { ClientLayout } from '@/components/client/client-layout';
+import { AppLayout } from '@/components/shared/app-layout';
 
 export default async function ClientLayoutWrapper({
   children,
@@ -20,9 +20,9 @@ export default async function ClientLayoutWrapper({
   };
 
   return (
-    <ClientLayout user={serializedUser}>
+    <AppLayout user={serializedUser}>
       {children}
-    </ClientLayout>
+    </AppLayout>
   );
 }
   

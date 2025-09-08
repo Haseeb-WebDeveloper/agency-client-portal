@@ -1,5 +1,5 @@
 import { getCurrentUser } from '@/lib/auth';
-import { AdminLayout } from '@/components/admin/admin-layout';
+import { AppLayout } from '@/components/shared/app-layout';
 
 export default async function AdminLayoutWrapper({
   children,
@@ -20,8 +20,8 @@ export default async function AdminLayoutWrapper({
   };
 
   return (
-    <AdminLayout user={serializedUser}>
+    <AppLayout user={serializedUser}>
       {children}
-    </AdminLayout>
+    </AppLayout>
   );
 }

@@ -2,16 +2,17 @@
 
 ## Overview
 
-This document describes the comprehensive database schema for a client-agency platform built with Supabase Auth, Prisma ORM, and PostgreSQL. The schema supports multi-tenant architecture with role-based access control, real-time messaging, project management, and comprehensive activity tracking.
+This document describes the comprehensive database schema for a client-agency platform built with Supabase Auth, Prisma ORM, and PostgreSQL. The schema supports multi-tenant architecture with role-based access control, real-time messaging, contract management, and comprehensive activity tracking.
 
 ## Core Design Principles
 
 - **Normalized Structure**: Follows 3NF to minimize data redundancy
-- **Scalable Architecture**: Designed to handle growth in users, projects, and data
+- **Scalable Architecture**: Designed to handle growth in users, contracts, and data
 - **Audit Trail**: Comprehensive tracking of all changes with soft deletes
 - **Role-Based Access**: Granular permissions for different user types
 - **Real-time Ready**: Optimized for Supabase Realtime messaging
 - **Multi-tenant**: Supports multiple clients with proper data isolation
+- **Contract-Centric**: All work is organized around contracts instead of projects
 
 ## Entity Relationship Diagram (Textual)
 
@@ -22,16 +23,14 @@ Users (1) ←→ (M) Permissions
 
 Clients (1) ←→ (M) Contracts
 Clients (1) ←→ (M) Offers
-Clients (1) ←→ (M) Projects
 Clients (1) ←→ (M) Rooms
 
-Contracts (1) ←→ (M) Projects
+Contracts (1) ←→ (M) ContractAssignments (M) ←→ (1) Users
+Contracts (1) ←→ (M) Tasks
+Contracts (1) ←→ (M) Rooms
+Contracts (1) ←→ (M) Messages
+Contracts (1) ←→ (M) Activities
 Offers (M) ←→ (M) Contracts (many-to-many conversion)
-
-Projects (1) ←→ (M) ProjectAssignments (M) ←→ (1) Users
-Projects (1) ←→ (M) Rooms
-Projects (1) ←→ (M) Messages
-Projects (1) ←→ (M) Activities
 
 Rooms (1) ←→ (M) RoomParticipants (M) ←→ (1) Users
 Rooms (1) ←→ (M) Messages
@@ -41,7 +40,7 @@ Messages (1) ←→ (M) MessageAttachments
 Messages (1) ←→ (M) MessageReplies (self-referencing)
 
 Activities (M) ←→ (1) Users (actor)
-Activities (M) ←→ (1) Projects (optional context)
+Activities (M) ←→ (1) Contracts (optional context)
 Activities (M) ←→ (1) Rooms (optional context)
 ```
 
@@ -142,11 +141,11 @@ Activities (M) ←→ (1) Rooms (optional context)
 - `function`
 - `deletedAt`
 
-### Projects & Contracts
+### Contracts & Tasks
 
 #### 5. Contracts
 **Primary Key**: `id` (UUID)  
-**Purpose**: Formal agreements between agency and clients
+**Purpose**: Formal agreements between agency and clients with progress tracking
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
@@ -159,6 +158,12 @@ Activities (M) ←→ (1) Rooms (optional context)
 | endDate | DateTime | NULL | Contract end date |
 | value | Decimal(10,2) | NULL | Contract value |
 | currency | String | DEFAULT "USD" | Currency code |
+| budget | Decimal(10,2) | NULL | Contract budget |
+| progressPercentage | Int | DEFAULT 0 | Progress percentage (0-100) |
+| estimatedHours | Int | NULL | Total estimated hours |
+| actualHours | Int | DEFAULT 0 | Hours actually worked |
+| priority | Int | DEFAULT 3 | Priority level (1=High, 2=Medium, 3=Low) |
+| tags | String[] | NULL | Contract tags for categorization |
 | createdAt | DateTime | DEFAULT now() | Creation timestamp |
 | updatedAt | DateTime | AUTO UPDATE | Last update timestamp |
 | createdBy | String | NULL | Creator user ID |
@@ -168,47 +173,21 @@ Activities (M) ←→ (1) Rooms (optional context)
 **Indexes**:
 - `clientId`
 - `status`
+- `progressPercentage`
+- `priority`
 - `deletedAt`
 
-#### 6. Projects
+#### 6. ContractAssignments
 **Primary Key**: `id` (UUID)  
-**Purpose**: Individual work scopes within contracts
+**Unique Constraints**: `(contractId, userId)`  
+**Purpose**: Many-to-many relationship between contracts and users
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | id | UUID | PK | Primary key |
-| contractId | String | FK → Contracts.id | Parent contract |
-| clientId | String | FK → Clients.id | Client reference |
-| title | String | NOT NULL | Project title |
-| description | String | NULL | Project description |
-| status | ProjectStatus | DEFAULT DRAFT | Project status |
-| startDate | DateTime | NULL | Project start date |
-| endDate | DateTime | NULL | Project end date |
-| budget | Decimal(10,2) | NULL | Project budget |
-| currency | String | DEFAULT "USD" | Currency code |
-| createdAt | DateTime | DEFAULT now() | Creation timestamp |
-| updatedAt | DateTime | AUTO UPDATE | Last update timestamp |
-| createdBy | String | NULL | Creator user ID |
-| updatedBy | String | NULL | Last updater user ID |
-| deletedAt | DateTime | NULL | Soft delete timestamp |
-
-**Indexes**:
-- `contractId`
-- `clientId`
-- `status`
-- `deletedAt`
-
-#### 7. ProjectAssignments
-**Primary Key**: `id` (UUID)  
-**Unique Constraints**: `(projectId, userId)`  
-**Purpose**: Many-to-many relationship between projects and users
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | UUID | PK | Primary key |
-| projectId | String | FK → Projects.id | Project reference |
+| contractId | String | FK → Contracts.id | Contract reference |
 | userId | String | FK → Users.id | User reference |
-| role | String | NOT NULL | Project-specific role |
+| role | String | NOT NULL | Contract-specific role |
 | isActive | Boolean | DEFAULT true | Assignment status |
 | createdAt | DateTime | DEFAULT now() | Creation timestamp |
 | updatedAt | DateTime | AUTO UPDATE | Last update timestamp |
@@ -217,8 +196,37 @@ Activities (M) ←→ (1) Rooms (optional context)
 | deletedAt | DateTime | NULL | Soft delete timestamp |
 
 **Indexes**:
-- `projectId`
+- `contractId`
 - `userId`
+- `deletedAt`
+
+#### 7. Tasks
+**Primary Key**: `id` (UUID)  
+**Purpose**: Individual tasks within contracts for progress tracking
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | UUID | PK | Primary key |
+| contractId | String | FK → Contracts.id | Parent contract |
+| title | String | NOT NULL | Task title |
+| description | String | NULL | Task description |
+| status | TaskStatus | DEFAULT TODO | Task status |
+| priority | String | DEFAULT "medium" | Task priority |
+| dueDate | DateTime | NULL | Task due date |
+| assignedTo | String | FK → Users.id | Assigned user |
+| order | Int | NULL | Task ordering within contract |
+| createdAt | DateTime | DEFAULT now() | Creation timestamp |
+| updatedAt | DateTime | AUTO UPDATE | Last update timestamp |
+| createdBy | String | NULL | Creator user ID |
+| updatedBy | String | NULL | Last updater user ID |
+| deletedAt | DateTime | NULL | Soft delete timestamp |
+
+**Indexes**:
+- `contractId`
+- `status`
+- `assignedTo`
+- `dueDate`
+- `order`
 - `deletedAt`
 
 ### Offers
@@ -237,6 +245,7 @@ Activities (M) ←→ (1) Rooms (optional context)
 | value | Decimal(10,2) | NULL | Offer value |
 | currency | String | DEFAULT "USD" | Currency code |
 | validUntil | DateTime | NULL | Offer expiration |
+| hasReviewed | Boolean | DEFAULT false | Review status |
 | createdAt | DateTime | DEFAULT now() | Creation timestamp |
 | updatedAt | DateTime | AUTO UPDATE | Last update timestamp |
 | createdBy | String | NULL | Creator user ID |
@@ -247,6 +256,7 @@ Activities (M) ←→ (1) Rooms (optional context)
 - `clientId`
 - `status`
 - `validUntil`
+- `hasReviewed`
 - `deletedAt`
 
 ### Messaging System
@@ -261,7 +271,7 @@ Activities (M) ←→ (1) Rooms (optional context)
 | name | String | NOT NULL | Room name |
 | description | String | NULL | Room description |
 | type | RoomType | NOT NULL | Room type |
-| projectId | String | FK → Projects.id | Project-specific room |
+| contractId | String | FK → Contracts.id | Contract-specific room |
 | clientId | String | FK → Clients.id | Client-specific room |
 | isActive | Boolean | DEFAULT true | Room status |
 | createdAt | DateTime | DEFAULT now() | Creation timestamp |
@@ -272,7 +282,7 @@ Activities (M) ←→ (1) Rooms (optional context)
 
 **Indexes**:
 - `type`
-- `projectId`
+- `contractId`
 - `clientId`
 - `deletedAt`
 
@@ -311,7 +321,7 @@ Activities (M) ←→ (1) Rooms (optional context)
 | roomId | String | FK → Rooms.id | Room reference |
 | userId | String | FK → Users.id | Sender reference |
 | content | String | NOT NULL | Message content |
-| projectId | String | FK → Projects.id | Optional project linkage |
+| contractId | String | FK → Contracts.id | Optional contract linkage |
 | parentId | String | FK → Messages.id | Reply to message |
 | isEdited | Boolean | DEFAULT false | Edit status |
 | createdAt | DateTime | DEFAULT now() | Creation timestamp |
@@ -323,7 +333,7 @@ Activities (M) ←→ (1) Rooms (optional context)
 **Indexes**:
 - `(roomId, createdAt)` - **Critical for messaging performance**
 - `userId`
-- `projectId`
+- `contractId`
 - `parentId`
 - `deletedAt`
 
@@ -363,7 +373,7 @@ Activities (M) ←→ (1) Rooms (optional context)
 | targetType | String | NOT NULL | Target entity type |
 | targetId | String | NOT NULL | Target entity ID |
 | metadata | Json | NULL | Additional context data |
-| projectId | String | FK → Projects.id | Optional project context |
+| contractId | String | FK → Contracts.id | Optional contract context |
 | roomId | String | FK → Rooms.id | Optional room context |
 | createdAt | DateTime | DEFAULT now() | Creation timestamp |
 | updatedAt | DateTime | AUTO UPDATE | Last update timestamp |
@@ -374,7 +384,7 @@ Activities (M) ←→ (1) Rooms (optional context)
 **Indexes**:
 - `actorId`
 - `(targetType, targetId)` - **Critical for activity feeds**
-- `projectId`
+- `contractId`
 - `roomId`
 - `createdAt` - **Critical for activity feeds**
 - `deletedAt`
@@ -390,7 +400,7 @@ Activities (M) ←→ (1) Rooms (optional context)
 |--------|------|-------------|-------------|
 | id | UUID | PK | Primary key |
 | userId | String | FK → Users.id | User reference |
-| resourceType | String | NOT NULL | Resource type (room, project, etc.) |
+| resourceType | String | NOT NULL | Resource type (room, contract, etc.) |
 | resourceId | String | NOT NULL | Resource ID |
 | permission | PermissionType | NOT NULL | Permission level |
 | grantedBy | String | FK → Users.id | User who granted permission |
@@ -425,15 +435,6 @@ Activities (M) ←→ (1) Rooms (optional context)
 - `CREATIVE_DIRECTOR` - Creative leadership
 - `TECHNICAL_LEAD` - Technical leadership
 
-### ProjectStatus
-- `DRAFT` - Initial planning
-- `PLANNING` - Detailed planning phase
-- `IN_PROGRESS` - Active development
-- `REVIEW` - Client review phase
-- `COMPLETED` - Project finished
-- `ON_HOLD` - Temporarily paused
-- `CANCELLED` - Project cancelled
-
 ### ContractStatus
 - `DRAFT` - Initial contract creation
 - `PENDING_APPROVAL` - Awaiting approval
@@ -452,7 +453,7 @@ Activities (M) ←→ (1) Rooms (optional context)
 
 ### RoomType
 - `GENERAL` - General communication
-- `PROJECT_SPECIFIC` - Project-specific room
+- `CONTRACT_SPECIFIC` - Contract-specific room
 - `CLIENT_SPECIFIC` - Client-specific room
 - `AGENCY_INTERNAL` - Internal agency room
 
@@ -469,12 +470,25 @@ Activities (M) ←→ (1) Rooms (optional context)
 - `CONTRACT_SIGNED` - Contract signed
 - `OFFER_ACCEPTED` - Offer accepted
 - `OFFER_DECLINED` - Offer declined
+- `TASK_CREATED` - Task created
+- `TASK_UPDATED` - Task updated
+- `TASK_COMPLETED` - Task completed
+- `TASK_ASSIGNED` - Task assigned
+- `TASK_UNASSIGNED` - Task unassigned
 
 ### PermissionType
 - `READ` - Read-only access
 - `WRITE` - Read and write access
 - `ADMIN` - Full administrative access
 - `NONE` - No access
+
+### TaskStatus
+- `TODO` - Task not started
+- `IN_PROGRESS` - Task in progress
+- `IN_REVIEW` - Task under review
+- `COMPLETED` - Task completed
+- `CANCELLED` - Task cancelled
+- `ON_HOLD` - Task on hold
 
 ## Performance Optimizations
 
@@ -486,7 +500,12 @@ Activities (M) ←→ (1) Rooms (optional context)
 ### Critical Indexes for Activity Feeds
 - `activities(targetType, targetId)` - **Entity-specific activity lookup**
 - `activities(createdAt)` - **Chronological activity feeds**
-- `activities(projectId)` - **Project-specific activity feeds**
+- `activities(contractId)` - **Contract-specific activity feeds**
+
+### Critical Indexes for Task Management
+- `tasks(contractId)` - **Contract task lookup**
+- `tasks(status)` - **Task status filtering**
+- `tasks(assignedTo)` - **User task assignments**
 
 ### General Performance Indexes
 - All foreign key columns are indexed
@@ -522,7 +541,7 @@ Every table includes comprehensive audit fields:
 ## Migration Strategy
 
 1. **Phase 1**: Core user and organization tables
-2. **Phase 2**: Projects and contracts
+2. **Phase 2**: Contracts and tasks
 3. **Phase 3**: Messaging system
 4. **Phase 4**: Activity tracking and permissions
 5. **Phase 5**: Performance optimizations and indexes
@@ -535,4 +554,12 @@ Every table includes comprehensive audit fields:
 4. **Read Replicas**: Use read replicas for reporting queries
 5. **Connection Pooling**: Implement proper connection pooling for high concurrency
 
-This schema provides a solid foundation for a scalable client-agency platform with comprehensive features for project management, communication, and collaboration.
+## Contract-Centric Architecture Benefits
+
+1. **Simplified Workflow**: All work is organized around contracts
+2. **Clear Progress Tracking**: Contract progress is tracked through tasks
+3. **Better Client Communication**: Clients see contract progress, not project details
+4. **Unified Messaging**: All contract-related communication in one place
+5. **Streamlined Permissions**: Contract-based access control is simpler to manage
+
+This schema provides a solid foundation for a scalable client-agency platform with comprehensive features for contract management, communication, and collaboration.

@@ -29,3 +29,11 @@ export async function createClient() {
     }
   )
 }
+
+export type PresenceState = {
+  userId: string
+  name: string
+  avatar?: string | null
+  typing?: boolean
+  lastActiveAt?: string
+}

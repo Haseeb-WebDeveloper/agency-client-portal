@@ -81,6 +81,9 @@ export function OfferForm({
       ? new Date(offer.validUntil).toISOString().split("T")[0]
       : "",
     selectedTags: serviceTags.slice(0, 3), // Default to first 3 tags
+    createRoom: true,
+    roomName: offer?.title ? `Offer: ${offer.title}` : '',
+    roomLogo: '' as string | null,
   });
 
   const { uploadFiles, removeFile, isUploading, uploadedFiles } = useFileUpload(
@@ -145,6 +148,11 @@ export function OfferForm({
         ...formData,
         media: uploadedFiles.length > 0 ? uploadedFiles : null,
         validUntil: formData.validUntil ? new Date(formData.validUntil) : null,
+        messaging: {
+          createRoom: formData.createRoom,
+          roomName: formData.roomName || `Offer: ${formData.title}`,
+          roomLogo: formData.roomLogo || null,
+        }
       };
 
       await onSave(offerData);
@@ -246,6 +254,44 @@ export function OfferForm({
               rows={4}
             />
           </div>
+        </div>
+      </div>
+
+      {/* Messaging Room */}
+      <div className="p-4 rounded-lg border border-primary/20">
+        <p className="mb-4">Offer Room</p>
+        <div className="space-y-6">
+          <div className="flex items-center gap-2">
+            <input
+              id="createRoom"
+              type="checkbox"
+              checked={formData.createRoom}
+              onChange={(e) => handleInputChange("createRoom", e.target.checked)}
+            />
+            <Label htmlFor="createRoom">Create a discussion room for this offer</Label>
+          </div>
+          {formData.createRoom && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="roomName">Room name</Label>
+                <Input
+                  id="roomName"
+                  value={formData.roomName}
+                  onChange={(e) => handleInputChange("roomName", e.target.value)}
+                  placeholder={`Offer: ${formData.title || "New"}`}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="roomLogo">Room logo URL (optional)</Label>
+                <Input
+                  id="roomLogo"
+                  value={formData.roomLogo || ''}
+                  onChange={(e) => handleInputChange("roomLogo", e.target.value)}
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
