@@ -131,3 +131,75 @@ export async function getClientDashboardStats(userId: string) {
     recentMessages: processedMessages,
   };
 }
+
+/**
+ * Fetch paginated contracts for the current client (for client UI list)
+ */
+export async function getClientContracts(params: { userId: string; page?: number; limit?: number; search?: string; status?: string; }) {
+  const { userId, page = 1, limit = 10, search = '', status = '' } = params;
+
+  // Resolve clientId for this user via membership
+  const clientMembership = await prisma.clientMembership.findFirst({
+    where: { userId, isActive: true, deletedAt: null },
+    select: { clientId: true },
+  });
+
+  if (!clientMembership) {
+    return { contracts: [], pagination: { page: 1, limit, total: 0, totalPages: 0, hasNext: false, hasPrev: false } };
+  }
+
+  const clientId = clientMembership.clientId;
+
+  let contracts = await prisma.$queryRaw<any[]>`
+    SELECT 
+      c.id, c.title, c.description, c.status, c.tags, c."progressPercentage",
+      c."createdAt",
+      COALESCE(media_files.file_count, 0) as media_files_count
+    FROM contracts c
+    LEFT JOIN (
+      SELECT m."contractId", COUNT(ma.id) as file_count
+      FROM messages m
+      LEFT JOIN message_attachments ma ON m.id = ma."messageId"
+      WHERE m."contractId" IS NOT NULL AND m."deletedAt" IS NULL
+      GROUP BY m."contractId"
+    ) media_files ON c.id = media_files."contractId"
+    WHERE c."clientId" = ${clientId} AND c."deletedAt" IS NULL
+    ORDER BY c."updatedAt" DESC`;
+
+  if (status) {
+    contracts = contracts.filter((c) => c.status === status);
+  }
+  if (search) {
+    const q = search.toLowerCase();
+    contracts = contracts.filter((c) =>
+      c.title.toLowerCase().includes(q) ||
+      (c.description ?? '').toLowerCase().includes(q) ||
+      (Array.isArray(c.tags) ? c.tags : []).some((t: string) => t.toLowerCase().includes(q))
+    );
+  }
+
+  const total = contracts.length;
+  const totalPages = Math.ceil(total / limit) || 1;
+  const startIndex = (page - 1) * limit;
+  const paginated = contracts.slice(startIndex, startIndex + limit);
+
+  const transformed = paginated.map((c) => ({
+    id: c.id,
+    title: c.title,
+    description: c.description,
+    status: c.status,
+    tags: c.tags || [],
+    progressPercentage: c.progressPercentage || 0,
+    mediaFilesCount: parseInt(c.media_files_count) || 0,
+    createdAt: c.createdAt,
+  }));
+
+  return {
+    contracts: transformed,
+    pagination: {
+      page, limit, total, totalPages,
+      hasNext: page < totalPages,
+      hasPrev: page > 1,
+    },
+  };
+}
