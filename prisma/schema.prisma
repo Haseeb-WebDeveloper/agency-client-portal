@@ -346,6 +346,7 @@ model Offer {
   client    Client     @relation(fields: [clientId], references: [id], onDelete: Cascade)
   creator   User?      @relation("OfferCreator", fields: [createdBy], references: [id])
   contracts Contract[] @relation("OfferToContract")
+  rooms     Room[]
 
   @@index([clientId])
   @@index([status])
@@ -366,6 +367,8 @@ model Room {
   type        RoomType
   contractId  String? // null for general rooms
   clientId    String? // for client-specific rooms
+  offerId     String? // for offer-specific rooms
+  logo        String?
   isActive    Boolean  @default(true)
 
   // Audit fields
@@ -378,6 +381,7 @@ model Room {
   // Relations
   contract     Contract?          @relation(fields: [contractId], references: [id])
   client       Client?            @relation(fields: [clientId], references: [id])
+  offer        Offer?             @relation(fields: [offerId], references: [id])
   participants RoomParticipant[]
   messages     Message[]
   activities   Activity[]
@@ -385,6 +389,7 @@ model Room {
   @@index([type])
   @@index([contractId])
   @@index([clientId])
+  @@index([offerId])
   @@index([deletedAt])
   @@map("rooms")
 }
@@ -396,6 +401,7 @@ model RoomParticipant {
   permission PermissionType @default(READ)
   joinedAt   DateTime       @default(now())
   isActive   Boolean        @default(true)
+  lastReadAt DateTime?
 
   // Audit fields
   createdAt DateTime  @default(now())

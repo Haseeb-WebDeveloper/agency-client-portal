@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { OfferForm } from "@/components/admin/offer-form";
+import { createOrUpdateOffer } from "@/actions/offers";
 import { MediaFile } from "@/types/models";
 import Link from "next/link";
 
@@ -94,38 +95,14 @@ export default function OfferPage() {
     try {
       setIsSaving(true);
       setError(null);
-
-      const url = isNew ? "/api/admin/offers" : `/api/admin/offers/${offerId}`;
-      const method = isNew ? "POST" : "PUT";
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(offerData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to save offer");
-      }
-
-      const result = await response.json();
-
+      const saved = await createOrUpdateOffer(isNew ? null : offerId, offerData);
       if (isNew) {
-        // Redirect to the new offer page
-        router.push(`/admin/offers/${result.offer.id}`);
+        router.push(`/admin/offers/${saved.id}`);
       } else {
-        // Update local state
-        setOffer((prev) => (prev ? { ...prev, ...result.offer } : null));
+        router.refresh();
       }
-
-      // Show success message (you could add a toast notification here)
-      console.log("Offer saved successfully");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save offer");
-      console.error("Error saving offer:", err);
     } finally {
       setIsSaving(false);
     }

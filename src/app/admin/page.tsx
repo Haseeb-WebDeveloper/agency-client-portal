@@ -42,7 +42,7 @@ export default async function AdminDashboard() {
           {/* Right column - Sidebar */}
           <div className="space-y-6">
             {/* Messages card */}
-            <MessagesCard messages={dashboardData.unreadMessages} />
+            <MessagesCard />
 
             {/* Recent news card - placeholder for now */}
             <div className="bg-transparent border-primary/20 px-7 py-6 border rounded-lg space-y-6">
