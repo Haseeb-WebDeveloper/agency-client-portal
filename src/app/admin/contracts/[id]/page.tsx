@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ContractForm } from "@/components/admin/contract-form";
+import { MediaFile } from "@/types/models";
 import Link from "next/link";
 
 interface Client {
@@ -27,6 +28,7 @@ interface Contract {
   estimatedHours: number | null;
   progressPercentage: number;
   actualHours: number;
+  media: MediaFile[];
   createdAt: string;
   updatedAt: string;
   client: {
