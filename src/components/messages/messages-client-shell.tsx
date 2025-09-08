@@ -30,6 +30,13 @@ type Message = {
     lastName: string;
     avatar?: string | null;
   };
+  attachments?: Array<{
+    id: string;
+    fileName: string;
+    filePath: string;
+    fileSize: number;
+    mimeType: string;
+  }>;
 };
 
 interface MessagesClientShellProps {
@@ -132,7 +139,8 @@ export default function MessagesClientShell({ initialRooms, isAdmin, currentUser
 
   const handleSendMessage = async (formData: FormData) => {
     const content = String(formData.get("content") || "");
-    if (!content.trim() || !selectedRoomId) return;
+    const hasAttachments = Boolean(formData.get("attachments"));
+    if ((!content.trim() && !hasAttachments) || !selectedRoomId) return;
 
     try {
       const response = await fetch(`/api/messages/rooms/${selectedRoomId}/send`, {
@@ -144,6 +152,8 @@ export default function MessagesClientShell({ initialRooms, isAdmin, currentUser
         console.error("Failed to send message");
         throw new Error("Failed to send message");
       }
+      // Refresh messages to include attachments since realtime payload doesn't include relations
+      await fetchMessages(selectedRoomId);
     } catch (error) {
       console.error("Error sending message:", error);
       throw error; // Re-throw to let ChatRoom handle the error

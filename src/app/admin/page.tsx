@@ -15,7 +15,7 @@ export default async function AdminDashboard() {
   const dashboardData = await getAdminDashboardStats();
 
   return (
-      <div className="space-y-6">
+      <div className="space-y-6 px-8 py-6">
         {/* Header with greeting and quick actions */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>

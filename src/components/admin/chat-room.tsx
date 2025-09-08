@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { createClient } from "@/utils/supabase/clients";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useFileUpload } from "@/hooks/use-file-upload";
 
 type UserLite = {
   id: string;
@@ -20,6 +21,13 @@ type Message = {
   createdAt: string;
   isEdited: boolean;
   user?: UserLite;
+  attachments?: Array<{
+    id: string;
+    fileName: string;
+    filePath: string;
+    fileSize: number;
+    mimeType: string;
+  }>;
 };
 
 interface ChatRoomProps {
@@ -49,6 +57,8 @@ export default function ChatRoom({
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { uploadFiles, uploadedFiles, removeFile, clearFiles, isUploading } = useFileUpload({ folder: "agency-portal/messages" });
 
   // Merge incoming props with local state to preserve optimistic items and order
   useEffect(() => {
@@ -219,7 +229,13 @@ export default function ChatRoom({
 
   async function clientSend(formData: FormData) {
     const content = String(formData.get("content") || "").trim();
-    if (!content) return;
+    // allow empty content if there are attachments
+    if (!content && uploadedFiles.length === 0) return;
+
+    // attach uploaded files metadata
+    if (uploadedFiles.length > 0) {
+      formData.set("attachments", JSON.stringify(uploadedFiles));
+    }
 
     // Clear input immediately for better UX
     if (inputRef.current) {
@@ -242,6 +258,13 @@ export default function ChatRoom({
         lastName: '',
         avatar: null,
       },
+      attachments: uploadedFiles.map(f => ({
+        id: `temp-${Math.random()}`,
+        fileName: f.name || 'file',
+        filePath: f.url,
+        fileSize: f.size || 0,
+        mimeType: typeof f.type === 'string' ? f.type : 'application/octet-stream',
+      })),
     };
 
     // Add optimistic message immediately
@@ -252,6 +275,7 @@ export default function ChatRoom({
         await onSend(formData);
         // Remove optimistic message and let realtime update handle the real one
         setMessages(prev => prev.filter(msg => msg.id !== tempId));
+        clearFiles();
       } catch (error) {
         // Remove optimistic message on error
         setMessages(prev => prev.filter(msg => msg.id !== tempId));
@@ -393,6 +417,30 @@ export default function ChatRoom({
                           <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
                             {message.content}
                           </p>
+                          {message.attachments && message.attachments.length > 0 && (
+                            <div className={`mt-2 grid gap-2 ${isCurrent ? 'justify-items-end' : 'justify-items-start'}`}>
+                              {message.attachments.map(att => {
+                                const isImage = att.mimeType.startsWith('image') || att.filePath.match(/\.(png|jpe?g|gif|webp)$/i);
+                                const isVideo = att.mimeType.startsWith('video') || att.filePath.match(/\.(mp4|webm|ogg)$/i);
+                                if (isImage) {
+                                  return (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img key={att.id} src={att.filePath} alt={att.fileName} className="max-w-[260px] rounded-md border border-border/40" />
+                                  );
+                                }
+                                if (isVideo) {
+                                  return (
+                                    <video key={att.id} src={att.filePath} controls className="max-w-[320px] rounded-md border border-border/40" />
+                                  );
+                                }
+                                return (
+                                  <a key={att.id} href={att.filePath} target="_blank" rel="noreferrer" className={`text-xs underline ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}>
+                                    {att.fileName}
+                                  </a>
+                                );
+                              })}
+                            </div>
+                          )}
                           {message.isEdited && (
                             <span className="text-xs opacity-60 ml-1">(edited)</span>
                           )}
@@ -457,6 +505,34 @@ export default function ChatRoom({
       {/* Input Area */}
       <div className="sticky bottom-0 w-auto right-0 left-0  border-t border-border/50 bg-[#0F0A1D]">
         <form action={clientSend} className="p-4 flex gap-3 items-end">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="cursor-pointer w-9 h-9 grid place-items-center rounded-md border border-primary/20 disabled:opacity-50"
+              disabled={isUploading}
+              aria-label="Attach files"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 1 1-2.83-2.83l8.49-8.48" />
+              </svg>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/*,video/*,application/pdf,.doc,.docx,.txt,.rtf"
+              className="hidden"
+              onChange={(e) => {
+                const files = e.target.files;
+                if (files && files.length > 0) {
+                  uploadFiles(files);
+                  // reset so selecting the same file again still triggers change
+                  e.currentTarget.value = "";
+                }
+              }}
+            />
+          </div>
           <div className="flex-1 relative">
             <textarea
               ref={inputRef}
@@ -472,6 +548,7 @@ export default function ChatRoom({
           <button
             type="submit"
             className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full p-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isUploading}
           >
             <svg
               className="w-5 h-5"
@@ -488,6 +565,38 @@ export default function ChatRoom({
             </svg>
           </button>
         </form>
+
+        {/* Selected attachments preview */}
+        {uploadedFiles.length > 0 && (
+          <div className="px-4 pb-4 flex flex-wrap gap-2">
+            {uploadedFiles.map((f, idx) => {
+              const isImage = (f.type === 'image') || (f.url.match(/\.(png|jpe?g|gif|webp)$/i) != null);
+              const isVideo = (f.type === 'video') || (f.url.match(/\.(mp4|webm|ogg)$/i) != null);
+              return (
+                <div key={`${f.url}-${idx}`} className="relative border border-border/40 rounded-md p-1">
+                  <button
+                    type="button"
+                    onClick={() => removeFile(idx)}
+                    className="absolute -top-2 -right-2 bg-background border border-border/50 rounded-full w-5 h-5 text-xs"
+                    aria-label="Remove attachment"
+                  >
+                    ×
+                  </button>
+                  {isImage ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={f.url} alt={f.name || 'image'} className="w-20 h-20 object-cover rounded" />
+                  ) : isVideo ? (
+                    <video src={f.url} className="w-24 h-16 object-cover rounded" />
+                  ) : (
+                    <a href={f.url} target="_blank" rel="noreferrer" className="text-xs underline block max-w-[160px] truncate px-2 py-1">
+                      {f.name || 'file'}
+                    </a>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

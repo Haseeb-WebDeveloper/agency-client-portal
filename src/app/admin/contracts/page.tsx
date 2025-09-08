@@ -85,7 +85,7 @@ function ContractsContent() {
 
   if (isLoading && !contractsData) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6  px-8 py-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="figma-h3">Contracts</h1>
@@ -102,7 +102,7 @@ function ContractsContent() {
 
   if (error) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6  px-8 py-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="figma-h3">Contracts</h1>
@@ -128,7 +128,7 @@ function ContractsContent() {
   }
 
   return (
-    <div className="space-y-16">
+      <div className="space-y-16  px-8 py-6">
         {/* Header with Search and Filter */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex-1">
@@ -202,7 +202,7 @@ function ContractsContent() {
 export default function ContractsPage() {
   return (
     <Suspense fallback={
-      <div className="space-y-6">
+      <div className="space-y-6  px-8 py-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="figma-h3">Contracts</h1>

@@ -51,7 +51,7 @@ export function ClientCard({ client }: ClientCardProps) {
               alt={client.name}
               width={200}
               height={200}
-              className="rounded-full object-cover bg-red-500 aspect-square"
+              className="rounded-full object-cover aspect-square"
             />
           </div>
         ) : (

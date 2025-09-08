@@ -15,9 +15,20 @@ export async function POST(
 
     const formData = await request.formData();
     const content = String(formData.get("content") || "").trim();
+    // Attachments come as JSON array of { url, type, name?, size? }
+    const attachmentsJson = String(formData.get("attachments") || "");
+    let attachmentsInput: Array<{ url: string; type?: string; name?: string; size?: number }> = [];
+    if (attachmentsJson) {
+      try {
+        const parsed = JSON.parse(attachmentsJson);
+        if (Array.isArray(parsed)) attachmentsInput = parsed;
+      } catch {
+        return NextResponse.json({ error: "Invalid attachments payload" }, { status: 400 });
+      }
+    }
 
-    if (!content) {
-      return NextResponse.json({ error: "Content is required" }, { status: 400 });
+    if (!content && attachmentsInput.length === 0) {
+      return NextResponse.json({ error: "Message must include text or attachments" }, { status: 400 });
     }
 
     // Verify user has access to this room
@@ -45,7 +56,7 @@ export async function POST(
         data: {
           roomId: roomId,
           userId: me.id,
-          content,
+          content: content || (attachmentsInput.length > 0 ? "" : content),
           createdBy: me.id,
           updatedBy: me.id,
         },
@@ -58,8 +69,23 @@ export async function POST(
               avatar: true,
             },
           },
+          attachments: true,
         },
       });
+
+      if (attachmentsInput.length > 0) {
+        await tx.messageAttachment.createMany({
+          data: attachmentsInput.map((a) => ({
+            messageId: message.id,
+            fileName: a.name || "file",
+            filePath: a.url,
+            fileSize: typeof a.size === "number" ? Math.floor(a.size) : 0,
+            mimeType: a.type || "application/octet-stream",
+            createdBy: me.id,
+            updatedBy: me.id,
+          })),
+        });
+      }
 
       // Update room's updatedAt in the same transaction
       await tx.room.update({
@@ -70,7 +96,15 @@ export async function POST(
       return message;
     });
 
-    const message = result;
+    const message = await prisma.message.findUnique({
+      where: { id: result.id },
+      include: {
+        user: {
+          select: { id: true, firstName: true, lastName: true, avatar: true },
+        },
+        attachments: true,
+      },
+    });
 
     return NextResponse.json({ message });
   } catch (error) {
