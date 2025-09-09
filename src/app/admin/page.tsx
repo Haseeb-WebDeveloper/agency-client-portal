@@ -7,6 +7,7 @@ import { MessagesCard } from "@/components/admin/messages-card";
 import { QuickActions } from "@/components/admin/quick-actions";
 import { getGreeting, getGreetingSubtitle } from "@/utils/greeting";
 import Image from "next/image";
+import Link from "next/link";
 
 // src/app/admin/page.tsx
 
@@ -18,7 +19,6 @@ export default async function AdminDashboard() {
   const dashboardData = await getAdminDashboardStats();
 
   // Fetch news data
-  const newsData = await getRecentNews(5);
 
   return (
     <div className="space-y-6 px-8 py-6">
@@ -85,14 +85,14 @@ export default async function AdminDashboard() {
 
                   <div className="flex-1">
                     <h4 className="text-sm font-medium text-foreground mb-1">
-                      {newsItem.title}
+                      Achieve the Impossible with AI
                     </h4>
                     <p className="text-xs text-foreground/60">
-                      {newsItem.description}
+                      Lorem ipsum dolor sit amet consectetur...
                     </p>
                   </div>
                 </div>
-              ))}
+              </div>
 
               <div className="pt-2">
                 <Link
@@ -106,6 +106,5 @@ export default async function AdminDashboard() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
