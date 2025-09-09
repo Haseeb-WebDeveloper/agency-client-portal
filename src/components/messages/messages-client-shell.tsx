@@ -74,18 +74,29 @@ export default function MessagesClientShell({
   const supabase = useMemo(() => createClient(), []);
   const [isMobile, setIsMobile] = useState(false);
   const [isRoomsSheetOpen, setIsRoomsSheetOpen] = useState(false);
-  
+
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<{
     rooms: Array<{ id: string; name: string; logo?: string | null }>;
-    users: Array<{ id: string; firstName: string; lastName: string; email: string; avatar?: string | null; role: string }>;
+    users: Array<{
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      avatar?: string | null;
+      role: string;
+    }>;
   }>({ rooms: [], users: [] });
   const [isSearching, setIsSearching] = useState(false);
+
+  // Add loading state
+  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch messages for a room (always fetch and merge with cache to avoid partial lists)
   const fetchMessages = async (roomId: string) => {
     try {
+      setIsLoading(true);
       const response = await fetch(
         `/api/messages/rooms/${roomId}/messages?limit=50`,
         {
@@ -111,6 +122,8 @@ export default function MessagesClientShell({
       });
     } catch (error) {
       console.error("Error fetching messages:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -150,7 +163,7 @@ export default function MessagesClientShell({
       setSearchTerm("");
       return;
     }
-    
+
     setIsSearching(true);
     try {
       const result = await searchRoomsAndUsersAction(formData);
@@ -182,9 +195,9 @@ export default function MessagesClientShell({
   const handleUserClick = async (userId: string) => {
     try {
       const room = await createDMRoomAction(userId);
-      
+
       // Add the room to the local state if it's new
-      const existingRoom = rooms.find(r => r.id === room.id);
+      const existingRoom = rooms.find((r) => r.id === room.id);
       if (!existingRoom) {
         setRooms((prev) => [
           {
@@ -197,15 +210,15 @@ export default function MessagesClientShell({
           ...prev,
         ]);
       }
-      
+
       // Select the room and clear search
       setSelectedRoomId(room.id);
       clearSearch();
-      
+
       // Fetch messages for the room
       fetchMessages(room.id);
       markRoomRead(room.id);
-      
+
       if (isMobile) {
         setIsRoomsSheetOpen(false);
       }
@@ -215,13 +228,12 @@ export default function MessagesClientShell({
   };
 
   // Handle room updates from ChatRoom
-  const handleRoomUpdate = (roomId: string, updates: { name?: string; logo?: string | null }) => {
+  const handleRoomUpdate = (
+    roomId: string,
+    updates: { name?: string; logo?: string | null }
+  ) => {
     setRooms((prev) =>
-      prev.map((room) =>
-        room.id === roomId
-          ? { ...room, ...updates }
-          : room
-      )
+      prev.map((room) => (room.id === roomId ? { ...room, ...updates } : room))
     );
   };
 
@@ -385,7 +397,13 @@ export default function MessagesClientShell({
                 onClick={clearSearch}
                 className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/60 hover:text-foreground"
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <path d="M18 6L6 18" />
                   <path d="M6 6l12 12" />
                 </svg>
@@ -413,13 +431,15 @@ export default function MessagesClientShell({
           />
         )}
       </div>
-      
+
       {/* Search Results */}
       {searchTerm && (
         <div className="space-y-3">
           {searchResults.rooms.length > 0 && (
             <div>
-              <h4 className="text-sm font-medium text-foreground/80 mb-2">Rooms</h4>
+              <h4 className="text-sm font-medium text-foreground/80 mb-2">
+                Rooms
+              </h4>
               <div className="space-y-1">
                 {searchResults.rooms.map((room) => (
                   <button
@@ -440,17 +460,21 @@ export default function MessagesClientShell({
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{room.name}</p>
+                      <p className="text-sm font-medium truncate">
+                        {room.name}
+                      </p>
                     </div>
                   </button>
                 ))}
               </div>
             </div>
           )}
-          
+
           {searchResults.users.length > 0 && (
             <div>
-              <h4 className="text-sm font-medium text-foreground/80 mb-2">Users</h4>
+              <h4 className="text-sm font-medium text-foreground/80 mb-2">
+                Users
+              </h4>
               <div className="space-y-1">
                 {searchResults.users.map((user) => (
                   <button
@@ -479,22 +503,27 @@ export default function MessagesClientShell({
                       </p>
                     </div>
                     <span className="text-xs text-foreground/60 capitalize">
-                      {user.role.toLowerCase().replace('_', ' ')}
+                      {user.role.toLowerCase().replace("_", " ")}
                     </span>
                   </button>
                 ))}
               </div>
             </div>
           )}
-          
-          {searchTerm && searchResults.rooms.length === 0 && searchResults.users.length === 0 && !isSearching && (
-            <div className="text-center py-8">
-              <p className="text-sm text-foreground/60">No results found for "{searchTerm}"</p>
-            </div>
-          )}
+
+          {searchTerm &&
+            searchResults.rooms.length === 0 &&
+            searchResults.users.length === 0 &&
+            !isSearching && (
+              <div className="text-center py-8">
+                <p className="text-sm text-foreground/60">
+                  No results found for "{searchTerm}"
+                </p>
+              </div>
+            )}
         </div>
       )}
-      
+
       {/* Regular Room List */}
       {!searchTerm && (
         <div className="space-y-1">

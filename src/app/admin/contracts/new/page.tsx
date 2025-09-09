@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ContractForm } from "@/components/admin/contract-form";
 import Link from "next/link";
+import { Suspense } from "react";
 
 interface Client {
   id: string;
@@ -11,7 +12,7 @@ interface Client {
   logo?: string | null;
 }
 
-export default function NewContractPage() {
+function NewContractPageContent() {
   const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,7 +30,9 @@ export default function NewContractPage() {
         const data = await response.json();
         setClients(data.clients);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch clients");
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch clients"
+        );
         console.error("Error fetching clients:", err);
       } finally {
         setIsLoading(false);
@@ -94,10 +97,7 @@ export default function NewContractPage() {
               Error Loading Page
             </h3>
             <p className="text-foreground/60 mb-4">{error}</p>
-            <button
-              onClick={() => router.back()}
-              className="figma-btn-primary"
-            >
+            <button onClick={() => router.back()} className="figma-btn-primary">
               Go Back
             </button>
           </div>
@@ -141,5 +141,24 @@ export default function NewContractPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function NewContractPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="space-y-6  px-8 py-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-foreground/60">Loading...</p>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <NewContractPageContent />
+    </Suspense>
   );
 }

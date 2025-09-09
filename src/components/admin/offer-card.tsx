@@ -15,7 +15,7 @@ interface Offer {
   title: string;
   description: string | null;
   status: string;
-  media: MediaFile[] | null;
+  media: MediaFile[] | null | any; // Make it more flexible to handle different data types
   validUntil: string | null;
   createdAt: string;
   client_name: string;
@@ -120,7 +120,14 @@ export function OfferCard({ offer }: OfferCardProps) {
           <div className="w-fit flex items-center justify-start gap-4 text-sm">
             <div className="flex items-center gap-1">
               <FileText className="w-4 h-4" />
-              <span>{offer.media?.length || 4} files</span>
+              <span>
+                {Array.isArray(offer.media)
+                  ? offer.media.length
+                  : offer.media
+                  ? 1
+                  : 0}{" "}
+                files
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
@@ -170,28 +177,42 @@ export function OfferCard({ offer }: OfferCardProps) {
             </div>
 
             {/* Project Assets */}
-            {offer.media && offer.media.length > 0 && (
+            {offer.media && (
               <div className="space-y-3">
                 <h4 className="text-lg font-semibold text-foreground">
                   Project Assets
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {offer.media.map((file, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-3 p-3 border border-primary/20 rounded-lg hover:border-primary/40 transition-colors cursor-pointer"
-                    >
+                  {/* Ensure media is an array before mapping */}
+                  {Array.isArray(offer.media) ? (
+                    offer.media.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-3 p-3 border border-primary/20 rounded-lg hover:border-primary/40 transition-colors cursor-pointer"
+                      >
+                        <FileText className="w-5 h-5 text-primary" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {file.name || `File ${index + 1}`}
+                          </p>
+                          <p className="text-xs text-foreground/60 capitalize">
+                            {file.type}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    // Handle case where media is an object or other type
+                    <div className="flex items-center gap-3 p-3 border border-primary/20 rounded-lg">
                       <FileText className="w-5 h-5 text-primary" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">
-                          {file.name || `File ${index + 1}`}
+                          Media File
                         </p>
-                        <p className="text-xs text-foreground/60 capitalize">
-                          {file.type}
-                        </p>
+                        <p className="text-xs text-foreground/60">Attachment</p>
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             )}

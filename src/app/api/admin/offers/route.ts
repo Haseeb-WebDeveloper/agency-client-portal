@@ -10,6 +10,8 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || '';
     const status = searchParams.get('status') || '';
 
+    console.log('Fetching offers with params:', { page, limit, search, status });
+
     // Get offers based on filters
     let offers;
     if (status) {
@@ -18,11 +20,13 @@ export async function GET(request: NextRequest) {
       offers = await getOffersWithDetails();
     }
 
+    console.log('Raw offers data:', offers);
+
     // Apply search filter if provided
     if (search) {
       offers = offers.filter(offer => 
         offer.title.toLowerCase().includes(search.toLowerCase()) ||
-        offer.description?.toLowerCase().includes(search.toLowerCase()) ||
+        (offer.description && offer.description.toLowerCase().includes(search.toLowerCase())) ||
         offer.client_name.toLowerCase().includes(search.toLowerCase())
       );
     }
@@ -34,20 +38,42 @@ export async function GET(request: NextRequest) {
     const endIndex = startIndex + limit;
     const paginatedOffers = offers.slice(startIndex, endIndex);
 
+    console.log('Paginated offers count:', paginatedOffers.length);
+
     // Transform offers to match expected format and ensure proper serialization
-    const transformedOffers = paginatedOffers.map(offer => ({
-      id: offer.id,
-      title: offer.title,
-      description: offer.description,
-      status: offer.status,
-      media: offer.media ? JSON.parse(offer.media as string) : null,
-      validUntil: offer.validUntil ? new Date(offer.validUntil).toISOString() : null,
-      createdAt: new Date(offer.createdAt).toISOString(),
-      client_name: offer.client_name,
-      client_logo: offer.client_logo,
-      creator_first_name: offer.creator_first_name,
-      creator_last_name: offer.creator_last_name,
-    }));
+    const transformedOffers = paginatedOffers.map(offer => {
+      try {
+        return {
+          id: offer.id,
+          title: offer.title,
+          description: offer.description,
+          status: offer.status,
+          media: offer.media || null,
+          validUntil: offer.validUntil ? new Date(offer.validUntil).toISOString() : null,
+          createdAt: new Date(offer.createdAt).toISOString(),
+          client_name: offer.client_name,
+          client_logo: offer.client_logo,
+          creator_first_name: offer.creator_first_name,
+          creator_last_name: offer.creator_last_name,
+        };
+      } catch (transformError) {
+        console.error('Error transforming offer:', transformError, offer);
+        // Return a safe version of the offer
+        return {
+          id: offer.id,
+          title: offer.title,
+          description: offer.description,
+          status: offer.status,
+          media: null,
+          validUntil: offer.validUntil ? new Date(offer.validUntil).toISOString() : null,
+          createdAt: new Date(offer.createdAt).toISOString(),
+          client_name: offer.client_name || '',
+          client_logo: offer.client_logo,
+          creator_first_name: offer.creator_first_name,
+          creator_last_name: offer.creator_last_name,
+        };
+      }
+    });
 
     return NextResponse.json({
       offers: transformedOffers,
@@ -62,8 +88,15 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching offers:', error);
+    // Provide more detailed error information
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
-      { error: 'Failed to fetch offers' },
+      { 
+        error: 'Failed to fetch offers',
+        details: errorMessage,
+        // Include stack trace in development only
+        ...(process.env.NODE_ENV === 'development' && { stack: error instanceof Error ? error.stack : undefined })
+      },
       { status: 500 }
     );
   }
@@ -88,7 +121,7 @@ export async function POST(request: NextRequest) {
         description,
         status: status || 'DRAFT',
         clientId,
-        media: media ? JSON.stringify(media) : undefined,
+        media, // Prisma will handle the JSON conversion
         validUntil: validUntil ? new Date(validUntil) : null,
         hasReviewed: false,
       },
@@ -101,7 +134,7 @@ export async function POST(request: NextRequest) {
         title: offer.title,
         description: offer.description,
         status: offer.status,
-        media: offer.media ? JSON.parse(offer.media as string) : null,
+        media: offer.media || null,
         validUntil: offer.validUntil,
         createdAt: offer.createdAt,
       },

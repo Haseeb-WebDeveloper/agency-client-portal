@@ -85,20 +85,40 @@ export default function ClientOffersPage() {
 
       {error && <div className="text-sm text-red-500">{error}</div>}
 
-      {isLoading && !data ? (
-        <div className="h-40 flex items-center justify-center text-foreground/60">
-          Loading...
+      {/* Loading State */}
+      {(isLoading || isPending) && !data ? (
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="border border-primary/20 rounded-lg p-6 space-y-4 animate-pulse"
+            >
+              <div className="h-6 bg-primary/10 rounded w-3/4"></div>
+              <div className="h-4 bg-primary/10 rounded w-full"></div>
+              <div className="h-4 bg-primary/10 rounded w-2/3"></div>
+              <div className="pt-4 flex justify-between">
+                <div className="h-8 w-24 bg-primary/10 rounded"></div>
+                <div className="h-8 w-24 bg-primary/10 rounded"></div>
+              </div>
+            </div>
+          ))}
         </div>
-      ) : data && data.offers.length === 0 ? (
+      ) : null}
+
+      {/* Empty State */}
+      {!isLoading && !isPending && data && data.offers.length === 0 ? (
         <div className="rounded-lg border border-primary/20 p-16 text-center">
           <p className="figma-h4">
             There are no offers <em>yet</em>
           </p>
           <p className="mt-2 text-foreground/60">
-            We’ll notify you as soon as new offers are available.
+            We'll notify you as soon as new offers are available.
           </p>
         </div>
-      ) : (
+      ) : null}
+
+      {/* Offers List */}
+      {data && data.offers.length > 0 && (
         <>
           <div className="space-y-4">
             {data?.offers.map((o) => (
