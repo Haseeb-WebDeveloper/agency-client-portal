@@ -142,7 +142,9 @@ export function AppLayout({ children, user }: AppLayoutProps) {
               </div>
             </div>
           </header>
-          <main className={` `}>{children}</main>
+          <main className={`bg-[#0F0A1D] min-h-[calc(100vh-75px)]`}>
+            {children}
+          </main>
         </div>
       </div>
     </div>

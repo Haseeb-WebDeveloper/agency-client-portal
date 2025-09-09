@@ -23,6 +23,7 @@ const NewsForm = ({ initialData }: { initialData?: any }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -106,6 +107,8 @@ const NewsForm = ({ initialData }: { initialData?: any }) => {
       return;
     }
 
+    setSubmitting(true);
+
     // If using file upload method but no image URL is set, try to upload the file
     if (
       imageUploadMethod === "upload" &&
@@ -115,11 +118,13 @@ const NewsForm = ({ initialData }: { initialData?: any }) => {
       const uploadSuccess = await handleUpload();
       // If upload failed, don't submit the form
       if (!uploadSuccess) {
+        setSubmitting(false);
         return;
       }
       // If featuredImage is still empty, the upload didn't complete successfully
       if (!featuredImage || featuredImage.trim() === "") {
         setError("Image upload failed. Please try again or use a direct URL.");
+        setSubmitting(false);
         return;
       }
     }
@@ -152,6 +157,8 @@ const NewsForm = ({ initialData }: { initialData?: any }) => {
     } catch (error) {
       console.error("Error submitting news form:", error);
       setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -168,6 +175,7 @@ const NewsForm = ({ initialData }: { initialData?: any }) => {
           placeholder="Title"
           required
           className="w-full p-2 text-white rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+          disabled={submitting}
         />
       </div>
 
@@ -179,6 +187,7 @@ const NewsForm = ({ initialData }: { initialData?: any }) => {
           placeholder="Description"
           className="w-full p-2 rounded-lg text-white border border-gray-600 focus:border-blue-500 focus:outline-none"
           rows={3}
+          disabled={submitting}
         />
       </div>
 
@@ -191,6 +200,7 @@ const NewsForm = ({ initialData }: { initialData?: any }) => {
               checked={imageUploadMethod === "upload"}
               onChange={() => setImageUploadMethod("upload")}
               className="mr-2"
+              disabled={submitting}
             />
             Upload Image
           </label>
@@ -200,7 +210,7 @@ const NewsForm = ({ initialData }: { initialData?: any }) => {
               checked={imageUploadMethod === "url"}
               onChange={() => setImageUploadMethod("url")}
               className="mr-2"
-              disabled={uploading}
+              disabled={uploading || submitting}
             />
             Enter URL
           </label>
@@ -214,7 +224,7 @@ const NewsForm = ({ initialData }: { initialData?: any }) => {
               onChange={handleFileChange}
               accept="image/*"
               className="w-52 rounded border border:primary/20"
-              disabled={uploading}
+              disabled={uploading || submitting}
             />
             {selectedFile && (
               <div className="flex items-center space-x-2">
@@ -224,7 +234,7 @@ const NewsForm = ({ initialData }: { initialData?: any }) => {
                 <button
                   type="button"
                   onClick={handleUpload}
-                  disabled={uploading}
+                  disabled={uploading || submitting}
                   className="px-3 py-1 text-white border border:primary/20 rounded-lg text-sm disabled:opacity-50"
                 >
                   {uploading ? "Uploading..." : "Upload"}
@@ -249,6 +259,7 @@ const NewsForm = ({ initialData }: { initialData?: any }) => {
             onChange={(e) => setFeaturedImage(e.target.value)}
             placeholder="Enter image URL"
             className="w-full p-2 rounded-lg text-white border border-gray-600 focus:border-blue-500 focus:outline-none"
+            disabled={submitting}
           />
         )}
       </div>
@@ -262,6 +273,7 @@ const NewsForm = ({ initialData }: { initialData?: any }) => {
           required
           rows={6}
           className="w-full p-2 rounded-lg text-white border border-gray-600 focus:border-blue-500 focus:outline-none"
+          disabled={submitting}
         />
       </div>
 
@@ -272,6 +284,7 @@ const NewsForm = ({ initialData }: { initialData?: any }) => {
             checked={sendToAll}
             onChange={() => setSendToAll(!sendToAll)}
             className="mr-2"
+            disabled={submitting}
           />
           Send to All
         </label>
@@ -280,15 +293,23 @@ const NewsForm = ({ initialData }: { initialData?: any }) => {
       <div className="flex space-x-2">
         <button
           type="submit"
-          className="px-4 py-2 bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF] text-white rounded-lg hover:bg-blue-600 transition-colors"
+          className="cursor-pointer px-4 py-2 bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF] text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-60"
+          disabled={submitting}
         >
-          {initialData ? "Update News" : "Create News"}
+          {submitting
+            ? initialData
+              ? "Updating..."
+              : "Creating..."
+            : initialData
+            ? "Update News"
+            : "Create News"}
         </button>
 
         <button
           type="button"
           onClick={() => router.push("/admin/news")}
           className="px-4 py-2 border border:primary/20 text-white rounded-lg hover:bg-gray-600 transition-colors"
+          disabled={submitting}
         >
           Cancel
         </button>
