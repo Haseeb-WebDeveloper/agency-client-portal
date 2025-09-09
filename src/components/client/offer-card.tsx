@@ -16,7 +16,7 @@ interface Offer {
   title: string;
   description: string | null;
   status: string;
-  media: any[] | null;
+  media: any[] | null | any; // Make it more flexible
   validUntil: string | null;
   createdAt: string;
 }
@@ -81,7 +81,14 @@ export function ClientOfferCard({ offer }: OfferCardProps) {
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Paperclip className="w-3.5 h-3.5" />
-                <span>{offer.media?.length ?? 0} files</span>
+                <span>
+                  {Array.isArray(offer.media)
+                    ? offer.media.length
+                    : offer.media
+                    ? 1
+                    : 0}{" "}
+                  files
+                </span>
               </div>
               <div className="flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" />

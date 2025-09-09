@@ -1,9 +1,17 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 import { AlertTriangle } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function AuthErrorPage() {
+function AuthErrorContent() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
+  const errorDescription = searchParams.get("error_description");
+
   return (
     <div className="min-h-screen flex flex-col-reverse lg:flex-row">
       {/* Left Column - Image and Text */}
@@ -51,8 +59,8 @@ export default function AuthErrorPage() {
             <div className="space-y-6 mt-4">
               <div className="bg-destructive text-foreground rounded-lg px-3 py-2 border-dashed border border-foreground">
                 <p>
-                  There was a problem with your authentication. This could be
-                  due to an expired or invalid link.
+                  {errorDescription ||
+                    "There was a problem with your authentication. This could be due to an expired or invalid link."}
                 </p>
               </div>
 
@@ -83,5 +91,22 @@ export default function AuthErrorPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AuthErrorPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-foreground/60">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <AuthErrorContent />
+    </Suspense>
   );
 }

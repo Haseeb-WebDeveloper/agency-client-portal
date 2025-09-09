@@ -10,6 +10,8 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || '';
     const status = searchParams.get('status') || '';
 
+    console.log('Fetching offers with params:', { page, limit, search, status });
+
     // Get offers based on filters
     let offers;
     if (status) {
@@ -18,11 +20,13 @@ export async function GET(request: NextRequest) {
       offers = await getOffersWithDetails();
     }
 
+    console.log('Raw offers data:', offers);
+
     // Apply search filter if provided
     if (search) {
       offers = offers.filter(offer => 
         offer.title.toLowerCase().includes(search.toLowerCase()) ||
-        offer.description?.toLowerCase().includes(search.toLowerCase()) ||
+        (offer.description && offer.description.toLowerCase().includes(search.toLowerCase())) ||
         offer.client_name.toLowerCase().includes(search.toLowerCase())
       );
     }
@@ -33,6 +37,8 @@ export async function GET(request: NextRequest) {
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
     const paginatedOffers = offers.slice(startIndex, endIndex);
+
+    console.log('Paginated offers count:', paginatedOffers.length);
 
     // Transform offers to match expected format and ensure proper serialization
     const transformedOffers = paginatedOffers.map(offer => ({
@@ -62,8 +68,15 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching offers:', error);
+    // Provide more detailed error information
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
-      { error: 'Failed to fetch offers' },
+      { 
+        error: 'Failed to fetch offers',
+        details: errorMessage,
+        // Include stack trace in development only
+        ...(process.env.NODE_ENV === 'development' && { stack: error instanceof Error ? error.stack : undefined })
+      },
       { status: 500 }
     );
   }

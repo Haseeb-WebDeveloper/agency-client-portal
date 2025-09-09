@@ -16,7 +16,7 @@ interface Offer {
   title: string;
   description: string | null;
   status: string;
-  media: MediaFile[] | null;
+  media: MediaFile[] | null | any; // Make it more flexible to handle different data types
   validUntil: string | null;
   createdAt: string;
   client_name: string;
@@ -113,7 +113,14 @@ export function OfferCard({ offer }: OfferCardProps) {
           <div className="w-fit flex items-center justify-start gap-4 text-sm">
             <div className="flex items-center gap-1">
               <FileText className="w-4 h-4" />
-              <span>{offer.media?.length || 4} files</span>
+              <span>
+                {Array.isArray(offer.media)
+                  ? offer.media.length
+                  : offer.media
+                  ? 1
+                  : 0}{" "}
+                files
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
