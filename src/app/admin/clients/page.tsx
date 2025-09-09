@@ -154,7 +154,7 @@ function ClientsContent() {
             />
             <button
               onClick={() => setShowCreateModal(true)}
-              className="cursor-pointer px-6 py-2 border border-primary/20 hover:border-primary/40 rounded-lg transition-all"
+              className="cursor-pointer px-6 py-2 bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF] rounded-lg transition-all"
             >
              Create Client
             </button>

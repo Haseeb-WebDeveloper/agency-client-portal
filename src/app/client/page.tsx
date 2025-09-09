@@ -1,11 +1,16 @@
 import NextImage from "next/image";
-import { getClientDashboardStats } from "@/lib/client-queries";
+import {
+  getClientDashboardStats,
+  getClientRecentNews,
+} from "@/lib/client-queries";
 import { getCurrentUser } from "@/lib/auth";
 import { ClientStatsCards } from "@/components/client/client-stats-cards";
 import { OngoingContracts } from "@/components/client/ongoing-contracts";
 import { MessagesCard } from "@/components/client/messages-card";
 import { getGreeting, getGreetingSubtitle } from "@/utils/greeting";
 import ClientDashboardClient from "./client-dashboard-client";
+
+// src/app/client/page.tsx
 
 export default async function ClientDashboard() {
   try {
@@ -14,6 +19,9 @@ export default async function ClientDashboard() {
 
     // Get dashboard data (server-side)
     const dashboardData = await getClientDashboardStats(user.id);
+
+    // Fetch news data using the proper service function
+    const newsData = await getClientRecentNews(5);
 
     // Serialize data for client component
     const serializedData = {
@@ -49,6 +57,13 @@ export default async function ClientDashboard() {
             avatar: message.user.avatar,
           },
           room: message.room,
+        })),
+        recentNews: newsData.map((newsItem) => ({
+          // Serialize news data
+          id: newsItem.id,
+          title: newsItem.title,
+          description: newsItem.description || "", // Handle null description
+          featuredImage: newsItem.featuredImage, // Add featured image
         })),
       },
     };
