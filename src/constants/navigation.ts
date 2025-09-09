@@ -20,13 +20,13 @@ export const adminSidebarItems = [
   {
     id: "offers",
     label: "Offers",
-    icon: "/list.svg",
+    icon: "/offer.svg",
     href: "/admin/offers",
   },
   {
     id: "contracts",
     label: "Contracts",
-    icon: "/list.svg",
+    icon: "/contract.svg",
     href: "/admin/contracts",
   },
   { id: "news", label: "News", icon: "/news.svg", href: "/admin/news" },
@@ -42,7 +42,7 @@ export const clientSidebarItems = [
   {
     id: "offers",
     label: "Offers",
-    icon: "/list.svg",
+    icon: "/offer.svg",
     href: "/client/offers",
   },
   {
