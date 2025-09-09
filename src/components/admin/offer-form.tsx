@@ -6,24 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { MediaFile } from "@/types/models";
 import {
   Calendar,
-  Upload,
   X,
   FileText,
   Image,
   Video,
   File,
+  UploadIcon,
 } from "lucide-react";
 
 interface Client {
@@ -41,6 +33,11 @@ interface OfferFormProps {
     media: MediaFile[] | null;
     validUntil: string | null;
     clientId: string;
+    room?: {
+      id: string;
+      name: string;
+      logo?: string | null;
+    } | null;
   } | null;
   clients: Client[];
   onSave: (offerData: any) => Promise<void>;
@@ -56,15 +53,6 @@ const statusOptions = [
   { value: "WITHDRAWN", label: "Withdrawn" },
 ];
 
-const serviceTags = [
-  "Copywriting",
-  "Graphic design",
-  "Lead gen",
-  "SEO",
-  "Social Media",
-  "Web Development",
-];
-
 export function OfferForm({
   offer,
   clients,
@@ -75,18 +63,19 @@ export function OfferForm({
   const [formData, setFormData] = useState({
     title: offer?.title || "",
     description: offer?.description || "",
-    status: offer?.status || "DRAFT",
+    status: "SENT",
     clientId: offer?.clientId || "",
     validUntil: offer?.validUntil
       ? new Date(offer.validUntil).toISOString().split("T")[0]
       : "",
-    selectedTags: serviceTags.slice(0, 3), // Default to first 3 tags
-    createRoom: true,
-    roomName: offer?.title ? `Offer: ${offer.title}` : '',
-    roomLogo: '' as string | null,
+    createRoom: !!offer?.room,
+    roomName: offer?.room?.name || (offer?.title ? `Offer: ${offer.title}` : ""),
+    roomLogo: offer?.room?.logo || null,
+    roomLogoFile: null as File | null,
+    isUploadingRoomLogo: false,
   });
 
-  const { uploadFiles, removeFile, isUploading, uploadedFiles } = useFileUpload(
+  const { uploadFiles, removeFile, isUploading, uploadedFiles, setInitialFiles } = useFileUpload(
     {
       folder: "offers",
       onSuccess: (files) => {
@@ -100,7 +89,7 @@ export function OfferForm({
 
   // Initialize uploaded files from existing offer
   useEffect(() => {
-    if (offer?.media) {
+    if (offer?.media && Array.isArray(offer.media)) {
       // Convert existing media to uploaded files format
       const existingFiles = offer.media.map((file, index) => ({
         url: file.url,
@@ -108,9 +97,18 @@ export function OfferForm({
         name: file.name || `File ${index + 1}`,
         size: file.size || 0,
       }));
-      // Note: This would need to be handled by the useFileUpload hook
+      setInitialFiles(existingFiles);
     }
-  }, [offer]);
+  }, [offer, setInitialFiles]);
+
+  // Cleanup object URL on unmount
+  useEffect(() => {
+    return () => {
+      if (formData.roomLogo && formData.roomLogo.startsWith("blob:")) {
+        URL.revokeObjectURL(formData.roomLogo);
+      }
+    };
+  }, [formData.roomLogo]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({
@@ -126,12 +124,76 @@ export function OfferForm({
     }
   };
 
-  const handleTagToggle = (tag: string) => {
+  const handleRoomLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        alert("Please select an image file");
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File size must be less than 5MB");
+        return;
+      }
+
+      // Set loading state
+      setFormData((prev) => ({
+        ...prev,
+        roomLogoFile: file,
+        roomLogo: URL.createObjectURL(file), // For preview
+        isUploadingRoomLogo: true,
+      }));
+
+      try {
+        // Upload to Cloudinary
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folder', 'offers/room-logos');
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
+
+        const result = await response.json();
+        
+        // Update form data with Cloudinary URL
+        setFormData((prev) => ({
+          ...prev,
+          roomLogo: result.data.url,
+          roomLogoFile: file,
+          isUploadingRoomLogo: false,
+        }));
+      } catch (error) {
+        console.error('Room logo upload error:', error);
+        alert('Failed to upload room logo. Please try again.');
+        setFormData((prev) => ({
+          ...prev,
+          roomLogoFile: null,
+          roomLogo: null,
+          isUploadingRoomLogo: false,
+        }));
+      }
+    }
+  };
+
+  const removeRoomLogo = () => {
+    // Only revoke object URL if it's a blob URL (local preview)
+    if (formData.roomLogo && formData.roomLogo.startsWith('blob:')) {
+      URL.revokeObjectURL(formData.roomLogo);
+    }
     setFormData((prev) => ({
       ...prev,
-      selectedTags: prev.selectedTags.includes(tag)
-        ? prev.selectedTags.filter((t) => t !== tag)
-        : [...prev.selectedTags, tag],
+      roomLogoFile: null,
+      roomLogo: null,
+      isUploadingRoomLogo: false,
     }));
   };
 
@@ -152,7 +214,7 @@ export function OfferForm({
           createRoom: formData.createRoom,
           roomName: formData.roomName || `Offer: ${formData.title}`,
           roomLogo: formData.roomLogo || null,
-        }
+        },
       };
 
       await onSave(offerData);
@@ -177,62 +239,70 @@ export function OfferForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* Basic Information */}
-      <div className="p-4 rounded-lg border border-primary/20">
-        <p className="mb-4">Basic Information</p>
+      <div className="">
+        <p className="mb-4 text-lg">Basic Information</p>
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="title" className="figma-paragraph">
+              Offer Title *
+            </Label>
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => handleInputChange("title", e.target.value)}
+              placeholder="e.g., Instagram Ad Campaign"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="description" className="figma-paragraph">
+              Description
+            </Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => handleInputChange("description", e.target.value)}
+              placeholder="Describe the offer details..."
+              rows={4}
+            />
+          </div>
+          <div className="flex flex-wrap gap-6">
             <div className="space-y-2">
-              <Label htmlFor="title">Offer Title *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => handleInputChange("title", e.target.value)}
-                placeholder="e.g., Instagram Ad Campaign"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="clientId">Client *</Label>
-              <Select
-                value={formData.clientId}
-                onValueChange={(value) => handleInputChange("clientId", value)}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a client" />
-                </SelectTrigger>
-                <SelectContent>
+              <Label htmlFor="clientId" className="figma-paragraph">
+                Client *
+              </Label>
+              {/* Custom select instead of shadcn/ui Select */}
+              <div className="relative">
+                <select
+                  id="clientId"
+                  value={formData.clientId}
+                  onChange={(e) => handleInputChange("clientId", e.target.value)}
+                  required
+                  className="cursor-pointer block w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none appearance-none"
+                  style={{ WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
+                >
+                  <option value="" disabled>
+                    Select a client
+                  </option>
                   {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
+                    <option className="cursor-pointer" key={client.id} value={client.id}>
                       {client.name}
-                    </SelectItem>
+                    </option>
                   ))}
-                </SelectContent>
-              </Select>
+                </select>
+                {/* Custom dropdown image (chevron) */}
+                <span className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                    <path d="M6 8L10 12L14 8" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </span>
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => handleInputChange("status", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="validUntil">Valid Until</Label>
+              <Label htmlFor="validUntil" className="figma-paragraph">
+                Valid Until
+              </Label>
               <Input
                 id="validUntil"
                 type="date"
@@ -243,51 +313,95 @@ export function OfferForm({
               />
             </div>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
-              placeholder="Describe the offer details..."
-              rows={4}
-            />
-          </div>
         </div>
       </div>
 
       {/* Messaging Room */}
-      <div className="p-4 rounded-lg border border-primary/20">
-        <p className="mb-4">Offer Room</p>
+      <div className="">
+        <p className="mb-4 text-lg">Offer Room</p>
         <div className="space-y-6">
           <div className="flex items-center gap-2">
             <input
               id="createRoom"
               type="checkbox"
               checked={formData.createRoom}
-              onChange={(e) => handleInputChange("createRoom", e.target.checked)}
+              onChange={(e) =>
+                handleInputChange("createRoom", e.target.checked)
+              }
             />
-            <Label htmlFor="createRoom">Create a discussion room for this offer</Label>
+            <Label htmlFor="createRoom">
+              Create a discussion room for this offer
+            </Label>
           </div>
           {formData.createRoom && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex gap-6 items-center">
+              {/* Room Logo Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  {formData.roomLogo ? (
+                    <div className="relative">
+                      <img
+                        src={formData.roomLogo}
+                        alt="Room logo preview"
+                        className="w-20 h-20 object-cover rounded-full"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full p-0"
+                        onClick={removeRoomLogo}
+                        disabled={formData.isUploadingRoomLogo}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center">
+                        <Image className="w-8 h-8 text-red-500" />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-gray-600 text-white hover:bg-gray-700 p-0"
+                        onClick={() =>
+                          document.getElementById("room-logo-upload")?.click()
+                        }
+                        disabled={formData.isUploadingRoomLogo}
+                      >
+                        {formData.isUploadingRoomLogo ? (
+                          <div className="w-3 h-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        ) : (
+                          <span className="text-sm">+</span>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    onChange={handleRoomLogoUpload}
+                    className="hidden"
+                    id="room-logo-upload"
+                    accept="image/*"
+                  />
+                </div>
+              </div>
+
+              {/* Room Name Section */}
               <div className="space-y-2">
-                <Label htmlFor="roomName">Room name</Label>
+                <Label htmlFor="roomName" className="figma-paragraph">
+                  Room Name
+                </Label>
                 <Input
                   id="roomName"
                   value={formData.roomName}
-                  onChange={(e) => handleInputChange("roomName", e.target.value)}
-                  placeholder={`Offer: ${formData.title || "New"}`}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="roomLogo">Room logo URL (optional)</Label>
-                <Input
-                  id="roomLogo"
-                  value={formData.roomLogo || ''}
-                  onChange={(e) => handleInputChange("roomLogo", e.target.value)}
-                  placeholder="https://..."
+                  onChange={(e) =>
+                    handleInputChange("roomName", e.target.value)
+                  }
+                  placeholder="Room Name"
+                  className=""
                 />
               </div>
             </div>
@@ -295,35 +409,13 @@ export function OfferForm({
         </div>
       </div>
 
-      {/* Service Tags */}
-      <div className="p-4 rounded-lg border border-primary/20">
-          <p className="mb-4">Service Tags</p>
-        <div>
-          <div className="flex flex-wrap gap-2">
-            {serviceTags.map((tag) => (
-              <Badge
-                key={tag}
-                variant={
-                  formData.selectedTags.includes(tag) ? "default" : "outline"
-                }
-                className="cursor-pointer"
-                onClick={() => handleTagToggle(tag)}
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Project Assets */}
-      <div className="p-4 rounded-lg border border-primary/20">
-        <p className="mb-4">Project Assets</p>
-        <div>
-        </div>
+      <div className="">
+        <p className="mb-4 text-lg">Project Assets</p>
+        <div></div>
         <div className="space-y-4">
           <div className="border-2 border-dashed border-primary/20 rounded-lg p-6 text-center">
-            <Upload className="w-8 h-8 mx-auto mb-2 text-primary/60" />
+            <UploadIcon className="w-8 h-8 mx-auto mb-2 text-primary/60" />
             <p className="text-sm text-foreground/60 mb-4">
               Upload files to attach to this offer
             </p>

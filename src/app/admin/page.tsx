@@ -1,12 +1,12 @@
+import { getAdminDashboardStats } from "@/lib/admin-queries";
 import NextImage from "next/image";
-import Link from "next/link";
-import { getAdminDashboardStats, getRecentNews } from "@/lib/admin-queries";
 import { requireAdmin } from "@/lib/auth";
 import { StatsCards } from "@/components/admin/stats-cards";
 import { ClientsTable } from "@/components/admin/clients-table";
 import { MessagesCard } from "@/components/admin/messages-card";
 import { QuickActions } from "@/components/admin/quick-actions";
 import { getGreeting, getGreetingSubtitle } from "@/utils/greeting";
+import Image from "next/image";
 
 // src/app/admin/page.tsx
 
@@ -50,37 +50,39 @@ export default async function AdminDashboard() {
           {/* Messages card */}
           <MessagesCard />
 
-          {/* Recent news card */}
-          <div className="bg-transparent border-primary/20 px-7 py-6 border rounded-lg space-y-6">
-            <div className="flex items-center gap-3">
-              <NextImage
-                src="/icons/news.svg"
-                alt="Recent News"
-                width={20}
-                height={20}
-              />
-              <p className="figma-paragraph text-foreground">
-                Recent News Posted
-              </p>
-            </div>
-            <div className="space-y-4">
-              {newsData.map((newsItem) => (
-                <div className="flex items-start gap-3" key={newsItem.id}>
-                  {newsItem.featuredImage ? (
-                    <div className="flex-shrink-0">
-                      <NextImage
-                        src={newsItem.featuredImage}
-                        alt={newsItem.title}
-                        width={48}
-                        height={48}
-                        className="rounded object-cover w-12 h-12"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-12 h-12 bg-gradient-to-r from-figma-primary to-figma-primary-purple-1 rounded flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs text-figma-text-white">ai</span>
-                    </div>
-                  )}
+            {/* Recent news card - placeholder for now */}
+            <div className="bg-transparent border-primary/20 px-7 py-6 border rounded-lg space-y-6">
+              <div className="flex items-center gap-3">
+                <Image
+                  src="/icons/news.svg"
+                  alt="Recent News"
+                  width={20}
+                  height={20}
+                />
+                <p className="figma-paragraph text-foreground">
+                  Recent News Posted
+                </p>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-8 bg-gradient-to-r from-figma-primary to-figma-primary-purple-1 rounded flex items-center justify-center">
+                    <span className="text-xs text-figma-text-white">AI</span>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium text-foreground mb-1">
+                      Achieve the Impossible with AI
+                    </h4>
+                    <p className="text-xs text-foreground/60">
+                      Lorem ipsum dolor sit amet consectetur...
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-8 bg-gradient-to-r from-figma-warning to-orange-400 rounded flex items-center justify-center">
+                    <span className="text-xs text-figma-text-white">VR</span>
+                  </div>
+
                   <div className="flex-1">
                     <h4 className="text-sm font-medium text-foreground mb-1">
                       {newsItem.title}

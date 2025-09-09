@@ -33,6 +33,11 @@ interface Offer {
     firstName: string;
     lastName: string;
   } | null;
+  room: {
+    id: string;
+    name: string;
+    logo?: string | null;
+  } | null;
 }
 
 export default function OfferPage() {

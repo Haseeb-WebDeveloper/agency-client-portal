@@ -56,15 +56,17 @@ interface MessagesClientShellProps {
   initialRooms: Room[];
   isAdmin: boolean;
   currentUserId: string;
+  initialSelectedRoomId?: string;
 }
 
 export default function MessagesClientShell({
   initialRooms,
   isAdmin,
   currentUserId,
+  initialSelectedRoomId,
 }: MessagesClientShellProps) {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(
-    initialRooms[0]?.id || null
+    initialSelectedRoomId || initialRooms[0]?.id || null
   );
   const [rooms, setRooms] = useState<Room[]>(initialRooms);
   const [messagesCache, setMessagesCache] = useState<Record<string, Message[]>>(

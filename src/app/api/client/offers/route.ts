@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       title: o.title,
       description: o.description,
       status: o.status,
-      media: o.media ? JSON.parse(o.media as string) : null,
+      media: o.media,
       validUntil: o.validUntil ? new Date(o.validUntil).toISOString() : null,
       createdAt: new Date(o.createdAt).toISOString(),
     }));

@@ -134,7 +134,7 @@ export function ContractForm({
 
   // Initialize uploaded files from existing contract
   useEffect(() => {
-    if (contract?.media) {
+    if (contract?.media && Array.isArray(contract.media)) {
       // Convert existing media to uploaded files format
       const existingFiles = contract.media.map((file, index) => ({
         url: file.url,

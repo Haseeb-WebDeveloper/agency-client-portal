@@ -16,6 +16,17 @@ export async function GET(
             lastName: true,
           },
         },
+        rooms: {
+          where: {
+            offerId: (await params).id,
+            isActive: true,
+          },
+          select: {
+            id: true,
+            name: true,
+            logo: true,
+          },
+        },
       },
     });
 
@@ -31,7 +42,7 @@ export async function GET(
       title: offer.title,
       description: offer.description,
       status: offer.status,
-      media: offer.media ? JSON.parse(offer.media as string) : null,
+      media: offer.media,
       validUntil: offer.validUntil,
       hasReviewed: offer.hasReviewed,
       createdAt: offer.createdAt,
@@ -44,6 +55,11 @@ export async function GET(
       creator: offer.creator ? {
         firstName: offer.creator.firstName,
         lastName: offer.creator.lastName,
+      } : null,
+      room: offer.rooms && offer.rooms.length > 0 ? {
+        id: offer.rooms[0].id,
+        name: offer.rooms[0].name,
+        logo: offer.rooms[0].logo,
       } : null,
     });
   } catch (error) {
@@ -78,7 +94,7 @@ export async function PUT(
         description,
         status,
         clientId,
-        media: media ? JSON.stringify(media) : undefined,
+        media: media || undefined,
         validUntil: validUntil ? new Date(validUntil) : null,
         hasReviewed: hasReviewed || false,
       },
@@ -91,7 +107,7 @@ export async function PUT(
         title: offer.title,
         description: offer.description,
         status: offer.status,
-        media: offer.media ? JSON.parse(offer.media as string) : null,
+        media: offer.media,
         validUntil: offer.validUntil,
         hasReviewed: offer.hasReviewed,
         updatedAt: offer.updatedAt,
