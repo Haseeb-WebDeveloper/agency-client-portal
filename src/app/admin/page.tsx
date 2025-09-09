@@ -19,6 +19,7 @@ export default async function AdminDashboard() {
 
   // Fetch news data
   const newsData = await getRecentNews(5);
+  const newsData = await getRecentNews(5);
 
   return (
     <div className="space-y-6 px-8 py-6">

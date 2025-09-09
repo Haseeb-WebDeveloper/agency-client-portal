@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,9 +8,389 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ==============================================
-// ENUMS
-// ==============================================
+model User {
+  id                  String               @id @default(uuid())
+  authId              String               @unique
+  email               String               @unique
+  firstName           String
+  lastName            String
+  avatar              String?
+  role                UserRole
+  isActive            Boolean              @default(true)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  createdBy           String?
+  updatedBy           String?
+  deletedAt           DateTime?
+  activities          Activity[]
+  agencyMembership    AgencyMembership?
+  clientMemberships   ClientMembership[]
+  contractAssignments ContractAssignment[]
+  createdContracts    Contract[]           @relation("ContractCreator")
+  messages            Message[]
+  createdNews         News[]               @relation("NewsCreator")
+  createdOffers       Offer[]              @relation("OfferCreator")
+  grantedPermissions  Permission[]         @relation("PermissionGranter")
+  permissions         Permission[]
+  roomParticipants    RoomParticipant[]
+  assignedTasks       Task[]               @relation("TaskAssignee")
+  createdTasks        Task[]               @relation("TaskCreator")
+  updatedTasks        Task[]               @relation("TaskUpdater")
+
+  @@index([authId])
+  @@index([email])
+  @@index([role])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+model Client {
+  id          String             @id @default(uuid())
+  name        String
+  description String?
+  website     String?
+  logo        String?
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  createdBy   String?
+  updatedBy   String?
+  deletedAt   DateTime?
+  memberships ClientMembership[]
+  contracts   Contract[]
+  offers      Offer[]
+  rooms       Room[]
+
+  @@index([name])
+  @@index([deletedAt])
+  @@map("clients")
+}
+
+model ClientMembership {
+  id        String    @id @default(uuid())
+  userId    String
+  clientId  String
+  role      String    @default("member")
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+  client    Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, clientId])
+  @@index([userId])
+  @@index([clientId])
+  @@index([deletedAt])
+  @@map("client_memberships")
+}
+
+model AgencyMembership {
+  id        String               @id @default(uuid())
+  userId    String               @unique
+  function  AgencyMemberFunction
+  isActive  Boolean              @default(true)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([function])
+  @@index([deletedAt])
+  @@map("agency_memberships")
+}
+
+model Contract {
+  id                 String               @id @default(uuid())
+  clientId           String
+  title              String
+  description        String?
+  status             ContractStatus       @default(DRAFT)
+  startDate          DateTime?
+  endDate            DateTime?
+  value              Decimal?             @db.Decimal(10, 2)
+  currency           String               @default("USD")
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  createdBy          String?
+  updatedBy          String?
+  deletedAt          DateTime?
+  actualHours        Int                  @default(0)
+  budget             Decimal?             @db.Decimal(10, 2)
+  estimatedHours     Int?
+  priority           Int                  @default(3)
+  progressPercentage Int                  @default(0)
+  tags               String[]
+  activities         Activity[]
+  assignments        ContractAssignment[]
+  client             Client               @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  creator            User?                @relation("ContractCreator", fields: [createdBy], references: [id])
+  messages           Message[]
+  rooms              Room[]
+  tasks              Task[]
+  offers             Offer[]              @relation("OfferToContract")
+
+  @@index([clientId])
+  @@index([status])
+  @@index([progressPercentage])
+  @@index([priority])
+  @@index([deletedAt])
+  @@map("contracts")
+}
+
+model ContractAssignment {
+  id         String    @id @default(uuid())
+  contractId String
+  userId     String
+  role       String
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  createdBy  String?
+  updatedBy  String?
+  deletedAt  DateTime?
+  contract   Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([contractId, userId])
+  @@index([contractId])
+  @@index([userId])
+  @@index([deletedAt])
+  @@map("contract_assignments")
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  priority    String?    @default("medium")
+  dueDate     DateTime?
+  assignedTo  String?
+  order       Int?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  createdBy   String?
+  updatedBy   String?
+  deletedAt   DateTime?
+  contractId  String
+  assignee    User?      @relation("TaskAssignee", fields: [assignedTo], references: [id])
+  contract    Contract   @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  creator     User?      @relation("TaskCreator", fields: [createdBy], references: [id])
+  updater     User?      @relation("TaskUpdater", fields: [updatedBy], references: [id])
+
+  @@index([contractId])
+  @@index([status])
+  @@index([assignedTo])
+  @@index([dueDate])
+  @@index([order])
+  @@index([deletedAt])
+  @@map("tasks")
+}
+
+model Offer {
+  id          String      @id @default(uuid())
+  clientId    String
+  title       String
+  description String?
+  status      OfferStatus @default(DRAFT)
+  validUntil  DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  createdBy   String?
+  updatedBy   String?
+  deletedAt   DateTime?
+  hasReviewed Boolean     @default(false)
+  media       Json?
+  client      Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  creator     User?       @relation("OfferCreator", fields: [createdBy], references: [id])
+  rooms       Room[]
+  contracts   Contract[]  @relation("OfferToContract")
+
+  @@index([clientId])
+  @@index([status])
+  @@index([validUntil])
+  @@index([hasReviewed])
+  @@index([deletedAt])
+  @@map("offers")
+}
+
+model Room {
+  id           String            @id @default(uuid())
+  name         String
+  description  String?
+  type         RoomType
+  clientId     String?
+  isActive     Boolean           @default(true)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  createdBy    String?
+  updatedBy    String?
+  deletedAt    DateTime?
+  contractId   String?
+  logo         String?
+  offerId      String?
+  activities   Activity[]
+  messages     Message[]
+  participants RoomParticipant[]
+  client       Client?           @relation(fields: [clientId], references: [id])
+  contract     Contract?         @relation(fields: [contractId], references: [id])
+  offer        Offer?            @relation(fields: [offerId], references: [id])
+
+  @@index([type])
+  @@index([contractId])
+  @@index([clientId])
+  @@index([offerId])
+  @@index([deletedAt])
+  @@map("rooms")
+}
+
+model RoomParticipant {
+  id         String         @id @default(uuid())
+  roomId     String
+  userId     String
+  permission PermissionType @default(READ)
+  joinedAt   DateTime       @default(now())
+  isActive   Boolean        @default(true)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  createdBy  String?
+  updatedBy  String?
+  deletedAt  DateTime?
+  lastReadAt DateTime?
+  room       Room           @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@index([roomId])
+  @@index([userId])
+  @@index([permission])
+  @@index([deletedAt])
+  @@map("room_participants")
+}
+
+model Message {
+  id          String              @id @default(uuid())
+  roomId      String
+  userId      String
+  content     String
+  parentId    String?
+  isEdited    Boolean             @default(false)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  createdBy   String?
+  updatedBy   String?
+  deletedAt   DateTime?
+  contractId  String?
+  attachments MessageAttachment[]
+  contract    Contract?           @relation(fields: [contractId], references: [id])
+  parent      Message?            @relation("MessageReplies", fields: [parentId], references: [id])
+  replies     Message[]           @relation("MessageReplies")
+  room        Room                @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
+  @@index([userId])
+  @@index([contractId])
+  @@index([parentId])
+  @@index([deletedAt])
+  @@map("messages")
+}
+
+model MessageAttachment {
+  id        String    @id @default(uuid())
+  messageId String
+  fileName  String
+  filePath  String
+  fileSize  Int
+  mimeType  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+  message   Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@index([deletedAt])
+  @@map("message_attachments")
+}
+
+model Activity {
+  id         String       @id @default(uuid())
+  actorId    String
+  verb       ActivityVerb
+  targetType String
+  targetId   String
+  metadata   Json?
+  roomId     String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  createdBy  String?
+  updatedBy  String?
+  deletedAt  DateTime?
+  contractId String?
+  actor      User         @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  contract   Contract?    @relation(fields: [contractId], references: [id])
+  room       Room?        @relation(fields: [roomId], references: [id])
+
+  @@index([actorId])
+  @@index([targetType, targetId])
+  @@index([contractId])
+  @@index([roomId])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("activities")
+}
+
+model Permission {
+  id           String         @id @default(uuid())
+  userId       String
+  resourceType String
+  resourceId   String
+  permission   PermissionType
+  grantedBy    String
+  expiresAt    DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  createdBy    String?
+  updatedBy    String?
+  deletedAt    DateTime?
+  granter      User           @relation("PermissionGranter", fields: [grantedBy], references: [id])
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, resourceType, resourceId])
+  @@index([userId])
+  @@index([resourceType, resourceId])
+  @@index([permission])
+  @@index([expiresAt])
+  @@index([deletedAt])
+  @@map("permissions")
+}
+
+model News {
+  id            String    @id @default(uuid())
+  title         String
+  description   String?
+  featuredImage String?
+  content       String
+  sendTo        String[]
+  sendToAll     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  createdBy     String?
+  updatedBy     String?
+  deletedAt     DateTime?
+  creator       User?     @relation("NewsCreator", fields: [createdBy], references: [id])
+
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("news")
+}
 
 enum UserRole {
   PLATFORM_ADMIN
@@ -94,482 +468,4 @@ enum TaskStatus {
   COMPLETED
   CANCELLED
   ON_HOLD
-}
-
-// ==============================================
-// CORE USER & ORGANIZATION TABLES
-// ==============================================
-
-model User {
-  id        String   @id @default(uuid())
-  authId    String   @unique // Maps to auth.users.id
-  email     String   @unique
-  firstName String
-  lastName  String
-  avatar    String?
-  role      UserRole
-  isActive  Boolean  @default(true)
-
-  // Audit fields
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  createdBy String?
-  updatedBy String?
-  deletedAt DateTime?
-
-  // Relations
-  clientMemberships    ClientMembership[]
-  agencyMembership     AgencyMembership?
-  roomParticipants     RoomParticipant[]
-  contractAssignments  ContractAssignment[]
-  activities           Activity[]
-  messages             Message[]
-  createdContracts     Contract[]          @relation("ContractCreator")
-  createdOffers        Offer[]             @relation("OfferCreator")
-  grantedPermissions   Permission[]        @relation("PermissionGranter")
-  permissions          Permission[]
-  assignedTasks        Task[]              @relation("TaskAssignee")
-  createdTasks         Task[]              @relation("TaskCreator")
-  updatedTasks         Task[]              @relation("TaskUpdater")
-  createdNews          News[]              @relation("NewsCreator")
-
-  @@index([authId])
-  @@index([email])
-  @@index([role])
-  @@index([deletedAt])
-  @@map("users")
-}
-
-model Client {
-  id          String  @id @default(uuid())
-  name        String
-  description String?
-  website     String?
-  logo        String?
-  isActive    Boolean @default(true)
-
-  // Audit fields
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  createdBy String?
-  updatedBy String?
-  deletedAt DateTime?
-
-  // Relations
-  memberships ClientMembership[]
-  contracts   Contract[]
-  offers      Offer[]
-  rooms       Room[]
-
-  @@index([name])
-  @@index([deletedAt])
-  @@map("clients")
-}
-
-model ClientMembership {
-  id       String  @id @default(uuid())
-  userId   String
-  clientId String
-  role     String  @default("member") // client-specific role
-  isActive Boolean @default(true)
-
-  // Audit fields
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  createdBy String?
-  updatedBy String?
-  deletedAt DateTime?
-
-  // Relations
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, clientId])
-  @@index([userId])
-  @@index([clientId])
-  @@index([deletedAt])
-  @@map("client_memberships")
-}
-
-model AgencyMembership {
-  id       String               @id @default(uuid())
-  userId   String               @unique
-  function AgencyMemberFunction
-  isActive Boolean              @default(true)
-
-  // Audit fields
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  createdBy String?
-  updatedBy String?
-  deletedAt DateTime?
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([function])
-  @@index([deletedAt])
-  @@map("agency_memberships")
-}
-
-// ==============================================
-// CONTRACTS
-// ==============================================
-
-model Contract {
-  id          String         @id @default(uuid())
-  clientId    String
-  title       String
-  description String?
-  status      ContractStatus @default(DRAFT)
-  startDate   DateTime?
-  endDate     DateTime?
-  value       Decimal?       @db.Decimal(10, 2)
-  currency    String         @default("USD")
-  budget      Decimal?       @db.Decimal(10, 2) // Moved from Project
-  
-  // Progress tracking fields
-  progressPercentage Int     @default(0) // 0-100
-  estimatedHours     Int?    // Total estimated hours
-  actualHours        Int     @default(0) // Hours actually worked
-  priority           Int     @default(3) // 1=High, 2=Medium, 3=Low
-  tags               String[] // Contract tags for categorization
-
-  // Audit fields
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  createdBy String?
-  updatedBy String?
-  deletedAt DateTime?
-
-  // Relations
-  client       Client                @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  creator      User?                 @relation("ContractCreator", fields: [createdBy], references: [id])
-  offers       Offer[]               @relation("OfferToContract")
-  assignments  ContractAssignment[] 
-  tasks        Task[]               
-  rooms        Room[]               
-  messages     Message[]            
-  activities   Activity[]           
-
-  @@index([clientId])
-  @@index([status])
-  @@index([progressPercentage])
-  @@index([priority])
-  @@index([deletedAt])
-  @@map("contracts")
-}
-
-model ContractAssignment {
-  id          String  @id @default(uuid())
-  contractId  String
-  userId      String
-  role        String // contract-specific role
-  isActive    Boolean @default(true)
-
-  // Audit fields
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  createdBy String?
-  updatedBy String?
-  deletedAt DateTime?
-
-  // Relations
-  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([contractId, userId])
-  @@index([contractId])
-  @@index([userId])
-  @@index([deletedAt])
-  @@map("contract_assignments")
-}
-
-// ==============================================
-// TASKS
-// ==============================================
-
-model Task {
-  id          String     @id @default(uuid())
-  contractId  String
-  title       String
-  description String?
-  status      TaskStatus @default(TODO)
-  priority    String?    @default("medium") // low, medium, high, urgent
-  dueDate     DateTime?
-  assignedTo  String?    // User ID who is assigned to this task
-  order       Int?       // For task ordering within contract
-
-  // Audit fields
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  createdBy String?
-  updatedBy String?
-  deletedAt DateTime?
-
-  // Relations
-  contract  Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  assignee  User?    @relation("TaskAssignee", fields: [assignedTo], references: [id])
-  creator   User?    @relation("TaskCreator", fields: [createdBy], references: [id])
-  updater   User?    @relation("TaskUpdater", fields: [updatedBy], references: [id])
-
-  @@index([contractId])
-  @@index([status])
-  @@index([assignedTo])
-  @@index([dueDate])
-  @@index([order])
-  @@index([deletedAt])
-  @@map("tasks")
-}
-
-// ==============================================
-// OFFERS
-// ==============================================
-
-model Offer {
-  id          String      @id @default(uuid())
-  clientId    String
-  title       String
-  description String?
-  status      OfferStatus @default(DRAFT)
-  media       Json?       // Array of media files with url, type, etc.
-  validUntil  DateTime?
-  hasReviewed Boolean     @default(false)
-
-  // Audit fields
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  createdBy String?
-  updatedBy String?
-  deletedAt DateTime?
-
-  // Relations
-  client    Client     @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  creator   User?      @relation("OfferCreator", fields: [createdBy], references: [id])
-  contracts Contract[] @relation("OfferToContract")
-  rooms     Room[]
-
-  @@index([clientId])
-  @@index([status])
-  @@index([validUntil])
-  @@index([hasReviewed])
-  @@index([deletedAt])
-  @@map("offers")
-}
-
-// ==============================================
-// MESSAGING SYSTEM
-// ==============================================
-
-model Room {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  type        RoomType
-  contractId  String? // null for general rooms
-  clientId    String? // for client-specific rooms
-  offerId     String? // for offer-specific rooms
-  logo        String?
-  isActive    Boolean  @default(true)
-
-  // Audit fields
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  createdBy String?
-  updatedBy String?
-  deletedAt DateTime?
-
-  // Relations
-  contract     Contract?          @relation(fields: [contractId], references: [id])
-  client       Client?            @relation(fields: [clientId], references: [id])
-  offer        Offer?             @relation(fields: [offerId], references: [id])
-  participants RoomParticipant[]
-  messages     Message[]
-  activities   Activity[]
-
-  @@index([type])
-  @@index([contractId])
-  @@index([clientId])
-  @@index([offerId])
-  @@index([deletedAt])
-  @@map("rooms")
-}
-
-model RoomParticipant {
-  id         String         @id @default(uuid())
-  roomId     String
-  userId     String
-  permission PermissionType @default(READ)
-  joinedAt   DateTime       @default(now())
-  isActive   Boolean        @default(true)
-  lastReadAt DateTime?
-
-  // Audit fields
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  createdBy String?
-  updatedBy String?
-  deletedAt DateTime?
-
-  // Relations
-  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([roomId, userId])
-  @@index([roomId])
-  @@index([userId])
-  @@index([permission])
-  @@index([deletedAt])
-  @@map("room_participants")
-}
-
-model Message {
-  id         String  @id @default(uuid())
-  roomId     String
-  userId     String
-  content    String
-  contractId String? // optional contract linkage
-  parentId   String? // for replies
-  isEdited   Boolean @default(false)
-
-  // Audit fields
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  createdBy String?
-  updatedBy String?
-  deletedAt DateTime?
-
-  // Relations
-  room        Room                @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  contract    Contract?           @relation(fields: [contractId], references: [id])
-  parent      Message?            @relation("MessageReplies", fields: [parentId], references: [id])
-  replies     Message[]           @relation("MessageReplies")
-  attachments MessageAttachment[]
-
-  @@index([roomId, createdAt])
-  @@index([userId])
-  @@index([contractId])
-  @@index([parentId])
-  @@index([deletedAt])
-  @@map("messages")
-}
-
-model MessageAttachment {
-  id        String @id @default(uuid())
-  messageId String
-  fileName  String
-  filePath  String
-  fileSize  Int
-  mimeType  String
-
-  // Audit fields
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  createdBy String?
-  updatedBy String?
-  deletedAt DateTime?
-
-  // Relations
-  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-
-  @@index([messageId])
-  @@index([deletedAt])
-  @@map("message_attachments")
-}
-
-// ==============================================
-// ACTIVITY TRACKING
-// ==============================================
-
-model Activity {
-  id         String       @id @default(uuid())
-  actorId    String // User who performed the action
-  verb       ActivityVerb
-  targetType String // "contract", "offer", "message", etc.
-  targetId   String // ID of the target entity
-  metadata   Json? // Additional context data
-  contractId String? // Optional contract context
-  roomId     String? // Optional room context
-
-  // Audit fields
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  createdBy String?
-  updatedBy String?
-  deletedAt DateTime?
-
-  // Relations
-  actor    User      @relation(fields: [actorId], references: [id], onDelete: Cascade)
-  contract Contract? @relation(fields: [contractId], references: [id])
-  room     Room?     @relation(fields: [roomId], references: [id])
-
-  @@index([actorId])
-  @@index([targetType, targetId])
-  @@index([contractId])
-  @@index([roomId])
-  @@index([createdAt])
-  @@index([deletedAt])
-  @@map("activities")
-}
-
-// ==============================================
-// PERMISSIONS & ACCESS CONTROL
-// ==============================================
-
-model Permission {
-  id           String         @id @default(uuid())
-  userId       String
-  resourceType String // "room", "project", "contract", etc.
-  resourceId   String
-  permission   PermissionType
-  grantedBy    String
-  expiresAt    DateTime?
-
-  // Audit fields
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  createdBy String?
-  updatedBy String?
-  deletedAt DateTime?
-
-  // Relations
-  user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  granter User @relation("PermissionGranter", fields: [grantedBy], references: [id])
-
-  @@unique([userId, resourceType, resourceId])
-  @@index([userId])
-  @@index([resourceType, resourceId])
-  @@index([permission])
-  @@index([expiresAt])
-  @@index([deletedAt])
-  @@map("permissions")
-}
-
-// ==============================================
-// NEWS
-// ==============================================
-
-model News {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  featuredImage String?
-  content     String
-  sendTo      String[] // Array of user IDs or client IDs
-  sendToAll   Boolean  @default(false)
-
-  // Audit fields
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  createdBy String?
-  updatedBy String?
-  deletedAt DateTime?
-
-  // Relations
-  creator User? @relation("NewsCreator", fields: [createdBy], references: [id])
-
-  @@index([createdAt])
-  @@index([deletedAt])
-  @@map("news")
 }

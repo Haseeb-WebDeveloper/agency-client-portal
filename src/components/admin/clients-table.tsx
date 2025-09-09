@@ -77,11 +77,11 @@ export function ClientsTable({ clients }: ClientsTableProps) {
                             ? new Date(client.lastActivity)
                             : client.lastActivity;
                         if (isNaN(date.getTime())) {
-                          return "Lorem ipsum dolor sit amet consectetur ...";
+                          return "No activity yet";
                         }
                         return formatDistanceToNow(date, { addSuffix: true });
                       } catch (error) {
-                        return "Lorem ipsum dolor sit amet consectetur ...";
+                        return "No activity yet";
                       }
                     })()}
                   </div>
