@@ -107,7 +107,7 @@ export async function PUT(
         title: offer.title,
         description: offer.description,
         status: offer.status,
-        media: offer.media,
+        media: offer.media || null,
         validUntil: offer.validUntil,
         hasReviewed: offer.hasReviewed,
         updatedAt: offer.updatedAt,

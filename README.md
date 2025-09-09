@@ -20,6 +20,17 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Loading System
+
+This application implements a comprehensive loading system with consistent UI across all pages:
+
+- **Global Loading**: Shows during route transitions
+- **Component Loading**: Shows during data fetching operations
+- **Skeleton Loading**: Provides content-aware loading states
+- **Chat Loading**: Specialized loading for chat interfaces
+
+For more details, see [LOADING_SYSTEM.md](md/LOADING_SYSTEM.md)
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
