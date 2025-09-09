@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { FileText, Calendar, RefreshCw } from "lucide-react";
+import { FileText, Calendar, RefreshCw, ExternalLink } from "lucide-react";
 import { AvatarStack } from "@/components/ui/avatar-stack";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
@@ -35,15 +36,16 @@ export function ClientCard({ client }: ClientCardProps) {
   const teamMembers = client.teamMembers || [];
   const totalTeamMembers = client.totalTeamMembers || 0;
 
-  const displayMembers = showAllMembers
-    ? teamMembers
-    : teamMembers.slice(0, 4);
+  const displayMembers = showAllMembers ? teamMembers : teamMembers.slice(0, 4);
   const remainingCount = totalTeamMembers - 4;
 
   return (
     <div className="border border-border rounded-xl p-6 hover:border-primary/40 transition-all duration-200 group">
       {/* Header with logo and name */}
-      <div className="flex items-center gap-4 mb-6">
+      <Link
+        href={`/admin/clients/${client.id}`}
+        className="flex items-center gap-4 mb-6"
+      >
         {client.logo ? (
           <div className="w-16 h-16 rounded-full">
             <Image
@@ -62,7 +64,7 @@ export function ClientCard({ client }: ClientCardProps) {
         <div className="flex-1 min-w-0">
           <h3 className="figma-paragraph-bold">{client.name}</h3>
         </div>
-      </div>
+      </Link>
 
       {/* Stats */}
       <div className="flex items-center gap-6 mb-6">
@@ -111,18 +113,17 @@ export function ClientCard({ client }: ClientCardProps) {
             try {
               const date = new Date(client.lastActivity);
               if (isNaN(date.getTime())) {
-                return 'Unknown';
+                return "Unknown";
               }
               return formatDistanceToNow(date, {
                 addSuffix: true,
               });
             } catch (error) {
-              return 'Unknown';
+              return "Unknown";
             }
           })()}
         </span>
       </div>
-
 
       {/* Team Members */}
       <div className="flex items-center justify-between">
