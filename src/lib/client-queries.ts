@@ -133,6 +133,29 @@ export async function getClientDashboardStats(userId: string) {
 }
 
 /**
+ * Get recent news items for client dashboard
+ */
+export async function getClientRecentNews(limit: number = 5) {
+  const newsItems = await prisma.news.findMany({
+    where: {
+      deletedAt: null
+    },
+    orderBy: { 
+      createdAt: 'desc' 
+    },
+    take: limit,
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      featuredImage: true,
+    }
+  });
+
+  return newsItems;
+}
+
+/**
  * Fetch paginated contracts for the current client (for client UI list)
  */
 export async function getClientContracts(params: { userId: string; page?: number; limit?: number; search?: string; status?: string; }) {
@@ -202,4 +225,59 @@ export async function getClientContracts(params: { userId: string; page?: number
       hasPrev: page > 1,
     },
   };
+}
+
+/**
+ * Get client news items
+ */
+export async function getClientNews(userId: string) {
+  try {
+    // First get the user to verify they exist
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+        deletedAt: null,
+      },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Check if user is a client or client member
+    if (user.role !== 'CLIENT' && user.role !== 'CLIENT_MEMBER') {
+      throw new Error('Access denied');
+    }
+
+    const news = await prisma.news.findMany({
+      where: {
+        deletedAt: null,
+        OR: [
+          { sendToAll: true },
+          { sendTo: { has: userId } },
+        ]
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        featuredImage: true,
+        content: true,
+        createdAt: true,
+        creator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          }
+        }
+      }
+    });
+
+    return news;
+  } catch (error) {
+    console.error('Error fetching client news:', error);
+    throw error;
+  }
 }

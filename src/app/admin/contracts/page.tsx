@@ -141,7 +141,7 @@ function ContractsContent() {
             />
             <button
               onClick={() => window.location.href = '/admin/contracts/new'}
-              className="cursor-pointer px-6 py-2 border border-primary/20 hover:border-primary/40 rounded-lg transition-all"
+              className="cursor-pointer bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF] px-6 py-2 rounded-lg transition-all"
             >
               Create Contract
             </button>

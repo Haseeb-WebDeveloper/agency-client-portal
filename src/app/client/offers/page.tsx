@@ -73,7 +73,7 @@ export default function ClientOffersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-8 py-6">
       <div className="flex items-center justify-between">
         <h1 className="figma-h3">Your Offers</h1>
         {/* Reuse contracts filters with status list typed in UI copy */}

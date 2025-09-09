@@ -131,6 +131,7 @@ model User {
   assignedTasks        Task[]              @relation("TaskAssignee")
   createdTasks         Task[]              @relation("TaskCreator")
   updatedTasks         Task[]              @relation("TaskUpdater")
+  createdNews          News[]              @relation("NewsCreator")
 
   @@index([authId])
   @@index([email])
@@ -543,4 +544,32 @@ model Permission {
   @@index([expiresAt])
   @@index([deletedAt])
   @@map("permissions")
+}
+
+// ==============================================
+// NEWS
+// ==============================================
+
+model News {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  featuredImage String?
+  content     String
+  sendTo      String[] // Array of user IDs or client IDs
+  sendToAll   Boolean  @default(false)
+
+  // Audit fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+
+  // Relations
+  creator User? @relation("NewsCreator", fields: [createdBy], references: [id])
+
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("news")
 }
