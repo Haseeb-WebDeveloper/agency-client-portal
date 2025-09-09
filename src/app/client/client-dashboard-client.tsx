@@ -6,6 +6,9 @@ import { ClientStatsCards } from "@/components/client/client-stats-cards";
 import { OngoingContracts } from "@/components/client/ongoing-contracts";
 import { MessagesCard } from "@/components/client/messages-card";
 import { getGreeting, getGreetingSubtitle } from "@/utils/greeting";
+import Link from "next/link";
+
+// src/app/client/client-dashboard-client.tsx
 
 interface SerializedData {
   user: {
@@ -44,6 +47,13 @@ interface SerializedData {
       room: {
         name: string;
       };
+    }[];
+    recentNews: {
+      // Add this property for news data
+      id: string;
+      title: string;
+      description: string;
+      featuredImage: string | null;
     }[];
   };
 }
@@ -84,7 +94,7 @@ export default function ClientDashboardClient({
           {/* Messages card */}
           <MessagesCard messages={dashboardData.recentMessages} />
 
-          {/* Recent news card - placeholder for now */}
+          {/* Recent news card */}
           <div className="bg-transparent border-primary/20 px-7 py-6 border rounded-lg space-y-6">
             <div className="flex items-center gap-3">
               <NextImage
@@ -98,38 +108,41 @@ export default function ClientDashboardClient({
               </p>
             </div>
             <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="w-12 h-8 bg-gradient-to-r from-figma-primary to-figma-primary-purple-1 rounded flex items-center justify-center">
-                  <span className="text-xs text-figma-text-white">AI</span>
+              {dashboardData.recentNews.map((newsItem) => (
+                <div className="flex items-start gap-3" key={newsItem.id}>
+                  {newsItem.featuredImage ? (
+                    <div className="flex-shrink-0">
+                      <NextImage
+                        src={newsItem.featuredImage}
+                        alt={newsItem.title}
+                        width={48}
+                        height={48}
+                        className="rounded object-cover w-12 h-12"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 bg-gradient-to-r from-figma-primary to-figma-primary-purple-1 rounded flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs text-figma-text-white">AI</span>
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium text-foreground mb-1">
+                      {newsItem.title}
+                    </h4>
+                    <p className="text-xs text-foreground/60">
+                      {newsItem.description}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h4 className="text-sm font-medium text-foreground mb-1">
-                    Achieve the Impossible with AI
-                  </h4>
-                  <p className="text-xs text-foreground/60">
-                    Lorem ipsum dolor sit amet consectetur...
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="w-12 h-8 bg-gradient-to-r from-figma-warning to-orange-400 rounded flex items-center justify-center">
-                  <span className="text-xs text-figma-text-white">VR</span>
-                </div>
-                <div className="flex-1">
-                  <h4 className="text-sm font-medium text-foreground mb-1">
-                    Boost your brand with VR services
-                  </h4>
-                  <p className="text-xs text-foreground/60">
-                    Lorem ipsum dolor sit amet consectetur...
-                  </p>
-                </div>
-              </div>
+              ))}
 
               <div className="pt-2">
-                <button className="text-sm text-figma-primary hover:text-figma-primary-purple-1 transition-colors">
+                <Link
+                  href="/client/news"
+                  className="text-sm text-figma-primary hover:text-figma-primary-purple-1 transition-colors"
+                >
                   View all news
-                </button>
+                </Link>
               </div>
             </div>
           </div>

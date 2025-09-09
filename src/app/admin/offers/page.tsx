@@ -128,7 +128,7 @@ function OffersContent() {
   }
 
   return (
-    <div className="space-y-16  px-8 py-6">
+    <div className="space-y-16  px-8 py-6 ">
         {/* Header with Search and Filter */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex-1">
@@ -141,7 +141,7 @@ function OffersContent() {
             />
             <button
               onClick={() => window.location.href = '/admin/offers/new'}
-              className="cursor-pointer px-6 py-2 border border-primary/20 hover:border-primary/40 rounded-lg transition-all"
+              className="cursor-pointer px-6 py-2  bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF] rounded-lg transition-all"
             >
               Create Offer
             </button>
