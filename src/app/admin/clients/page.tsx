@@ -97,7 +97,7 @@ function ClientsContent() {
 
   if (isLoading && !clientsData) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6  px-8 py-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="figma-h3">Our Clients</h1>
@@ -115,7 +115,7 @@ function ClientsContent() {
 
   if (error) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6  px-8 py-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="figma-h3">Our Clients</h1>
@@ -141,7 +141,7 @@ function ClientsContent() {
   }
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-12  px-8 py-6">
         {/* Header with Search, Filter, and Add */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex-1">
@@ -154,7 +154,7 @@ function ClientsContent() {
             />
             <button
               onClick={() => setShowCreateModal(true)}
-              className="cursor-pointer px-6 py-2 border border-primary/20 hover:border-primary/40 rounded-lg transition-all"
+              className="cursor-pointer px-6 py-2 bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF] rounded-lg transition-all"
             >
              Create Client
             </button>
@@ -219,7 +219,7 @@ function ClientsContent() {
 export default function ClientsPage() {
   return (
     <Suspense fallback={
-      <div className="space-y-6">
+      <div className="space-y-6  px-8 py-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="figma-h3">Our Clients</h1>

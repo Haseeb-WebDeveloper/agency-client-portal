@@ -1,6 +1,8 @@
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
+import Link from "next/link";
+import { listMyRooms } from "@/actions/messaging";
 
 interface Message {
   id: string;
@@ -17,11 +19,8 @@ interface Message {
   };
 }
 
-interface MessagesCardProps {
-  messages: Message[];
-}
-
-export function MessagesCard({ messages }: MessagesCardProps) {
+export async function MessagesCard() {
+  const rooms = await listMyRooms();
   return (
     <div className="bg-transparent border-primary/20 px-7 py-6 border rounded-lg space-y-6">
       <div className="flex items-center justify-between">
@@ -34,46 +33,37 @@ export function MessagesCard({ messages }: MessagesCardProps) {
           />
           <p className="figma-paragraph text-foreground">Messages</p>
         </div>
-        <span className="bg-figma-warning text-figma-text-white text-xs px-2 py-1 rounded-full">
-          {messages.length}+ unseen
-        </span>
+        <Link href="/messages" className="text-sm text-figma-primary">
+          View all
+        </Link>
       </div>
       
       <div className="space-y-4">
-        {messages.slice(0, 2).map((message) => (
-          <div key={message.id} className="flex items-start gap-3">
+        {rooms.slice(0, 3).map((r) => (
+          <Link key={r.id} href={`/messages/${r.id}`} className="flex items-start gap-3">
             <Avatar className="w-8 h-8">
-              <AvatarImage src={message.user.avatar || ""} alt={`${message.user.firstName} ${message.user.lastName}`} />
+              <AvatarImage src={r.logo || ""} alt={r.name} />
               <AvatarFallback className="bg-muted text-muted-foreground text-xs">
-                {message.user.firstName.charAt(0)}{message.user.lastName.charAt(0)}
+                {r.name.slice(0,2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm font-medium text-foreground">
-                  {message.user.firstName} {message.user.lastName}
+                  {r.name}
                 </span>
-                <span className="text-xs text-foreground/60">
-                  {formatDistanceToNow(message.createdAt, { addSuffix: true })}
-                </span>
+                {r.latestMessage?.createdAt && (
+                  <span className="text-xs text-foreground/60">
+                    {formatDistanceToNow(new Date(r.latestMessage.createdAt), { addSuffix: true })}
+                  </span>
+                )}
               </div>
               <p className="text-sm text-foreground/80 truncate">
-                {message.content.length > 50 
-                  ? `${message.content.substring(0, 50)}...` 
-                  : message.content
-                }
+                {r.latestMessage?.content || 'No messages yet'}
               </p>
             </div>
-          </div>
+          </Link>
         ))}
-        
-        {messages.length > 2 && (
-          <div className="pt-2">
-            <button className="text-sm text-figma-primary hover:text-figma-primary-purple-1 transition-colors">
-              View all messages
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

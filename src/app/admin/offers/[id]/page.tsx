@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { OfferForm } from "@/components/admin/offer-form";
+import { createOrUpdateOffer } from "@/actions/offers";
 import { MediaFile } from "@/types/models";
 import Link from "next/link";
 
@@ -94,38 +95,14 @@ export default function OfferPage() {
     try {
       setIsSaving(true);
       setError(null);
-
-      const url = isNew ? "/api/admin/offers" : `/api/admin/offers/${offerId}`;
-      const method = isNew ? "POST" : "PUT";
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(offerData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to save offer");
-      }
-
-      const result = await response.json();
-
+      const saved = await createOrUpdateOffer(isNew ? null : offerId, offerData);
       if (isNew) {
-        // Redirect to the new offer page
-        router.push(`/admin/offers/${result.offer.id}`);
+        router.push(`/admin/offers/${saved.id}`);
       } else {
-        // Update local state
-        setOffer((prev) => (prev ? { ...prev, ...result.offer } : null));
+        router.refresh();
       }
-
-      // Show success message (you could add a toast notification here)
-      console.log("Offer saved successfully");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save offer");
-      console.error("Error saving offer:", err);
     } finally {
       setIsSaving(false);
     }
@@ -133,7 +110,7 @@ export default function OfferPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6  px-8 py-6">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -146,7 +123,7 @@ export default function OfferPage() {
 
   if (error && !isNew) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6  px-8 py-6">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -169,7 +146,7 @@ export default function OfferPage() {
   }
 
   return (
-      <div className="space-y-8">
+      <div className="space-y-8  px-8 py-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>

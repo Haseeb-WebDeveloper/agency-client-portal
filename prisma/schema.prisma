@@ -131,6 +131,7 @@ model User {
   assignedTasks        Task[]              @relation("TaskAssignee")
   createdTasks         Task[]              @relation("TaskCreator")
   updatedTasks         Task[]              @relation("TaskUpdater")
+  createdNews          News[]              @relation("NewsCreator")
 
   @@index([authId])
   @@index([email])
@@ -346,6 +347,7 @@ model Offer {
   client    Client     @relation(fields: [clientId], references: [id], onDelete: Cascade)
   creator   User?      @relation("OfferCreator", fields: [createdBy], references: [id])
   contracts Contract[] @relation("OfferToContract")
+  rooms     Room[]
 
   @@index([clientId])
   @@index([status])
@@ -366,6 +368,8 @@ model Room {
   type        RoomType
   contractId  String? // null for general rooms
   clientId    String? // for client-specific rooms
+  offerId     String? // for offer-specific rooms
+  logo        String?
   isActive    Boolean  @default(true)
 
   // Audit fields
@@ -378,6 +382,7 @@ model Room {
   // Relations
   contract     Contract?          @relation(fields: [contractId], references: [id])
   client       Client?            @relation(fields: [clientId], references: [id])
+  offer        Offer?             @relation(fields: [offerId], references: [id])
   participants RoomParticipant[]
   messages     Message[]
   activities   Activity[]
@@ -385,6 +390,7 @@ model Room {
   @@index([type])
   @@index([contractId])
   @@index([clientId])
+  @@index([offerId])
   @@index([deletedAt])
   @@map("rooms")
 }
@@ -396,6 +402,7 @@ model RoomParticipant {
   permission PermissionType @default(READ)
   joinedAt   DateTime       @default(now())
   isActive   Boolean        @default(true)
+  lastReadAt DateTime?
 
   // Audit fields
   createdAt DateTime  @default(now())
@@ -537,4 +544,32 @@ model Permission {
   @@index([expiresAt])
   @@index([deletedAt])
   @@map("permissions")
+}
+
+// ==============================================
+// NEWS
+// ==============================================
+
+model News {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  featuredImage String?
+  content     String
+  sendTo      String[] // Array of user IDs or client IDs
+  sendToAll   Boolean  @default(false)
+
+  // Audit fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+  deletedAt DateTime?
+
+  // Relations
+  creator User? @relation("NewsCreator", fields: [createdBy], references: [id])
+
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("news")
 }

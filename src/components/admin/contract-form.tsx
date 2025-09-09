@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useFileUpload } from "@/hooks/use-file-upload";
-import { MediaFile } from "@/types/models";
+import { MediaFile, Contract } from "@/types/models";
 import {
   Calendar,
   Upload,
@@ -50,6 +50,7 @@ interface ContractFormProps {
     budget: number | null;
     priority: number;
     estimatedHours: number | null;
+    media: MediaFile[];
   } | null;
   clients: Client[];
   onSave: (contractData: any) => Promise<void>;

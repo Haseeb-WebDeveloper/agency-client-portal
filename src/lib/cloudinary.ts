@@ -1,6 +1,19 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { MediaFile } from '@/types/models';
 
+// Check if required environment variables are present
+const requiredEnvVars = [
+  'CLOUDINARY_CLOUD_NAME',
+  'CLOUDINARY_API_KEY', 
+  'CLOUDINARY_API_SECRET'
+];
+
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+
+if (missingEnvVars.length > 0) {
+  console.warn('Missing Cloudinary environment variables:', missingEnvVars);
+}
+
 // Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -23,6 +36,11 @@ export async function uploadToCloudinary(
   } = {}
 ): Promise<MediaFile> {
   try {
+    // Check if Cloudinary is properly configured
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      throw new Error('Cloudinary environment variables are not properly configured. Please check your .env file.');
+    }
+
     // Convert Buffer to base64 string for Cloudinary
     let uploadData: string;
     if (Buffer.isBuffer(file)) {
@@ -64,7 +82,7 @@ export async function uploadToCloudinary(
     };
   } catch (error) {
     console.error('Cloudinary upload error:', error);
-    throw new Error('Failed to upload file to Cloudinary');
+    throw new Error(`Failed to upload file to Cloudinary: ${(error as Error).message}`);
   }
 }
 

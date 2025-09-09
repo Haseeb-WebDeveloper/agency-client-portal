@@ -192,6 +192,36 @@ export async function getContractsWithDetails() {
 }
 
 /**
+ * Get recent news items for admin dashboard
+ */
+export async function getRecentNews(limit: number = 5) {
+  const newsItems = await prisma.news.findMany({
+    where: {
+      deletedAt: null
+    },
+    orderBy: { 
+      createdAt: 'desc' 
+    },
+    take: limit,
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      featuredImage: true,
+      creator: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+        }
+      }
+    }
+  });
+
+  return newsItems;
+}
+
+/**
  * Get contracts by status
  */
 export async function getContractsByStatus(status: string) {

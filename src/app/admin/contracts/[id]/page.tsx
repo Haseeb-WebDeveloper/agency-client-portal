@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ContractForm } from "@/components/admin/contract-form";
+import { MediaFile } from "@/types/models";
 import Link from "next/link";
 
 interface Client {
@@ -27,6 +28,7 @@ interface Contract {
   estimatedHours: number | null;
   progressPercentage: number;
   actualHours: number;
+  media: MediaFile[];
   createdAt: string;
   updatedAt: string;
   client: {
@@ -138,7 +140,7 @@ export default function ContractPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6  px-8 py-6">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -151,7 +153,7 @@ export default function ContractPage() {
 
   if (error && !isNew) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6  px-8 py-6">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -174,7 +176,7 @@ export default function ContractPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8  px-8 py-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

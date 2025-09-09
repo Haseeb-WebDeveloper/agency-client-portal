@@ -9,7 +9,7 @@ export const adminSidebarItems = [
     id: "messages",
     label: "Messages",
     icon: "/messages.svg",
-    href: "/admin/messages",
+    href: "/messages",
   },
   {
     id: "clients",
@@ -55,6 +55,6 @@ export const clientSidebarItems = [
     id: "messages",
     label: "Messages",
     icon: "/messages.svg",
-    href: "/client/messages",
+    href: "/messages",
   },
 ];

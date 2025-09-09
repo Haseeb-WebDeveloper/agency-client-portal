@@ -131,3 +131,153 @@ export async function getClientDashboardStats(userId: string) {
     recentMessages: processedMessages,
   };
 }
+
+/**
+ * Get recent news items for client dashboard
+ */
+export async function getClientRecentNews(limit: number = 5) {
+  const newsItems = await prisma.news.findMany({
+    where: {
+      deletedAt: null
+    },
+    orderBy: { 
+      createdAt: 'desc' 
+    },
+    take: limit,
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      featuredImage: true,
+    }
+  });
+
+  return newsItems;
+}
+
+/**
+ * Fetch paginated contracts for the current client (for client UI list)
+ */
+export async function getClientContracts(params: { userId: string; page?: number; limit?: number; search?: string; status?: string; }) {
+  const { userId, page = 1, limit = 10, search = '', status = '' } = params;
+
+  // Resolve clientId for this user via membership
+  const clientMembership = await prisma.clientMembership.findFirst({
+    where: { userId, isActive: true, deletedAt: null },
+    select: { clientId: true },
+  });
+
+  if (!clientMembership) {
+    return { contracts: [], pagination: { page: 1, limit, total: 0, totalPages: 0, hasNext: false, hasPrev: false } };
+  }
+
+  const clientId = clientMembership.clientId;
+
+  let contracts = await prisma.$queryRaw<any[]>`
+    SELECT 
+      c.id, c.title, c.description, c.status, c.tags, c."progressPercentage",
+      c."createdAt",
+      COALESCE(media_files.file_count, 0) as media_files_count
+    FROM contracts c
+    LEFT JOIN (
+      SELECT m."contractId", COUNT(ma.id) as file_count
+      FROM messages m
+      LEFT JOIN message_attachments ma ON m.id = ma."messageId"
+      WHERE m."contractId" IS NOT NULL AND m."deletedAt" IS NULL
+      GROUP BY m."contractId"
+    ) media_files ON c.id = media_files."contractId"
+    WHERE c."clientId" = ${clientId} AND c."deletedAt" IS NULL
+    ORDER BY c."updatedAt" DESC`;
+
+  if (status) {
+    contracts = contracts.filter((c) => c.status === status);
+  }
+  if (search) {
+    const q = search.toLowerCase();
+    contracts = contracts.filter((c) =>
+      c.title.toLowerCase().includes(q) ||
+      (c.description ?? '').toLowerCase().includes(q) ||
+      (Array.isArray(c.tags) ? c.tags : []).some((t: string) => t.toLowerCase().includes(q))
+    );
+  }
+
+  const total = contracts.length;
+  const totalPages = Math.ceil(total / limit) || 1;
+  const startIndex = (page - 1) * limit;
+  const paginated = contracts.slice(startIndex, startIndex + limit);
+
+  const transformed = paginated.map((c) => ({
+    id: c.id,
+    title: c.title,
+    description: c.description,
+    status: c.status,
+    tags: c.tags || [],
+    progressPercentage: c.progressPercentage || 0,
+    mediaFilesCount: parseInt(c.media_files_count) || 0,
+    createdAt: c.createdAt,
+  }));
+
+  return {
+    contracts: transformed,
+    pagination: {
+      page, limit, total, totalPages,
+      hasNext: page < totalPages,
+      hasPrev: page > 1,
+    },
+  };
+}
+
+/**
+ * Get client news items
+ */
+export async function getClientNews(userId: string) {
+  try {
+    // First get the user to verify they exist
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+        deletedAt: null,
+      },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Check if user is a client or client member
+    if (user.role !== 'CLIENT' && user.role !== 'CLIENT_MEMBER') {
+      throw new Error('Access denied');
+    }
+
+    const news = await prisma.news.findMany({
+      where: {
+        deletedAt: null,
+        OR: [
+          { sendToAll: true },
+          { sendTo: { has: userId } },
+        ]
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        featuredImage: true,
+        content: true,
+        createdAt: true,
+        creator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          }
+        }
+      }
+    });
+
+    return news;
+  } catch (error) {
+    console.error('Error fetching client news:', error);
+    throw error;
+  }
+}
