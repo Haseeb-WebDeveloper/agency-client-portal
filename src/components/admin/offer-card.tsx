@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { MediaFile } from "@/types/models";
 import { format, formatDistanceToNow } from "date-fns";
 import { Calendar, FileText, MessageCircle, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 interface Offer {
   id: string;
@@ -75,27 +76,19 @@ export function OfferCard({ offer }: OfferCardProps) {
     statusConfig.PENDING;
   const StatusIcon = statusInfo.icon;
 
-  const handleCardClick = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleMessageUs = () => {
-    // TODO: Implement message functionality
-    console.log("Message us clicked for offer:", offer.id);
-  };
-
   return (
     <>
-      <div
-        className="relative z-[20] flex w-fit cursor-pointer hover:shadow-lg transition-all duration-200 rounded-lg border "
-        onClick={handleCardClick}
+      <Link
+        className="relative z-[20] flex lg:w-[70%] cursor-pointer hover:shadow-lg transition-all duration-200 rounded-lg border "
+        href={`/admin/offers/${offer.id}`}
+        // onClick={handleCardClick}
       >
         {/* Status Badge - Top Right */}
         <div className="absolute bottom-[101%] right-2  px-3 py-1 bg-gradient-to-tr from-[#FF2AFF] to-[#6B42D1] rounded-t-sm text-xs font-medium flex items-center gap-2">
           <span>Pending</span>
         </div>
         {/* Left Section - Main Content */}
-        <div className="lg:max-w-72 p-6">
+        <div className="lg:w-[40%] p-6">
           <h3 className="figma-paragraph-bold mb-2">{offer.title}</h3>
           <p className="figma-paragraph leading-relaxed">
             {offer.description || "No description provided"}
@@ -128,88 +121,7 @@ export function OfferCard({ offer }: OfferCardProps) {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Offer Details Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {StatusIcon && <StatusIcon className="w-4 h-4" />}
-                <div
-                  className={`px-2 py-1 rounded text-xs font-medium ${statusInfo.color}`}
-                >
-                  {statusInfo.label}
-                </div>
-              </div>
-            </div>
-            <DialogTitle className="text-2xl font-bold text-foreground">
-              {offer.title}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-6">
-            {/* Description */}
-            <div>
-              <p className="text-foreground/80 leading-relaxed">
-                {offer.description || "No description provided"}
-              </p>
-            </div>
-
-            {/* Service tags */}
-            <div className="flex flex-wrap gap-2">
-              {serviceTags.map((tag) => (
-                <div
-                  key={tag}
-                  className="px-2 py-1 rounded text-sm font-medium bg-secondary text-secondary-foreground"
-                >
-                  {tag}
-                </div>
-              ))}
-            </div>
-
-            {/* Project Assets */}
-            {offer.media && offer.media.length > 0 && (
-              <div className="space-y-3">
-                <h4 className="text-lg font-semibold text-foreground">
-                  Project Assets
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {offer.media.map((file, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-3 p-3 border border-primary/20 rounded-lg hover:border-primary/40 transition-colors cursor-pointer"
-                    >
-                      <FileText className="w-5 h-5 text-primary" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {file.name || `File ${index + 1}`}
-                        </p>
-                        <p className="text-xs text-foreground/60 capitalize">
-                          {file.type}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Call to Action */}
-            <div className="flex items-center justify-between pt-4 border-t border-primary/20">
-              <p className="text-foreground/80">Interested in this offer?</p>
-              <Button
-                onClick={handleMessageUs}
-                className="bg-primary hover:bg-primary/90"
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Message us
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      </Link>
     </>
   );
 }

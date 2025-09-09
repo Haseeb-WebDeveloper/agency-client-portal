@@ -1,4 +1,3 @@
-import NextImage from "next/image";
 import { getAdminDashboardStats } from "@/lib/admin-queries";
 import { requireAdmin } from "@/lib/auth";
 import { StatsCards } from "@/components/admin/stats-cards";
@@ -6,6 +5,7 @@ import { ClientsTable } from "@/components/admin/clients-table";
 import { MessagesCard } from "@/components/admin/messages-card";
 import { QuickActions } from "@/components/admin/quick-actions";
 import { getGreeting, getGreetingSubtitle } from "@/utils/greeting";
+import Image from "next/image";
 
 export default async function AdminDashboard() {
   // Require admin authentication
@@ -47,7 +47,7 @@ export default async function AdminDashboard() {
             {/* Recent news card - placeholder for now */}
             <div className="bg-transparent border-primary/20 px-7 py-6 border rounded-lg space-y-6">
               <div className="flex items-center gap-3">
-                <NextImage
+                <Image
                   src="/icons/news.svg"
                   alt="Recent News"
                   width={20}

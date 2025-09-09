@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { Search, Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,16 +15,23 @@ import {
 interface ContractsSearchFiltersProps {
   onSearch: (search: string, status: string) => void;
   isLoading?: boolean;
+  currentStatus?: string;
 }
 
 export function ContractsSearchFilters({
   onSearch,
   isLoading = false,
+  currentStatus = '',
 }: ContractsSearchFiltersProps) {
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState(currentStatus);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Sync status with currentStatus prop
+  useEffect(() => {
+    setStatus(currentStatus);
+  }, [currentStatus]);
 
   const handleSearch = () => {
     startTransition(() => {

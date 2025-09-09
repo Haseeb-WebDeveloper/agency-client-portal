@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -100,6 +101,86 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching clients:', error);
     return NextResponse.json(
       { error: 'Failed to fetch clients' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // Require admin authentication
+    await requireAdmin();
+
+    const body = await request.json();
+    const { 
+      name, 
+      description, 
+      website, 
+      logo,
+      firstName,
+      lastName,
+      email
+    } = body;
+
+    // Validate required fields
+    if (!name || !firstName || !lastName || !email) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // Create client
+    const client = await prisma.client.create({
+      data: {
+        name,
+        description: description || '',
+        website: website || null,
+        logo: logo || null,
+      },
+    });
+
+    // Create primary contact user
+    const user = await prisma.user.create({
+      data: {
+        authId: `temp-${Date.now()}`, // Temporary auth ID, will be updated when user signs up
+        firstName,
+        lastName,
+        email,
+        role: 'CLIENT',
+        isActive: true,
+      },
+    });
+
+    // Create client membership
+    await prisma.clientMembership.create({
+      data: {
+        userId: user.id,
+        clientId: client.id,
+        role: 'PRIMARY_CONTACT',
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      client: {
+        id: client.id,
+        name: client.name,
+        description: client.description,
+        logo: client.logo,
+        website: client.website,
+      },
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.error('Error creating client:', error);
+    return NextResponse.json(
+      { error: 'Failed to create client' },
       { status: 500 }
     );
   }
