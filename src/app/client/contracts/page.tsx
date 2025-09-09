@@ -85,11 +85,31 @@ export default function ClientContractsPage() {
 
       {error && <div className="text-sm text-red-500">{error}</div>}
 
-      {isLoading && !data ? (
-        <div className="h-40 flex items-center justify-center text-foreground/60">
-          Loading...
+      {/* Loading State */}
+      {(isLoading || isPending) && !data ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div
+              key={i}
+              className="border border-primary/20 rounded-lg p-6 space-y-4 animate-pulse"
+            >
+              <div className="h-6 bg-primary/10 rounded w-3/4"></div>
+              <div className="h-4 bg-primary/10 rounded w-full"></div>
+              <div className="h-4 bg-primary/10 rounded w-2/3"></div>
+              <div className="pt-4">
+                <div className="h-2 bg-primary/10 rounded w-full"></div>
+              </div>
+              <div className="flex justify-between pt-4">
+                <div className="h-8 w-20 bg-primary/10 rounded"></div>
+                <div className="h-8 w-20 bg-primary/10 rounded"></div>
+              </div>
+            </div>
+          ))}
         </div>
-      ) : data && data.contracts.length === 0 ? (
+      ) : null}
+
+      {/* Empty State */}
+      {!isLoading && !isPending && data && data.contracts.length === 0 ? (
         <div className="rounded-lg border border-primary/20 bg-card p-16 text-center">
           <p className="figma-h4">
             There is nothing here to show <em>yet</em>
@@ -99,7 +119,10 @@ export default function ClientContractsPage() {
             download, and manage them in this space.
           </p>
         </div>
-      ) : (
+      ) : null}
+
+      {/* Contracts Grid */}
+      {data && data.contracts.length > 0 && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
             {data?.contracts.map((c) => (

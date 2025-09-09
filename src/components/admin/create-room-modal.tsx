@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Combobox,
   ComboboxContent,
@@ -20,32 +26,59 @@ type CreateRoomModalProps = {
   trigger?: React.ReactNode;
 };
 
-export default function CreateRoomModal({ onCreate, trigger }: CreateRoomModalProps) {
+export default function CreateRoomModal({
+  onCreate,
+  trigger,
+}: CreateRoomModalProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [query, setQuery] = useState("");
-  const [options, setOptions] = useState<Array<{ label: string; value: string }>>([]);
+  const [options, setOptions] = useState<
+    Array<{ label: string; value: string }>
+  >([]);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
 
   useEffect(() => {
+    // Only fetch when the modal is open
+    if (!open) return;
+
     let ignore = false;
     const controller = new AbortController();
+
     const fetchUsers = async () => {
-      const url = new URL("/api/messages/users", window.location.origin);
-      if (query) url.searchParams.set("q", query);
-      url.searchParams.set("limit", "10");
-      const res = await fetch(url.toString(), { signal: controller.signal, cache: "no-store" });
-      if (!res.ok) return;
-      const data = await res.json();
-      if (!ignore) {
-        const items = (data.items || []) as Array<{ label: string; value: string }>;
-        setOptions(items);
+      try {
+        const url = new URL("/api/messages/users", window.location.origin);
+        if (query) url.searchParams.set("q", query);
+        url.searchParams.set("limit", "10");
+        const res = await fetch(url.toString(), {
+          signal: controller.signal,
+          cache: "no-store",
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!ignore) {
+          const items = (data.items || []) as Array<{
+            label: string;
+            value: string;
+          }>;
+          setOptions(items);
+        }
+      } catch (error) {
+        // Only log non-abort errors
+        if (error instanceof Error && error.name !== "AbortError" && !ignore) {
+          console.error("Error fetching users:", error);
+        }
       }
     };
+
     fetchUsers();
+
     return () => {
       ignore = true;
-      controller.abort();
+      // Only abort if the controller hasn't been aborted yet
+      if (controller.signal && !controller.signal.aborted) {
+        controller.abort();
+      }
     };
   }, [query, open]);
 
@@ -85,12 +118,17 @@ export default function CreateRoomModal({ onCreate, trigger }: CreateRoomModalPr
             <label className="text-xs pb-2">Members</label>
             <div className="flex flex-wrap gap-2">
               {selectedUserIds.map((id) => (
-                <span key={id} className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-primary/10">
+                <span
+                  key={id}
+                  className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-primary/10"
+                >
                   {options.find((o) => o.value === id)?.label || id}
                   <button
                     type="button"
                     onClick={() => {
-                      setSelectedUserIds((prev) => prev.filter((userId) => userId !== id));
+                      setSelectedUserIds((prev) =>
+                        prev.filter((userId) => userId !== id)
+                      );
                     }}
                     className="cursor-pointer hover:bg-primary/20 rounded-full p-0.5 transition-colors"
                   >
@@ -121,7 +159,10 @@ export default function CreateRoomModal({ onCreate, trigger }: CreateRoomModalPr
                           }}
                           className="flex items-center gap-2 cursor-pointer bg-[#0F0A1D]/90 hover:bg-[#0F0A1D]/80"
                         >
-                          <Checkbox checked={isSelected} className="bg-[#0F0A1D]" />
+                          <Checkbox
+                            checked={isSelected}
+                            className="bg-[#0F0A1D]"
+                          />
                           {opt.label}
                         </ComboboxItem>
                       );
@@ -131,8 +172,15 @@ export default function CreateRoomModal({ onCreate, trigger }: CreateRoomModalPr
               </ComboboxContent>
             </Combobox>
           </div>
-          <input type="hidden" name="members" value={selectedUserIds.join(",")} />
-          <button disabled={isPending} className="cursor-pointer bg-primary text-background px-3 py-2 rounded-md w-full">
+          <input
+            type="hidden"
+            name="members"
+            value={selectedUserIds.join(",")}
+          />
+          <button
+            disabled={isPending}
+            className="cursor-pointer bg-primary text-background px-3 py-2 rounded-md w-full"
+          >
             {isPending ? "Creating…" : "Create room"}
           </button>
         </form>
@@ -140,5 +188,3 @@ export default function CreateRoomModal({ onCreate, trigger }: CreateRoomModalPr
     </Dialog>
   );
 }
-
-

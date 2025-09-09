@@ -10,6 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { adminSidebarItems, clientSidebarItems } from "@/constants/navigation";
 import { MenuIcon, Search } from "lucide-react";
+import { GlobalLoading } from "@/components/shared/global-loading";
+import { Suspense } from "react";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -89,6 +91,9 @@ export function AppLayout({ children, user }: AppLayoutProps) {
 
   return (
     <div className="min-h-screen h-full bg-gradient-to-b from-[#0A031C] to-[#000000] text-foreground">
+      <Suspense fallback={null}>
+        <GlobalLoading />
+      </Suspense>
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent side="left" className="p-0 w-64">
           <SidebarContent />

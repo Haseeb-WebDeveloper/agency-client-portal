@@ -21,11 +21,12 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import Image from "next/image";
 import { EMOJIS } from "@/constants/emoji";
 import RoomInfoModal from "@/components/messages/room-info-modal";
-import { 
-  getRoomInfoAction, 
-  getAvailableUsersAction, 
-  updateRoomAction 
+import {
+  getRoomInfoAction,
+  getAvailableUsersAction,
+  updateRoomAction,
 } from "@/actions/messages-client";
+import { ChatLoading } from "@/components/shared/chat-loading";
 
 type UserLite = {
   id: string;
@@ -69,7 +70,10 @@ interface ChatRoomProps {
   onSend: (formData: FormData) => Promise<void>;
   currentUserId?: string;
   roomTitle?: string;
-  onRoomUpdate?: (roomId: string, updates: { name?: string; logo?: string | null }) => void;
+  onRoomUpdate?: (
+    roomId: string,
+    updates: { name?: string; logo?: string | null }
+  ) => void;
 }
 
 export default function ChatRoom({
@@ -107,16 +111,18 @@ export default function ChatRoom({
   const [roomInfo, setRoomInfo] = useState<any>(null);
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load room info and check admin status
   useEffect(() => {
     const loadRoomInfo = async () => {
       try {
+        setIsLoading(true);
         const [roomData, usersData] = await Promise.all([
           getRoomInfoAction(roomId),
-          getAvailableUsersAction()
+          getAvailableUsersAction(),
         ]);
-        
+
         if (roomData) {
           setRoomInfo(roomData);
           // Check if current user is admin
@@ -124,13 +130,18 @@ export default function ChatRoom({
             (p: any) => p.user.id === currentUserId
           );
 
-          console.log("currentUserParticipant?.permission", currentUserParticipant?.permission);
-          setIsAdmin(currentUserParticipant?.permission === 'ADMIN');
+          console.log(
+            "currentUserParticipant?.permission",
+            currentUserParticipant?.permission
+          );
+          setIsAdmin(currentUserParticipant?.permission === "ADMIN");
         }
-        
+
         setAvailableUsers(usersData);
       } catch (error) {
-        console.error('Error loading room info:', error);
+        console.error("Error loading room info:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -157,12 +168,12 @@ export default function ChatRoom({
         if (onRoomUpdate) {
           onRoomUpdate(roomId, {
             name: roomData.name,
-            logo: roomData.logo
+            logo: roomData.logo,
           });
         }
       }
     } catch (error) {
-      console.error('Error updating room:', error);
+      console.error("Error updating room:", error);
       throw error;
     }
   };
@@ -532,325 +543,337 @@ export default function ChatRoom({
               className="cursor-pointer"
               title="Room Information"
             >
-             <Image src="/icons/edit.svg" alt="Edit" width={24} height={24} className="w-5 h-5" />
+              <Image
+                src="/icons/edit.svg"
+                alt="Edit"
+                width={24}
+                height={24}
+                className="w-5 h-5"
+              />
             </button>
           )}
         </div>
       </div>
       {/* Messages Area */}
-      <div
-        ref={listRef}
-        onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-4 space-y-4 pb-12"
-      >
-        {orderedMessages.map((message, index) => {
-          const isCurrent = isCurrentUser(message.userId);
-          const prevMessage = index > 0 ? orderedMessages[index - 1] : null;
-          const showAvatar =
-            !prevMessage || prevMessage.userId !== message.userId;
-          const showTime =
-            !prevMessage ||
-            new Date(message.createdAt).getTime() -
-              new Date(prevMessage.createdAt).getTime() >
-              300000; // 5 minutes
+      {isLoading ? (
+        <ChatLoading />
+      ) : (
+        <div
+          ref={listRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto p-4 space-y-4 pb-12"
+        >
+          {orderedMessages.map((message, index) => {
+            const isCurrent = isCurrentUser(message.userId);
+            const prevMessage = index > 0 ? orderedMessages[index - 1] : null;
+            const showAvatar =
+              !prevMessage || prevMessage.userId !== message.userId;
+            const showTime =
+              !prevMessage ||
+              new Date(message.createdAt).getTime() -
+                new Date(prevMessage.createdAt).getTime() >
+                300000; // 5 minutes
 
-          return (
-            <div
-              key={message.id}
-              className={`flex ${
-                isCurrent ? "justify-end" : "justify-start"
-              } group`}
-            >
+            return (
               <div
-                className={`flex max-w-[70%] ${
-                  isCurrent ? "flex-row-reverse" : "flex-row"
-                } items-end gap-2`}
+                key={message.id}
+                className={`flex ${
+                  isCurrent ? "justify-end" : "justify-start"
+                } group`}
               >
-                {/* Avatar */}
-                {!isCurrent && showAvatar && (
-                  <div className="relative">
-                    <Avatar className="w-8 h-8 flex-shrink-0">
-                      <AvatarImage src={message.user?.avatar || ""} />
-                      <AvatarFallback className="bg-primary/20 text-primary text-xs">
-                        {getInitials(message.user)}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                )}
-
-                {/* Message Content */}
                 <div
-                  className={`flex flex-col ${
-                    isCurrent ? "items-end" : "items-start"
-                  } ${!isCurrent && !showAvatar ? "ml-10" : ""}`}
+                  className={`flex max-w-[70%] ${
+                    isCurrent ? "flex-row-reverse" : "flex-row"
+                  } items-end gap-2`}
                 >
-                  {/* Sender Name */}
-                  {!isCurrent && showAvatar && message.user && (
-                    <span className="text-xs text-foreground/60 mb-1 px-2">
-                      {message.user.firstName} {message.user.lastName}
-                    </span>
+                  {/* Avatar */}
+                  {!isCurrent && showAvatar && (
+                    <div className="relative">
+                      <Avatar className="w-8 h-8 flex-shrink-0">
+                        <AvatarImage src={message.user?.avatar || ""} />
+                        <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                          {getInitials(message.user)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
                   )}
 
-                  {/* Message Bubble with actions */}
-                  <div className="group relative">
-                    <div
-                      className={`relative px-4 py-2 rounded-2xl ${
-                        isCurrent
-                          ? "bg-primary text-primary-foreground rounded-br-md"
-                          : "bg-muted text-foreground rounded-bl-md"
-                      } ${message.isEdited ? "opacity-75" : ""}`}
-                    >
-                      {editingId === message.id ? (
-                        <div className="flex items-end gap-2 w-full max-w-[520px]">
-                          <textarea
-                            className="w-full bg-background/20 border border-border/50 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 resize-none"
-                            rows={2}
-                            value={editDraft}
-                            onChange={(e) => setEditDraft(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                submitEdit(message.id);
-                              } else if (e.key === "Escape") {
-                                setEditingId(null);
-                                setEditDraft("");
-                              }
-                            }}
-                            autoFocus
-                          />
-                          <button
-                            onClick={() => submitEdit(message.id)}
-                            className="text-xs px-2 py-1 rounded bg-primary text-primary-foreground"
-                          >
-                            Save
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                            {message.content}
-                          </p>
-                          {message.attachments &&
-                            message.attachments.length > 0 && (
-                              <div
-                                className={`mt-2 grid gap-2 ${
-                                  isCurrent
-                                    ? "justify-items-end"
-                                    : "justify-items-start"
-                                }`}
-                              >
-                                {message.attachments.map((att) => {
-                                  const isImage =
-                                    att.mimeType.startsWith("image") ||
-                                    att.filePath.match(
-                                      /\.(png|jpe?g|gif|webp)$/i
-                                    );
-                                  const isVideo =
-                                    att.mimeType.startsWith("video") ||
-                                    att.filePath.match(/\.(mp4|webm|ogg)$/i);
-                                  if (isImage) {
-                                    return (
-                                      <div key={att.id} className="relative">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img
-                                          src={att.filePath}
-                                          alt={att.fileName}
-                                          className="max-w-[260px] rounded-md border border-border/40 cursor-pointer"
-                                          onClick={() =>
-                                            setPreviewImage({
-                                              url: att.filePath,
-                                              name: att.fileName,
-                                            })
-                                          }
-                                        />
-                                        <button
-                                          type="button"
-                                          onClick={() =>
-                                            forceDownload(
-                                              att.filePath,
-                                              att.fileName
-                                            )
-                                          }
-                                          className={`absolute bottom-2 right-2 bg-background/80 border border-border/40 rounded px-2 py-0.5 text-[10px] ${
-                                            isCurrent
-                                              ? "text-foreground"
-                                              : "text-foreground"
-                                          }`}
-                                        >
-                                          Download
-                                        </button>
-                                      </div>
-                                    );
-                                  }
-                                  if (isVideo) {
-                                    return (
-                                      <div key={att.id} className="relative">
-                                        <video
-                                          src={att.filePath}
-                                          controls
-                                          className="max-w-[320px] rounded-md border border-border/40"
-                                        />
-                                        <button
-                                          type="button"
-                                          onClick={() =>
-                                            forceDownload(
-                                              att.filePath,
-                                              att.fileName
-                                            )
-                                          }
-                                          className={`absolute bottom-2 right-2 bg-background/80 border border-border/40 rounded px-2 py-0.5 text-[10px] ${
-                                            isCurrent
-                                              ? "text-foreground"
-                                              : "text-foreground"
-                                          }`}
-                                        >
-                                          Download
-                                        </button>
-                                      </div>
-                                    );
-                                  }
-                                  return (
-                                    <div
-                                      key={att.id}
-                                      className="flex items-center gap-2 text-xs"
-                                    >
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          forceDownload(
-                                            att.filePath,
-                                            att.fileName
-                                          )
-                                        }
-                                        className={`${
-                                          isCurrent
-                                            ? "text-primary-foreground"
-                                            : "text-foreground"
-                                        } underline`}
-                                      >
-                                        {att.fileName}
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          forceDownload(
-                                            att.filePath,
-                                            att.fileName
-                                          )
-                                        }
-                                        className={`${
-                                          isCurrent
-                                            ? "text-primary-foreground"
-                                            : "text-foreground"
-                                        } underline`}
-                                      >
-                                        Download
-                                      </button>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          {message.isEdited && (
-                            <span className="text-xs opacity-60 ml-1">
-                              (edited)
-                            </span>
-                          )}
-                        </>
-                      )}
-                    </div>
+                  {/* Message Content */}
+                  <div
+                    className={`flex flex-col ${
+                      isCurrent ? "items-end" : "items-start"
+                    } ${!isCurrent && !showAvatar ? "ml-10" : ""}`}
+                  >
+                    {/* Sender Name */}
+                    {!isCurrent && showAvatar && message.user && (
+                      <span className="text-xs text-foreground/60 mb-1 px-2">
+                        {message.user.firstName} {message.user.lastName}
+                      </span>
+                    )}
 
-                    {/* Hover actions */}
-                    <div
-                      className={`absolute -top-3 ${
-                        isCurrent ? "left-2" : "right-2"
-                      } opacity-0 group-hover:opacity-100 transition-opacity`}
-                    >
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="h-6 px-2 rounded bg-background/80 border text-xs">
-                            •••
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align={isCurrent ? "start" : "end"}
-                          className="w-36"
-                        >
-                          <DropdownMenuItem
-                            onClick={() => copyMessage(message.content)}
-                          >
-                            Copy
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => startReply(message)}>
-                            Reply
-                          </DropdownMenuItem>
-                          {message.attachments &&
-                            message.attachments.length > 0 && (
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  downloadAttachments(message.attachments!)
+                    {/* Message Bubble with actions */}
+                    <div className="group relative">
+                      <div
+                        className={`relative px-4 py-2 rounded-2xl ${
+                          isCurrent
+                            ? "bg-primary text-primary-foreground rounded-br-md"
+                            : "bg-muted text-foreground rounded-bl-md"
+                        } ${message.isEdited ? "opacity-75" : ""}`}
+                      >
+                        {editingId === message.id ? (
+                          <div className="flex items-end gap-2 w-full max-w-[520px]">
+                            <textarea
+                              className="w-full bg-background/20 border border-border/50 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 resize-none"
+                              rows={2}
+                              value={editDraft}
+                              onChange={(e) => setEditDraft(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                  e.preventDefault();
+                                  submitEdit(message.id);
+                                } else if (e.key === "Escape") {
+                                  setEditingId(null);
+                                  setEditDraft("");
                                 }
+                              }}
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => submitEdit(message.id)}
+                              className="text-xs px-2 py-1 rounded bg-primary text-primary-foreground"
+                            >
+                              Save
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                              {message.content}
+                            </p>
+                            {message.attachments &&
+                              message.attachments.length > 0 && (
+                                <div
+                                  className={`mt-2 grid gap-2 ${
+                                    isCurrent
+                                      ? "justify-items-end"
+                                      : "justify-items-start"
+                                  }`}
+                                >
+                                  {message.attachments.map((att) => {
+                                    const isImage =
+                                      att.mimeType.startsWith("image") ||
+                                      att.filePath.match(
+                                        /\.(png|jpe?g|gif|webp)$/i
+                                      );
+                                    const isVideo =
+                                      att.mimeType.startsWith("video") ||
+                                      att.filePath.match(/\.(mp4|webm|ogg)$/i);
+                                    if (isImage) {
+                                      return (
+                                        <div key={att.id} className="relative">
+                                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                                          <img
+                                            src={att.filePath}
+                                            alt={att.fileName}
+                                            className="max-w-[260px] rounded-md border border-border/40 cursor-pointer"
+                                            onClick={() =>
+                                              setPreviewImage({
+                                                url: att.filePath,
+                                                name: att.fileName,
+                                              })
+                                            }
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              forceDownload(
+                                                att.filePath,
+                                                att.fileName
+                                              )
+                                            }
+                                            className={`absolute bottom-2 right-2 bg-background/80 border border-border/40 rounded px-2 py-0.5 text-[10px] ${
+                                              isCurrent
+                                                ? "text-foreground"
+                                                : "text-foreground"
+                                            }`}
+                                          >
+                                            Download
+                                          </button>
+                                        </div>
+                                      );
+                                    }
+                                    if (isVideo) {
+                                      return (
+                                        <div key={att.id} className="relative">
+                                          <video
+                                            src={att.filePath}
+                                            controls
+                                            className="max-w-[320px] rounded-md border border-border/40"
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              forceDownload(
+                                                att.filePath,
+                                                att.fileName
+                                              )
+                                            }
+                                            className={`absolute bottom-2 right-2 bg-background/80 border border-border/40 rounded px-2 py-0.5 text-[10px] ${
+                                              isCurrent
+                                                ? "text-foreground"
+                                                : "text-foreground"
+                                            }`}
+                                          >
+                                            Download
+                                          </button>
+                                        </div>
+                                      );
+                                    }
+                                    return (
+                                      <div
+                                        key={att.id}
+                                        className="flex items-center gap-2 text-xs"
+                                      >
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            forceDownload(
+                                              att.filePath,
+                                              att.fileName
+                                            )
+                                          }
+                                          className={`${
+                                            isCurrent
+                                              ? "text-primary-foreground"
+                                              : "text-foreground"
+                                          } underline`}
+                                        >
+                                          {att.fileName}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            forceDownload(
+                                              att.filePath,
+                                              att.fileName
+                                            )
+                                          }
+                                          className={`${
+                                            isCurrent
+                                              ? "text-primary-foreground"
+                                              : "text-foreground"
+                                          } underline`}
+                                        >
+                                          Download
+                                        </button>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            {message.isEdited && (
+                              <span className="text-xs opacity-60 ml-1">
+                                (edited)
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
+
+                      {/* Hover actions */}
+                      <div
+                        className={`absolute -top-3 ${
+                          isCurrent ? "left-2" : "right-2"
+                        } opacity-0 group-hover:opacity-100 transition-opacity`}
+                      >
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="h-6 px-2 rounded bg-background/80 border text-xs">
+                              •••
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align={isCurrent ? "start" : "end"}
+                            className="w-36"
+                          >
+                            <DropdownMenuItem
+                              onClick={() => copyMessage(message.content)}
+                            >
+                              Copy
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => startReply(message)}
+                            >
+                              Reply
+                            </DropdownMenuItem>
+                            {message.attachments &&
+                              message.attachments.length > 0 && (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    downloadAttachments(message.attachments!)
+                                  }
+                                >
+                                  Download
+                                </DropdownMenuItem>
+                              )}
+                            {isCurrent && (
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setEditingId(message.id);
+                                  setEditDraft(message.content);
+                                }}
                               >
-                                Download
+                                Edit
                               </DropdownMenuItem>
                             )}
-                          {isCurrent && (
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setEditingId(message.id);
-                                setEditDraft(message.content);
-                              }}
-                            >
-                              Edit
-                            </DropdownMenuItem>
-                          )}
-                          {isCurrent && (
-                            <DropdownMenuItem
-                              onClick={() => deleteOne(message.id)}
-                              className="text-destructive"
-                            >
-                              Delete
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            {isCurrent && (
+                              <DropdownMenuItem
+                                onClick={() => deleteOne(message.id)}
+                                className="text-destructive"
+                              >
+                                Delete
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Timestamp */}
-                  {showTime && (
-                    <span className="text-xs text-foreground/50 mt-1 px-2">
-                      {formatTime(message.createdAt)}
-                    </span>
-                  )}
+                    {/* Timestamp */}
+                    {showTime && (
+                      <span className="text-xs text-foreground/50 mt-1 px-2">
+                        {formatTime(message.createdAt)}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
 
-        {/* Typing Indicator - Always at bottom */}
-        {Object.keys(typingUsers).length > 0 && (
-          <div className="flex justify-start">
-            <div className="bg-muted flex items-end px-4 py-2 rounded-2xl rounded-bl-md">
-              {/* <p className="text-xs text-foreground/60 mr-2">Typing</p> */}
-              <div className="flex space-x-1">
-                <div className="w-1 h-1 bg-foreground/60 rounded-full animate-bounce"></div>
-                <div
-                  className="w-1 h-1 bg-foreground/60 rounded-full animate-bounce"
-                  style={{ animationDelay: "0.1s" }}
-                ></div>
-                <div
-                  className="w-1 h-1 bg-foreground/60 rounded-full animate-bounce"
-                  style={{ animationDelay: "0.2s" }}
-                ></div>
-              </div>
-            </div>{" "}
-          </div>
-        )}
-        {/* Bottom sentinel */}
-        <div ref={bottomRef} />
-      </div>
+          {/* Typing Indicator - Always at bottom */}
+          {Object.keys(typingUsers).length > 0 && (
+            <div className="flex justify-start">
+              <div className="bg-muted flex items-end px-4 py-2 rounded-2xl rounded-bl-md">
+                {/* <p className="text-xs text-foreground/60 mr-2">Typing</p> */}
+                <div className="flex space-x-1">
+                  <div className="w-1 h-1 bg-foreground/60 rounded-full animate-bounce"></div>
+                  <div
+                    className="w-1 h-1 bg-foreground/60 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.1s" }}
+                  ></div>
+                  <div
+                    className="w-1 h-1 bg-foreground/60 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.2s" }}
+                  ></div>
+                </div>
+              </div>{" "}
+            </div>
+          )}
+          {/* Bottom sentinel */}
+          <div ref={bottomRef} />
+        </div>
+      )}
 
       {/* Input Area */}
       <div className="sticky bottom-0 w-auto right-0 left-0 bg-[#0F0A1D]">
@@ -1040,7 +1063,7 @@ export default function ChatRoom({
             )}
           </DialogContent>
         </Dialog>
-        
+
         {/* Room Info Modal */}
         <RoomInfoModal
           isOpen={isRoomInfoOpen}
