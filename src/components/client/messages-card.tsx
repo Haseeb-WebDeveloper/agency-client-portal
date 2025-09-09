@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 interface Message {
   id: string;
@@ -24,23 +25,25 @@ export function MessagesCard({ messages }: MessagesCardProps) {
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) {
-        return 'Unknown';
+        return "Unknown";
       }
       const now = new Date();
-      const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-      
-      if (diffInHours < 1) return 'Just now';
+      const diffInHours = Math.floor(
+        (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+      );
+
+      if (diffInHours < 1) return "Just now";
       if (diffInHours < 24) return `${diffInHours}h ago`;
-      if (diffInHours < 48) return 'Yesterday';
+      if (diffInHours < 48) return "Yesterday";
       return date.toLocaleDateString();
     } catch (error) {
-      return 'Unknown';
+      return "Unknown";
     }
   };
 
   const truncateContent = (content: string, maxLength: number = 100) => {
     if (content.length <= maxLength) return content;
-    return content.substring(0, maxLength) + '...';
+    return content.substring(0, maxLength) + "...";
   };
 
   return (
@@ -66,7 +69,8 @@ export function MessagesCard({ messages }: MessagesCardProps) {
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-full bg-figma-primary flex items-center justify-center flex-shrink-0">
                   <span className="text-xs text-figma-text-white font-medium">
-                    {message.user.firstName.charAt(0)}{message.user.lastName.charAt(0)}
+                    {message.user.firstName.charAt(0)}
+                    {message.user.lastName.charAt(0)}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -89,9 +93,12 @@ export function MessagesCard({ messages }: MessagesCardProps) {
       )}
 
       <div className="pt-2">
-        <button className="text-sm text-figma-primary hover:text-figma-primary-purple-1 transition-colors">
+        <Link
+          href="/messages"
+          className="cursor-pointer text-sm text-figma-primary hover:text-figma-primary-purple-1 transition-colors"
+        >
           View all messages
-        </button>
+        </Link>
       </div>
     </div>
   );

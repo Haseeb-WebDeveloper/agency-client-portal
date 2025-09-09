@@ -221,4 +221,181 @@ export async function markRoomRead(roomId: string) {
   await prisma.roomParticipant.update({ where: { roomId_userId: { roomId, userId: me.id } }, data: { lastReadAt: new Date() } })
 }
 
+export async function createOrFindDMRoom(otherUserId: string) {
+  const me = await getCurrentDbUser()
+  if (!me) throw new Error('Not authenticated')
+  
+  // First, check if a DM room already exists between these two users
+  const existingRoom = await prisma.room.findFirst({
+    where: {
+      type: 'GENERAL',
+      deletedAt: null,
+      participants: {
+        every: {
+          userId: { in: [me.id, otherUserId] },
+          isActive: true,
+          deletedAt: null
+        }
+      }
+    },
+    include: {
+      participants: {
+        where: { deletedAt: null },
+        select: { userId: true }
+      }
+    }
+  })
+
+  // Check if it's actually a 2-person room (DM)
+  if (existingRoom && existingRoom.participants.length === 2) {
+    return existingRoom
+  }
+
+  // Get the other user's details for room naming
+  const otherUser = await prisma.user.findUnique({
+    where: { id: otherUserId },
+    select: { firstName: true, lastName: true }
+  })
+
+  if (!otherUser) {
+    throw new Error('User not found')
+  }
+
+  // Create a new DM room
+  const room = await prisma.room.create({
+    data: {
+      name: `${me.firstName} & ${otherUser.firstName}`,
+      description: `Direct message between ${me.firstName} ${me.lastName} and ${otherUser.firstName} ${otherUser.lastName}`,
+      type: 'GENERAL',
+      createdBy: me.id,
+      updatedBy: me.id,
+      participants: {
+        create: [
+          { userId: me.id, permission: 'ADMIN', createdBy: me.id, updatedBy: me.id },
+          { userId: otherUserId, permission: 'WRITE', createdBy: me.id, updatedBy: me.id },
+        ],
+      },
+    },
+    include: {
+      participants: {
+        where: { deletedAt: null },
+        select: { userId: true }
+      }
+    }
+  })
+
+  revalidatePath('/messages')
+  return room
+}
+
+export async function updateRoom(roomId: string, data: {
+  name?: string;
+  description?: string;
+  logo?: string | null;
+}) {
+  const me = await getCurrentDbUser()
+  if (!me) throw new Error('Not authenticated')
+
+  const room = await prisma.room.update({
+    where: { id: roomId },
+    data: {
+      ...data,
+      updatedBy: me.id,
+    },
+  })
+
+  revalidatePath('/messages')
+  return room
+}
+
+export async function addRoomMembers(roomId: string, userIds: string[]) {
+  const me = await getCurrentDbUser()
+  if (!me) throw new Error('Not authenticated')
+
+  // Add participants
+  await prisma.roomParticipant.createMany({
+    data: userIds.map(userId => ({
+      roomId,
+      userId,
+      permission: 'WRITE',
+      createdBy: me.id,
+      updatedBy: me.id,
+    })),
+    skipDuplicates: true,
+  })
+
+  revalidatePath('/messages')
+}
+
+export async function removeRoomMember(roomId: string, userId: string) {
+  const me = await getCurrentDbUser()
+  if (!me) throw new Error('Not authenticated')
+
+  await prisma.roomParticipant.update({
+    where: { roomId_userId: { roomId, userId } },
+    data: { isActive: false, deletedAt: new Date(), updatedBy: me.id }
+  })
+
+  revalidatePath('/messages')
+}
+
+export async function getRoomInfo(roomId: string) {
+  const me = await getCurrentDbUser()
+  if (!me) return null
+
+  return prisma.room.findFirst({
+    where: { 
+      id: roomId, 
+      deletedAt: null, 
+      participants: { 
+        some: { userId: me.id, isActive: true, deletedAt: null } 
+      } 
+    },
+    include: { 
+      participants: { 
+        where: { deletedAt: null }, 
+        select: {
+          permission: true,
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              avatar: true,
+              role: true,
+            }
+          }
+        }
+      } 
+    },
+  })
+}
+
+export async function getAvailableUsers() {
+  const me = await getCurrentDbUser()
+  if (!me) return []
+
+  const isAdmin = me.role === 'PLATFORM_ADMIN' || me.role === 'AGENCY_MEMBER'
+
+  return prisma.user.findMany({
+    where: {
+      deletedAt: null,
+      id: { not: me.id }, // Exclude current user
+      ...(isAdmin ? {} : {
+        // Non-admins can only see admins/agency members
+        role: { in: ['PLATFORM_ADMIN', 'AGENCY_MEMBER'] }
+      })
+    },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      avatar: true,
+      role: true,
+    },
+    orderBy: { firstName: 'asc' }
+  })
+}
 

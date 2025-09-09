@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -15,6 +16,8 @@ export async function POST(
 
     const formData = await request.formData();
     const content = String(formData.get("content") || "").trim();
+    const parentIdRaw = formData.get("parentId");
+    const parentId = typeof parentIdRaw === "string" && parentIdRaw.length > 0 ? parentIdRaw : null;
     // Attachments come as JSON array of { url, type, name?, size? }
     const attachmentsJson = String(formData.get("attachments") || "");
     let attachmentsInput: Array<{ url: string; type?: string; name?: string; size?: number }> = [];
@@ -57,6 +60,7 @@ export async function POST(
           roomId: roomId,
           userId: me.id,
           content: content || (attachmentsInput.length > 0 ? "" : content),
+          parentId,
           createdBy: me.id,
           updatedBy: me.id,
         },
@@ -70,6 +74,7 @@ export async function POST(
             },
           },
           attachments: true,
+          parent: { include: { user: { select: { id: true, firstName: true, lastName: true, avatar: true } } } },
         },
       });
 
@@ -103,6 +108,7 @@ export async function POST(
           select: { id: true, firstName: true, lastName: true, avatar: true },
         },
         attachments: true,
+        parent: { include: { user: { select: { id: true, firstName: true, lastName: true, avatar: true } } } },
       },
     });
 
