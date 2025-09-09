@@ -30,6 +30,7 @@ const inter = Inter({
   display: "swap",
 });
 
+
 export const metadata: Metadata = {
   title: "Figmenta Client Portal",
   description: "Client portal for managing contracts and project progress",

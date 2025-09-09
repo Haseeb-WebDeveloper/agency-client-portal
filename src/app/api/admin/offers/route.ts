@@ -41,39 +41,19 @@ export async function GET(request: NextRequest) {
     console.log('Paginated offers count:', paginatedOffers.length);
 
     // Transform offers to match expected format and ensure proper serialization
-    const transformedOffers = paginatedOffers.map(offer => {
-      try {
-        return {
-          id: offer.id,
-          title: offer.title,
-          description: offer.description,
-          status: offer.status,
-          media: offer.media || null,
-          validUntil: offer.validUntil ? new Date(offer.validUntil).toISOString() : null,
-          createdAt: new Date(offer.createdAt).toISOString(),
-          client_name: offer.client_name,
-          client_logo: offer.client_logo,
-          creator_first_name: offer.creator_first_name,
-          creator_last_name: offer.creator_last_name,
-        };
-      } catch (transformError) {
-        console.error('Error transforming offer:', transformError, offer);
-        // Return a safe version of the offer
-        return {
-          id: offer.id,
-          title: offer.title,
-          description: offer.description,
-          status: offer.status,
-          media: null,
-          validUntil: offer.validUntil ? new Date(offer.validUntil).toISOString() : null,
-          createdAt: new Date(offer.createdAt).toISOString(),
-          client_name: offer.client_name || '',
-          client_logo: offer.client_logo,
-          creator_first_name: offer.creator_first_name,
-          creator_last_name: offer.creator_last_name,
-        };
-      }
-    });
+    const transformedOffers = paginatedOffers.map(offer => ({
+      id: offer.id,
+      title: offer.title,
+      description: offer.description,
+      status: offer.status,
+      media: offer.media,
+      validUntil: offer.validUntil ? new Date(offer.validUntil).toISOString() : null,
+      createdAt: new Date(offer.createdAt).toISOString(),
+      client_name: offer.client_name,
+      client_logo: offer.client_logo,
+      creator_first_name: offer.creator_first_name,
+      creator_last_name: offer.creator_last_name,
+    }));
 
     return NextResponse.json({
       offers: transformedOffers,
@@ -121,7 +101,7 @@ export async function POST(request: NextRequest) {
         description,
         status: status || 'DRAFT',
         clientId,
-        media, // Prisma will handle the JSON conversion
+        media: media || undefined,
         validUntil: validUntil ? new Date(validUntil) : null,
         hasReviewed: false,
       },
@@ -134,7 +114,7 @@ export async function POST(request: NextRequest) {
         title: offer.title,
         description: offer.description,
         status: offer.status,
-        media: offer.media || null,
+        media: offer.media,
         validUntil: offer.validUntil,
         createdAt: offer.createdAt,
       },

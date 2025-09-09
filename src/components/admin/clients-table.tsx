@@ -17,59 +17,79 @@ interface ClientsTableProps {
 
 export function ClientsTable({ clients }: ClientsTableProps) {
   return (
-    <div className="bg-transparent border-primary/20 px-7 py-6 border rounded-lg space-y-6">
-      <div className="flex items-center gap-3">
-        <Image
-          src="/icons/members.svg"
-          alt="Client Snapshot"
-          width={20}
-          height={20}
-        />
-        <p className="figma-paragraph text-foreground">Client Snapshot</p>
-      </div>
-      
-      <div className="space-y-4">
-        {clients.map((client) => (
-          <div key={client.id} className="flex items-center justify-between py-3 border-b border-foreground/10 last:border-b-0">
-            <div className="flex items-center gap-3">
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={client.logo || ""} alt={client.name} />
-                <AvatarFallback className="bg-muted text-muted-foreground text-xs">
-                  {client.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-foreground font-medium">{client.name}</span>
-            </div>
-            
-            <div className="flex items-center gap-6">
-              <div className="text-center">
-                <div className="text-sm font-semibold text-foreground">{client.activeContracts}</div>
-                <div className="text-xs text-foreground/60">Active</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm font-semibold text-foreground">{client.pendingContracts}</div>
-                <div className="text-xs text-foreground/60">Pending</div>
-              </div>
-              <div className="text-center min-w-[120px]">
-                <div className="text-xs text-foreground/60">
-                  {(() => {
-                    try {
-                      const date = typeof client.lastActivity === 'string' 
-                        ? new Date(client.lastActivity) 
-                        : client.lastActivity;
-                      if (isNaN(date.getTime())) {
-                        return 'Unknown';
+    <div className="bg-transparent border-primary/20 space-y-6">
+      <div className="overflow-hidden rounded-lg border border-primary/20">
+        <div className="flex items-center gap-3 px-4 py-6">
+          <p className="figma-paragraph text-foreground/90">Client Snapshot</p>
+        </div>
+        <table className="w-full">
+          <thead className="border-b border-primary/20 bg-transparent">
+            <tr>
+              <th className="px-6 py-4 text-left figma-paragraph  text-nowrap">
+                Clients
+              </th>
+              <th className="px-6 py-4 text-center figma-paragraph  text-nowrap">
+                Active contracts
+              </th>
+              <th className="px-6 py-4 text-center figma-paragraph  text-nowrap">
+                Pending contracts
+              </th>
+              <th className="px-6 py-4 text-left figma-paragraph  text-nowrap">
+                Last activity
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-primary/20">
+            {clients.map((client) => (
+              <tr
+                key={client.id}
+                className="hover:bg-primary/5 transition-colors"
+              >
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={client.logo || ""} alt={client.name} />
+                      <AvatarFallback className="bg-muted text-muted-foreground text-sm font-medium">
+                        {client.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-foreground font-medium text-nowrap">
+                      {client.name}
+                    </span>
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <div className="text-lg font-semibold text-foreground">
+                    {client.activeContracts}
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <div className="text-lg font-semibold text-foreground">
+                    {client.pendingContracts}
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="text-sm text-foreground/70">
+                    {(() => {
+                      try {
+                        const date =
+                          typeof client.lastActivity === "string"
+                            ? new Date(client.lastActivity)
+                            : client.lastActivity;
+                        if (isNaN(date.getTime())) {
+                          return "Lorem ipsum dolor sit amet consectetur ...";
+                        }
+                        return formatDistanceToNow(date, { addSuffix: true });
+                      } catch (error) {
+                        return "Lorem ipsum dolor sit amet consectetur ...";
                       }
-                      return formatDistanceToNow(date, { addSuffix: true });
-                    } catch (error) {
-                      return 'Unknown';
-                    }
-                  })()}
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
+                    })()}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
