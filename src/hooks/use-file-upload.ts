@@ -60,10 +60,15 @@ export function useFileUpload(options: UseFileUploadOptions = {}) {
     setUploadedFiles([]);
   };
 
+  const setInitialFiles = (files: MediaFile[]) => {
+    setUploadedFiles(files);
+  };
+
   return {
     uploadFiles,
     removeFile,
     clearFiles,
+    setInitialFiles,
     isUploading,
     uploadedFiles,
   };
