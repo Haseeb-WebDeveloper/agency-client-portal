@@ -45,7 +45,6 @@ const AdminNewsPage = async () => {
       </div>
 
       <div className="mt-6">
-        <h2 className="text-xl font-semibold text-white mb-2">Existing News</h2>
         <NewsList initialNews={transformedNews} />
       </div>
     </div>
