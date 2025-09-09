@@ -88,15 +88,15 @@ export function OfferCard({ offer }: OfferCardProps) {
           <span>Pending</span>
         </div>
         {/* Left Section - Main Content */}
-        <div className="lg:w-[40%] p-6">
-          <h3 className="figma-paragraph-bold mb-2">{offer.title}</h3>
+        <div className="lg:w-[40%] p-5 space-y-6">
+          <h3 className="figma-paragraph-bold">{offer.title}</h3>
           <p className="figma-paragraph leading-relaxed">
             {offer.description || "No description provided"}
           </p>
         </div>
 
         {/* Right Section - Metadata */}
-        <div className="z-20 p-6 min-h-full lg:border-l flex flex-col justify-between gap-4 ">
+        <div className="z-20 p-5 min-h-full lg:border-l flex flex-col  gap-4 ">
           {/* Service Tags */}
           <div className="w-fit flex flex-wrap gap-2">
             {serviceTags.map((tag) => (

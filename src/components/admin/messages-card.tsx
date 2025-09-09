@@ -4,7 +4,7 @@ import Link from "next/link";
 import { listMyRooms } from "@/actions/messaging";
 import { ChevronRight } from "lucide-react";
 
-export async function MessagesCard() {
+export async function   MessagesCard() {
   const rooms = await listMyRooms();
 
   // Calculate total unseen messages across all rooms
@@ -24,7 +24,7 @@ export async function MessagesCard() {
   }
 
   return (
-    <div className="border border-[#4B3971] rounded-xl p-0 shadow-md" style={{ minWidth: 320 }}>
+    <div className="bg-transparent border border-primary/20  rounded-xl p-0 shadow-md" style={{ minWidth: 320 }}>
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
@@ -35,7 +35,7 @@ export async function MessagesCard() {
             height={22}
             className="opacity-90"
           />
-          <span className="text-lg tracking-tight">Messages</span>
+          <span className="figma-paragraph text-foreground">Messages</span>
         </div>
         {badge}
       </div>
@@ -46,12 +46,12 @@ export async function MessagesCard() {
           <Link
             key={r.id}
             href={`/messages?roomId=${r.id}`}
-            className={`flex items-center px-5 py-4 ${idx !== rooms.slice(0, 2).length - 1 ? "border-b border-[#32255A]" : ""} group`}
+            className={`flex items-center px-5 py-4 ${idx !== rooms.slice(0, 2).length - 1 ? "border-b border-primary/20" : ""} group`}
             style={{ textDecoration: "none" }}
           >
             <Avatar className="w-10 h-10 flex-shrink-0">
               <AvatarImage src={r.logo || ""} alt={r.name} />
-              <AvatarFallback className="bg-[#2D2347] ">
+              <AvatarFallback className="bg-primary/20 ">
                 {r.name.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -62,10 +62,10 @@ export async function MessagesCard() {
                 </span>
               </div>
               <p className="text-sm text-foreground/80 truncate mt-1">
-                {r.latestMessage?.content || "Lorem ipsum dolor sit amet consectetur ..."}
+                {r.latestMessage?.content || "No messages yet"}
               </p>
             </div>
-            <span className="ml-3 flex items-center justify-center w-8 h-8 rounded-full bg-[#2D2347] group-hover:bg-[#3A2C5F] transition-colors">
+            <span className="ml-3 flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 group-hover:bg-primary/30 transition-colors">
               <ChevronRight className="text-foreground/80 w-5 h-5" />
             </span>
           </Link>
@@ -73,7 +73,7 @@ export async function MessagesCard() {
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3 border-t border-[#32255A]">
+      <div className="px-5 py-3 border-t border-primary/20">
         <Link
           href="/messages"
           className="text-sm text-foreground/80 hover:underline"
