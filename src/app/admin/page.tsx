@@ -78,7 +78,7 @@ export default async function AdminDashboard() {
                     </div>
                   ) : (
                     <div className="w-12 h-12 bg-gradient-to-r from-figma-primary to-figma-primary-purple-1 rounded flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs text-figma-text-white">AI</span>
+                      <span className="text-xs text-figma-text-white">ai</span>
                     </div>
                   )}
                   <div className="flex-1">
