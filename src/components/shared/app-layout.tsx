@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -33,65 +33,74 @@ export function AppLayout({ children, user }: AppLayoutProps) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
 
-  const items =
-    user.role === "PLATFORM_ADMIN" || user.role === "AGENCY_MEMBER"
-      ? adminSidebarItems
-      : clientSidebarItems;
+  const items = useMemo(
+    () =>
+      user.role === "PLATFORM_ADMIN" || user.role === "AGENCY_MEMBER"
+        ? adminSidebarItems
+        : clientSidebarItems,
+    [user.role]
+  );
 
-  const SidebarContent = () => (
-    <div className="pl-3 py-4 h-full flex flex-col bg-gradient-to-b from-[#0A031C] to-[#000000] bg-sidebar ">
-      <div className="flex items-center space-x-2 mb-8">
-        <Image
-          src="/logo.png"
-          alt="Logo"
-          width={200}
-          height={200}
-          className="object-contain h-12"
-        />
-      </div>
-      <nav className="space-y-2 flex-1">
-        {items.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={`cursor-pointer w-full flex items-center justify-between px-6 py-3.5 border-0 shadow-none text-sm rounded-l-full transition-colors dark:text-foreground text-background ${
-                isActive ? "bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF]" : ""
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <Image
-                  src={`/icons/${item.icon}`}
-                  alt={item.label}
-                  width={20}
-                  height={20}
-                  className="w-5 h-5"
-                />
-                <span>{item.label}</span>
-              </div>
-            </Link>
-          );
-        })}
-      </nav>
-      <div className="pr-3">
-        <div className="w-full h-[1px] bg-sidebar-border"></div>
-        <div className="py-4 pl-4 flex items-center gap-3">
-          <Avatar className="w-8 h-8">
-            <AvatarImage
-              src={user.avatar || ""}
-              alt={`${user.firstName} ${user.lastName}`}
+  const SidebarContent = useMemo(
+    () => () =>
+      (
+        <div className="pl-3 py-4 h-full flex flex-col bg-gradient-to-b from-[#0A031C] to-[#000000] bg-sidebar ">
+          <div className="flex items-center space-x-2 mb-8">
+            <Image
+              src="/logo.png"
+              alt="Logo"
+              width={200}
+              height={200}
+              className="object-contain h-12"
             />
-            <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground">
-              {user.firstName.charAt(0)}
-            </AvatarFallback>
-          </Avatar>
-          <span className="text-sm font-medium text-sidebar-foreground">
-            {user.firstName}
-          </span>
+          </div>
+          <nav className="space-y-2 flex-1">
+            {items.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`cursor-pointer w-full flex items-center justify-between px-6 py-3.5 border-0 shadow-none text-sm rounded-l-full transition-colors dark:text-foreground text-background ${
+                    isActive
+                      ? "bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF]"
+                      : ""
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <Image
+                      src={`/icons/${item.icon}`}
+                      alt={item.label}
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                    />
+                    <span>{item.label}</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </nav>
+          <div className="pr-3">
+            <div className="w-full h-[1px] bg-sidebar-border"></div>
+            <div className="py-4 pl-4 flex items-center gap-3">
+              <Avatar className="w-8 h-8">
+                <AvatarImage
+                  src={user.avatar || ""}
+                  alt={`${user.firstName} ${user.lastName}`}
+                />
+                <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground">
+                  {user.firstName.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium text-sidebar-foreground">
+                {user.firstName}
+              </span>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      ),
+    [items, pathname, user.avatar, user.firstName]
   );
 
   return (

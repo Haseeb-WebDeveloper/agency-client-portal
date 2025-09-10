@@ -27,6 +27,16 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
+  // Skip auth for static assets and public routes
+  const publicRoutes = ['/login', '/auth', '/error', '/_next/static', '/_next/image', '/favicon.ico']
+  const isPublicRoute = publicRoutes.some(route => 
+    request.nextUrl.pathname.includes(route)
+  )
+
+  if (isPublicRoute) {
+    return supabaseResponse
+  }
+
   // Do not run code between createServerClient and
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
