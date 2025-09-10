@@ -112,7 +112,6 @@ model Contract {
   status             ContractStatus       @default(DRAFT)
   startDate          DateTime?
   endDate            DateTime?
-  value              Decimal?             @db.Decimal(10, 2)
   currency           String               @default("USD")
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
@@ -125,6 +124,7 @@ model Contract {
   priority           Int                  @default(3)
   progressPercentage Int                  @default(0)
   tags               String[]
+  media              Json?
   activities         Activity[]
   assignments        ContractAssignment[]
   client             Client               @relation(fields: [clientId], references: [id], onDelete: Cascade)

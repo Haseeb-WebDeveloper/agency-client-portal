@@ -252,6 +252,7 @@ export function OfferForm({
               onChange={(e) => handleInputChange("title", e.target.value)}
               placeholder="e.g., Instagram Ad Campaign"
               required
+              className="bg-transparent"
             />
           </div>
           <div className="space-y-2">
@@ -264,6 +265,7 @@ export function OfferForm({
               onChange={(e) => handleInputChange("description", e.target.value)}
               placeholder="Describe the offer details..."
               rows={4}
+              className="bg-transparent"
             />
           </div>
           <div className="flex flex-wrap gap-6">
@@ -278,7 +280,7 @@ export function OfferForm({
                   value={formData.clientId}
                   onChange={(e) => handleInputChange("clientId", e.target.value)}
                   required
-                  className="cursor-pointer block w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none appearance-none"
+                  className="cursor-pointer block w-full px-3 py-2 border border-input rounded-md bg-transparent text-foreground focus:outline-none appearance-none"
                   style={{ WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
                 >
                   <option value="" disabled>
@@ -310,6 +312,7 @@ export function OfferForm({
                 onChange={(e) =>
                   handleInputChange("validUntil", e.target.value)
                 }
+                className="bg-transparent"
               />
             </div>
           </div>
@@ -401,7 +404,7 @@ export function OfferForm({
                     handleInputChange("roomName", e.target.value)
                   }
                   placeholder="Room Name"
-                  className=""
+                  className="bg-transparent"
                 />
               </div>
             </div>

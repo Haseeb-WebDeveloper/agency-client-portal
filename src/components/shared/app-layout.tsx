@@ -136,7 +136,7 @@ export function AppLayout({ children, user }: AppLayoutProps) {
                     <SidebarContent />
                   </SheetContent>
                 </Sheet>
-                <div className="relative w-full">
+                <div className="relative w-full lg:min-w-2xl">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-foreground" />
                   <input
                     placeholder="Search"

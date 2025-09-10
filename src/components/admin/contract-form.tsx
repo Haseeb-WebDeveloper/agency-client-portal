@@ -27,6 +27,7 @@ import {
   DollarSign,
   Clock,
   Target,
+  Plus,
 } from "lucide-react";
 
 interface Client {
@@ -79,7 +80,8 @@ const currencyOptions = [
   { value: "CAD", label: "CAD (C$)" },
 ];
 
-const serviceTags = [
+// Predefined service tags for suggestions
+const suggestedServiceTags = [
   "Copywriting",
   "Graphic design",
   "Lead gen",
@@ -93,6 +95,131 @@ const serviceTags = [
   "PPC Advertising",
   "Analytics",
 ];
+
+// Custom Tag Input Component
+interface CustomTagInputProps {
+  tags: string[];
+  onTagsChange: (tags: string[]) => void;
+  suggestions: string[];
+  placeholder?: string;
+  maxTags?: number;
+}
+
+function CustomTagInput({ 
+  tags, 
+  onTagsChange, 
+  suggestions, 
+  placeholder = "Type to add tags...",
+  maxTags = 10 
+}: CustomTagInputProps) {
+  const [inputValue, setInputValue] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInputValue(value);
+    
+    if (value.trim()) {
+      const filtered = suggestions.filter(suggestion =>
+        suggestion.toLowerCase().includes(value.toLowerCase()) &&
+        !tags.includes(suggestion)
+      );
+      setFilteredSuggestions(filtered);
+      setShowSuggestions(true);
+    } else {
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addTag(inputValue.trim());
+    } else if (e.key === "Backspace" && !inputValue && tags.length > 0) {
+      removeTag(tags.length - 1);
+    }
+  };
+
+  const addTag = (tag: string) => {
+    if (tag && !tags.includes(tag) && tags.length < maxTags) {
+      onTagsChange([...tags, tag]);
+      setInputValue("");
+      setShowSuggestions(false);
+    }
+  };
+
+  const removeTag = (index: number) => {
+    onTagsChange(tags.filter((_, i) => i !== index));
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    addTag(suggestion);
+  };
+
+  const handleInputBlur = () => {
+    // Add tag if there's input value
+    if (inputValue.trim()) {
+      addTag(inputValue.trim());
+    }
+    setShowSuggestions(false);
+  };
+
+  return (
+    <div className="relative">
+      <div className="flex flex-wrap gap-2 p-3 border border-input rounded-md bg-background min-h-[40px]">
+        {tags.map((tag, index) => (
+          <Badge
+            key={index}
+            variant="secondary"
+            className="flex items-center gap-1 px-2 py-1"
+          >
+            {tag}
+            <button
+              type="button"
+              onClick={() => removeTag(index)}
+              className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </Badge>
+        ))}
+        <input
+          type="text"
+          value={inputValue}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          onBlur={handleInputBlur}
+          onFocus={() => inputValue && setShowSuggestions(true)}
+          placeholder={tags.length === 0 ? placeholder : ""}
+          className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm"
+          disabled={tags.length >= maxTags}
+        />
+      </div>
+      
+      {showSuggestions && filteredSuggestions.length > 0 && (
+        <div className="absolute z-10 w-full mt-1 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-y-auto">
+          {filteredSuggestions.map((suggestion, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => handleSuggestionClick(suggestion)}
+              className="w-full px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground first:rounded-t-md last:rounded-b-md"
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      )}
+      
+      {tags.length >= maxTags && (
+        <p className="text-xs text-muted-foreground mt-1">
+          Maximum {maxTags} tags allowed
+        </p>
+      )}
+    </div>
+  );
+}
 
 export function ContractForm({
   contract,
@@ -112,15 +239,17 @@ export function ContractForm({
     endDate: contract?.endDate
       ? new Date(contract.endDate).toISOString().split("T")[0]
       : "",
-    value: contract?.value || "",
     currency: contract?.currency || "USD",
     budget: contract?.budget || "",
     priority: contract?.priority || 3,
     estimatedHours: contract?.estimatedHours || "",
-    selectedTags: contract?.tags || serviceTags.slice(0, 3),
+    selectedTags: contract?.tags || [],
   });
 
-  const { uploadFiles, removeFile, isUploading, uploadedFiles } = useFileUpload(
+  // Tags state for custom tag input
+  const [tags, setTags] = useState<string[]>(contract?.tags || []);
+
+  const { uploadFiles, removeFile, isUploading, uploadedFiles, setInitialFiles } = useFileUpload(
     {
       folder: "contracts",
       onSuccess: (files) => {
@@ -142,7 +271,7 @@ export function ContractForm({
         name: file.name || `File ${index + 1}`,
         size: file.size || 0,
       }));
-      // Note: This would need to be handled by the useFileUpload hook
+      setInitialFiles(existingFiles);
     }
   }, [contract]);
 
@@ -160,12 +289,11 @@ export function ContractForm({
     }
   };
 
-  const handleTagToggle = (tag: string) => {
+  const handleTagsChange = (newTags: string[]) => {
+    setTags(newTags);
     setFormData((prev) => ({
       ...prev,
-      selectedTags: prev.selectedTags.includes(tag)
-        ? prev.selectedTags.filter((t) => t !== tag)
-        : [...prev.selectedTags, tag],
+      selectedTags: newTags,
     }));
   };
 
@@ -187,12 +315,6 @@ export function ContractForm({
       }
     }
 
-    // Validate financial values
-    if (formData.value && parseFloat(formData.value.toString()) < 0) {
-      alert("Contract value cannot be negative");
-      return;
-    }
-
     if (formData.budget && parseFloat(formData.budget.toString()) < 0) {
       alert("Budget cannot be negative");
       return;
@@ -201,13 +323,14 @@ export function ContractForm({
     try {
       const contractData = {
         ...formData,
-        value: formData.value ? parseFloat(formData.value.toString()) : null,
         budget: formData.budget ? parseFloat(formData.budget.toString()) : null,
-        estimatedHours: formData.estimatedHours ? parseInt(formData.estimatedHours.toString()) : null,
+        estimatedHours: formData.estimatedHours
+          ? parseInt(formData.estimatedHours.toString())
+          : null,
         startDate: formData.startDate ? new Date(formData.startDate) : null,
         endDate: formData.endDate ? new Date(formData.endDate) : null,
         tags: formData.selectedTags,
-        media: uploadedFiles.length > 0 ? uploadedFiles : null,
+        media: uploadedFiles.length > 0 ? uploadedFiles : (contract?.media || []),
       };
 
       await onSave(contractData);
@@ -233,7 +356,9 @@ export function ContractForm({
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* Basic Information */}
       <div className="p-6 rounded-lg border border-primary/20">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Basic Information</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">
+          Basic Information
+        </h3>
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -290,14 +415,19 @@ export function ContractForm({
               <Label htmlFor="priority">Priority</Label>
               <Select
                 value={formData.priority.toString()}
-                onValueChange={(value) => handleInputChange("priority", parseInt(value))}
+                onValueChange={(value) =>
+                  handleInputChange("priority", parseInt(value))
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {priorityOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value.toString()}>
+                    <SelectItem
+                      key={option.value}
+                      value={option.value.toString()}
+                    >
                       {option.label}
                     </SelectItem>
                   ))}
@@ -354,7 +484,9 @@ export function ContractForm({
                 id="estimatedHours"
                 type="number"
                 value={formData.estimatedHours}
-                onChange={(e) => handleInputChange("estimatedHours", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("estimatedHours", e.target.value)
+                }
                 placeholder="e.g., 40"
                 className="pl-10"
               />
@@ -370,37 +502,6 @@ export function ContractForm({
           Financial Information
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="value">Contract Value</Label>
-            <div className="flex gap-2">
-              <div className="w-24">
-                <Select
-                  value={formData.currency}
-                  onValueChange={(value) => handleInputChange("currency", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {currencyOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Input
-                id="value"
-                type="number"
-                step="0.01"
-                value={formData.value}
-                onChange={(e) => handleInputChange("value", e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-          </div>
-
           <div className="space-y-2">
             <Label htmlFor="budget">Budget</Label>
             <Input
@@ -421,27 +522,26 @@ export function ContractForm({
           <Target className="w-5 h-5" />
           Service Tags
         </h3>
-        <div>
-          <div className="flex flex-wrap gap-2">
-            {serviceTags.map((tag) => (
-              <Badge
-                key={tag}
-                variant={
-                  formData.selectedTags.includes(tag) ? "default" : "outline"
-                }
-                className="cursor-pointer hover:bg-primary/10"
-                onClick={() => handleTagToggle(tag)}
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="service-tags">Add service tags (type to create custom tags)</Label>
+          <CustomTagInput
+            tags={tags}
+            onTagsChange={handleTagsChange}
+            suggestions={suggestedServiceTags}
+            placeholder="Type to add custom tags or select from suggestions..."
+            maxTags={10}
+          />
+          <p className="text-sm text-muted-foreground">
+            You can select from suggested tags or type to create custom ones. Press Enter or comma to add a tag.
+          </p>
         </div>
       </div>
 
       {/* Project Assets */}
       <div className="p-6 rounded-lg border border-primary/20">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Project Assets</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">
+          Project Assets
+        </h3>
         <div className="space-y-4">
           <div className="border-2 border-dashed border-primary/20 rounded-lg p-6 text-center">
             <Upload className="w-8 h-8 mx-auto mb-2 text-primary/60" />
@@ -523,7 +623,11 @@ export function ContractForm({
           disabled={isLoading || isUploading}
           className="bg-primary hover:bg-primary/90"
         >
-          {isLoading ? "Saving..." : contract ? "Update Contract" : "Create Contract"}
+          {isLoading
+            ? "Saving..."
+            : contract
+            ? "Update Contract"
+            : "Create Contract"}
         </Button>
       </div>
     </form>

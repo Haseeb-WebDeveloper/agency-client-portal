@@ -101,7 +101,7 @@ function ClientsContent() {
 
   if (error) {
     return (
-      <div className="space-y-6 px-8 py-6">
+      <div className="space-y-6 md:px-8 md:py-6 px-4 py-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="figma-h3">Our Clients</h1>
@@ -129,20 +129,20 @@ function ClientsContent() {
   }
 
   return (
-    <div className="space-y-12 px-8 py-6">
+    <div className="space-y-12 md:px-8 md:py-6 px-4 py-6">
       {/* Header with Search, Filter, and Add */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex-1">
           <h1 className="figma-h3">Our Clients</h1>
         </div>
         <div className="flex items-center gap-3">
-          <ClientsSearchFilters
+          {/* <ClientsSearchFilters
             onSearch={handleSearch}
             isLoading={isLoading || isPending}
-          />
+          /> */}
           <button
             onClick={() => setShowCreateModal(true)}
-            className="cursor-pointer px-6 py-2 bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF] rounded-lg transition-all"
+            className="w-full md:w-fit cursor-pointer px-6 py-2 bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF] rounded-lg transition-all"
           >
             Create Client
           </button>

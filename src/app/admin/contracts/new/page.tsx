@@ -87,7 +87,7 @@ function NewContractPageContent() {
 
   if (error) {
     return (
-      <div className="space-y-6  px-8 py-6">
+      <div className="space-y-6  md:px-8 md:py-6 px-4 py-6">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -107,7 +107,7 @@ function NewContractPageContent() {
   }
 
   return (
-    <div className="space-y-8  px-8 py-6">
+    <div className="space-y-8  md:px-8 md:py-6 px-4 py-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -148,7 +148,7 @@ export default function NewContractPage() {
   return (
     <Suspense
       fallback={
-        <div className="space-y-6  px-8 py-6">
+        <div className="space-y-6  md:px-8 md:py-6 px-4 py-6">
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
