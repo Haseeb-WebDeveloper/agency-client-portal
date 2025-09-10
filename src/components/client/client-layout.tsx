@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -32,7 +32,19 @@ interface ClientLayoutProps {
 export function ClientLayout({ children, user }: ClientLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const isMobile = useIsMobile();
+
+  const handleNavigation = useCallback(
+    (href: string, e: React.MouseEvent) => {
+      e.preventDefault();
+      router.push(href);
+      if (isMobile) {
+        setSidebarOpen(false);
+      }
+    },
+    [router, isMobile]
+  );
 
   const SidebarContent = useMemo(
     () => () =>
@@ -57,6 +69,7 @@ export function ClientLayout({ children, user }: ClientLayoutProps) {
                 <Link
                   key={item.label}
                   href={item.href}
+                  onClick={(e) => handleNavigation(item.href, e)}
                   className={`cursor-pointer w-full flex items-center justify-between px-6 py-3.5 border-0 shadow-none text-sm rounded-l-full transition-colors dark:text-foreground text-background ${
                     isActive
                       ? "bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF]"
@@ -99,7 +112,7 @@ export function ClientLayout({ children, user }: ClientLayoutProps) {
           </div>
         </div>
       ),
-    [pathname, user.avatar, user.firstName]
+    [pathname, user.avatar, user.firstName, handleNavigation]
   );
 
   return (
