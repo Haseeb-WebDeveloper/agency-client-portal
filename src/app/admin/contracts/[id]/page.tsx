@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ContractForm } from "@/components/admin/contract-form";
 import { MediaFile } from "@/types/models";
-import Link from "next/link";
 
 interface Client {
   id: string;
@@ -70,7 +69,9 @@ export default function ContractPage() {
         const data = await response.json();
         setContract(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch contract");
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch contract"
+        );
       } finally {
         setIsLoading(false);
       }
@@ -102,7 +103,9 @@ export default function ContractPage() {
       setIsSaving(true);
       setError(null);
 
-      const url = isNew ? "/api/admin/contracts" : `/api/admin/contracts/${contractId}`;
+      const url = isNew
+        ? "/api/admin/contracts"
+        : `/api/admin/contracts/${contractId}`;
       const method = isNew ? "POST" : "PUT";
 
       const response = await fetch(url, {
@@ -153,7 +156,7 @@ export default function ContractPage() {
 
   if (error && !isNew) {
     return (
-      <div className="space-y-6  px-8 py-6">
+      <div className="space-y-6  md:px-8 md:py-6 px-4 py-6">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -163,10 +166,7 @@ export default function ContractPage() {
               Error Loading Contract
             </h3>
             <p className="text-foreground/60 mb-4">{error}</p>
-            <button
-              onClick={() => router.back()}
-              className="figma-btn-primary"
-            >
+            <button onClick={() => router.back()} className="figma-btn-primary">
               Go Back
             </button>
           </div>
@@ -176,7 +176,7 @@ export default function ContractPage() {
   }
 
   return (
-    <div className="space-y-8  px-8 py-6">
+    <div className="space-y-8  md:px-8 md:py-6 px-4 py-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -188,7 +188,7 @@ export default function ContractPage() {
               <p className="text-foreground/60">
                 Created {new Date(contract.createdAt).toLocaleDateString()}
               </p>
-              <div className="flex items-center gap-2">
+              {/* <div className="flex items-center gap-2">
                 <span className="text-sm text-foreground/60">Status:</span>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                   contract.status === 'ACTIVE' ? 'bg-green-500/20 text-green-500' :
@@ -198,16 +198,16 @@ export default function ContractPage() {
                 }`}>
                   {contract.status.replace('_', ' ')}
                 </span>
-              </div>
+              </div> */}
             </div>
           )}
         </div>
-        <Link
-          href="/admin/contracts"
+        <button
+          onClick={() => router.back()}
           className="px-4 py-2 text-foreground/70 hover:text-foreground transition-colors"
         >
-          ← Back to Contracts
-        </Link>
+          ← Back
+        </button>
       </div>
 
       {/* Error Message */}

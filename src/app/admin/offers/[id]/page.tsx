@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { OfferForm } from "@/components/admin/offer-form";
 import { createOrUpdateOffer } from "@/actions/offers";
 import { MediaFile } from "@/types/models";
-import Link from "next/link";
 
 interface Client {
   id: string;
@@ -66,7 +65,12 @@ export default function OfferPage() {
           throw new Error("Failed to fetch offer");
         }
         const data = await response.json();
-        setOffer(data);
+        // Transform the data to match the expected interface
+        const transformedOffer = {
+          ...data,
+          clientId: data.client?.id || "", // Extract clientId from client object
+        };
+        setOffer(transformedOffer);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch offer");
       } finally {
@@ -95,12 +99,14 @@ export default function OfferPage() {
     fetchClients();
   }, []);
 
-
   const handleSave = async (offerData: any) => {
     try {
       setIsSaving(true);
       setError(null);
-      const saved = await createOrUpdateOffer(isNew ? null : offerId, offerData);
+      const saved = await createOrUpdateOffer(
+        isNew ? null : offerId,
+        offerData
+      );
       if (isNew) {
         router.push(`/admin/offers/${saved.id}`);
       } else {
@@ -115,7 +121,7 @@ export default function OfferPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6  px-8 py-6">
+      <div className="space-y-6  md:px-8 md:py-6 px-4 py-6">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -128,7 +134,7 @@ export default function OfferPage() {
 
   if (error && !isNew) {
     return (
-      <div className="space-y-6  px-8 py-6">
+      <div className="space-y-6  md:px-8 md:py-6 px-4 py-6">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -138,11 +144,8 @@ export default function OfferPage() {
               Error Loading Offer
             </h3>
             <p className="text-foreground/60 mb-4">{error}</p>
-            <button
-              onClick={() => router.back()}
-              className="figma-btn-primary"
-            >
-              Go Back
+            <button onClick={() => router.back()} className="figma-btn-primary">
+              ← Back
             </button>
           </div>
         </div>
@@ -151,43 +154,43 @@ export default function OfferPage() {
   }
 
   return (
-      <div className="space-y-8  px-8 py-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="figma-h3">
-              {isNew ? "Create New Offer" : "Edit Offer"}
-            </h1>
-            {!isNew && offer && (
-              <p className="text-foreground/60 mt-1">
-                Created {new Date(offer.createdAt).toLocaleDateString()}
-              </p>
-            )}
-          </div>
-          <Link
-            href="/admin/offers"
-            className="px-4 py-2 text-foreground/70 hover:text-foreground transition-colors"
-          >
-            ← Back to Offers
-          </Link>
+    <div className="space-y-8  md:px-8 md:py-6 px-4 py-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="figma-h3">
+            {isNew ? "Create New Offer" : "Edit Offer"}
+          </h1>
+          {!isNew && offer && (
+            <p className="text-foreground/60 mt-1">
+              Created {new Date(offer.createdAt).toLocaleDateString()}
+            </p>
+          )}
         </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-            <p className="text-destructive">{error}</p>
-          </div>
-        )}
-
-        {/* Form */}
-        <div className="max-w-4xl">
-          <OfferForm
-            offer={offer}
-            clients={clients}
-            onSave={handleSave}
-            isLoading={isSaving}
-          />
-        </div>
+        <button
+          onClick={() => router.back()}
+          className="px-4 py-2 text-foreground/70 hover:text-foreground transition-colors"
+        >
+          ← Back
+        </button>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+          <p className="text-destructive">{error}</p>
+        </div>
+      )}
+
+      {/* Form */}
+      <div className="max-w-4xl">
+        <OfferForm
+          offer={offer}
+          clients={clients}
+          onSave={handleSave}
+          isLoading={isSaving}
+        />
+      </div>
+    </div>
   );
 }

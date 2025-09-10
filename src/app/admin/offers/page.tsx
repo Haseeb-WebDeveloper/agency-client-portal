@@ -130,7 +130,7 @@ function OffersContent() {
 
   if (error) {
     return (
-      <div className="space-y-6 px-8 py-6">
+      <div className="space-y-6 md:px-8 md:py-6 px-4 py-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="figma-h3">Your Offers</h1>
@@ -155,20 +155,20 @@ function OffersContent() {
   }
 
   return (
-    <div className="space-y-16 px-8 py-6">
+    <div className="space-y-16 md:px-8 md:py-6 px-4 py-6">
       {/* Header with Search and Filter */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex-1">
           <h1 className="figma-h3">Offers</h1>
         </div>
         <div className="flex items-center gap-3">
-          <OffersSearchFilters
+          {/* <OffersSearchFilters
             onSearch={handleSearch}
             isLoading={isLoading || isPending}
-          />
+          /> */}
           <button
             onClick={() => (window.location.href = "/admin/offers/new")}
-            className="cursor-pointer px-6 py-2 bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF] rounded-lg transition-all"
+            className="w-full md:w-fit cursor-pointer px-6 py-2 bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF] rounded-lg transition-all"
           >
             Create Offer
           </button>
@@ -204,7 +204,7 @@ function OffersContent() {
       {/* Offers Grid */}
       {offersData && offersData.offers.length > 0 ? (
         <>
-          <div className="flex flex-wrap gap-6">
+          <div className="flex flex-wrap gap-12">
             {offersData.offers.map((offer) => (
               <OfferCard key={offer.id} offer={offer} />
             ))}
@@ -261,7 +261,7 @@ export default function OffersPage() {
   return (
     <Suspense
       fallback={
-        <div className="space-y-6 px-8 py-6">
+        <div className="space-y-6 md:px-8 md:py-6 px-4 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="figma-h3">Your Offers</h1>

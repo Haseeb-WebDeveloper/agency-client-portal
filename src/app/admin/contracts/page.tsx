@@ -91,7 +91,7 @@ function ContractsContent() {
 
   if (error) {
     return (
-      <div className="space-y-6 px-8 py-6">
+      <div className="space-y-6 md:px-8 md:py-6 px-4 py-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="figma-h3">Contracts</h1>
@@ -119,20 +119,20 @@ function ContractsContent() {
   }
 
   return (
-    <div className="space-y-16 px-8 py-6">
+    <div className="space-y-16 md:px-8 md:py-6 px-4 py-6">
       {/* Header with Search and Filter */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex-1">
           <h1 className="figma-h3">Contracts</h1>
         </div>
         <div className="flex items-center gap-3">
-          <ContractsSearchFilters
+          {/* <ContractsSearchFilters
             onSearch={handleSearch}
             isLoading={isLoading || isPending}
-          />
+          /> */}
           <button
             onClick={() => (window.location.href = "/admin/contracts/new")}
-            className="cursor-pointer bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF] px-6 py-2 rounded-lg transition-all"
+            className="w-full md:w-fit cursor-pointer bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF] px-6 py-2 rounded-lg transition-all"
           >
             Create Contract
           </button>
@@ -141,7 +141,7 @@ function ContractsContent() {
 
       {/* Loading State */}
       {(isLoading || isPending) && !contractsData ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-6">
           {[...Array(6)].map((_, i) => (
             <div
               key={i}
@@ -162,7 +162,7 @@ function ContractsContent() {
       {/* Contracts Grid */}
       {contractsData && contractsData.contracts.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-6">
             {contractsData.contracts.map((contract) => (
               <ContractCard key={contract.id} contract={contract} />
             ))}

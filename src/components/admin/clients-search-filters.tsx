@@ -114,7 +114,7 @@ export function ClientsSearchFilters({ onSearch, isLoading }: ClientsSearchFilte
       </div> */}
 
       {/* Filter Dropdown */}
-      <div className="relative" ref={dropdownRef}>
+      {/* <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setShowFilters(!showFilters)}
           className={`flex items-center gap-3 cursor-pointer px-4 py-2 border rounded-lg transition-all ${
@@ -129,7 +129,6 @@ export function ClientsSearchFilters({ onSearch, isLoading }: ClientsSearchFilte
           <Image src="/icons/filter-down.svg" alt="Chevron Down" width={15} height={15} />
         </button>
 
-        {/* Dropdown Menu */}
         {showFilters && (
           <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-primary/20 rounded-lg shadow-lg z-50">
             <div className="p-4">
@@ -196,7 +195,7 @@ export function ClientsSearchFilters({ onSearch, isLoading }: ClientsSearchFilte
             </div>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Search Button */}
       {/* <button

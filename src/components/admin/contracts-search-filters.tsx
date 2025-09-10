@@ -1,16 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useTransition, useEffect } from 'react';
-import { Search, Filter, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState, useTransition, useEffect } from "react";
+import { Search, Filter, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
+import Image from "next/image";
 
 interface ContractsSearchFiltersProps {
   onSearch: (search: string, status: string) => void;
@@ -21,10 +22,10 @@ interface ContractsSearchFiltersProps {
 export function ContractsSearchFilters({
   onSearch,
   isLoading = false,
-  currentStatus = '',
+  currentStatus = "",
 }: ContractsSearchFiltersProps) {
   const [isPending, startTransition] = useTransition();
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [status, setStatus] = useState(currentStatus);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -40,15 +41,15 @@ export function ContractsSearchFilters({
   };
 
   const handleClear = () => {
-    setSearch('');
-    setStatus('');
+    setSearch("");
+    setStatus("");
     startTransition(() => {
-      onSearch('', '');
+      onSearch("", "");
     });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSearch();
     }
   };
@@ -58,7 +59,7 @@ export function ContractsSearchFilters({
   return (
     <div className="flex items-center gap-3">
       {/* Search Input */}
-      <div className="relative">
+      {/* <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground/40 w-4 h-4" />
         <Input
           placeholder="Search contracts..."
@@ -68,10 +69,10 @@ export function ContractsSearchFilters({
           className="pl-10 w-64"
           disabled={isLoading || isPending}
         />
-      </div>
+      </div> */}
 
       {/* Search Button */}
-      <Button
+      {/* <Button
         onClick={handleSearch}
         disabled={isLoading || isPending}
         className="bg-primary hover:bg-primary/90"
@@ -81,21 +82,31 @@ export function ContractsSearchFilters({
         ) : (
           <Search className="w-4 h-4" />
         )}
-      </Button>
+      </Button> */}
 
       {/* Filter Toggle */}
       <Button
         variant="outline"
         onClick={() => setShowFilters(!showFilters)}
-        className="border-primary/20 hover:border-primary/40"
+        className={`flex items-center gap-3 cursor-pointer px-4 py-2 border rounded-lg transition-all ${
+          showFilters || status
+            ? "border-primary bg-primary/5 text-primary"
+            : "border-primary/20 text-foreground/60 hover:border-primary/40"
+        }`}
         disabled={isLoading || isPending}
       >
-        <Filter className="w-4 h-4 mr-2" />
-        Filters
+        <Image src="/icons/filter.svg" alt="Filter" width={15} height={15} />
+        <span className="text-foreground">Filter</span>
+        <Image
+          src="/icons/filter-down.svg"
+          alt="Chevron Down"
+          width={15}
+          height={15}
+        />
       </Button>
 
       {/* Clear Filters */}
-      {hasActiveFilters && (
+      {/* {hasActiveFilters && (
         <Button
           variant="ghost"
           onClick={handleClear}
@@ -105,7 +116,7 @@ export function ContractsSearchFilters({
           <X className="w-4 h-4 mr-1" />
           Clear
         </Button>
-      )}
+      )} */}
 
       {/* Expanded Filters */}
       {showFilters && (
@@ -123,7 +134,9 @@ export function ContractsSearchFilters({
                   <SelectContent>
                     <SelectItem value="">All statuses</SelectItem>
                     <SelectItem value="DRAFT">Draft</SelectItem>
-                    <SelectItem value="PENDING_APPROVAL">Pending Approval</SelectItem>
+                    <SelectItem value="PENDING_APPROVAL">
+                      Pending Approval
+                    </SelectItem>
                     <SelectItem value="ACTIVE">Active</SelectItem>
                     <SelectItem value="COMPLETED">Completed</SelectItem>
                     <SelectItem value="TERMINATED">Terminated</SelectItem>

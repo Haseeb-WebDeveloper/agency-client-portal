@@ -18,11 +18,11 @@ const EditNewsPage = async ({
         <div className="flex justify-between items-center mb-6">
           <h1 className="figma-h3">Create News</h1>
           <Link
-            href="/admin/news"
-            className="px-4 py-2 border border:primary/20 rounded-lg text-white rounded hover:bg-gray-600 transition-colors"
-          >
-            Cancel
-          </Link>
+          href="/admin/news"
+          className="px-4 py-2 text-foreground/70 hover:text-foreground transition-colors"
+        >
+          ← Back
+        </Link>
         </div>
         <NewsForm />
       </div>
@@ -36,29 +36,27 @@ const EditNewsPage = async ({
 
   if (!newsItem) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-white mb-4">
-          News item not found
-        </h1>
+      <div className="space-y-12 md:px-8 md:py-6 px-4 py-6">
+        <h1 className="figma-h3 mb-4">News item not found</h1>
         <Link
           href="/admin/news"
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          className="px-4 py-2 text-foreground/70 hover:text-foreground transition-colors"
         >
-          Back to News
+          ← Back
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
+    <div className="space-y-12 md:px-8 md:py-6 px-4 py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-white">Edit News</h1>
+        <h1 className="figma-h3">Edit News</h1>
         <Link
           href="/admin/news"
-          className="px-4 py-2 border border:primary/20 rounded-lg text-white rounded hover:bg-gray-600 transition-colors"
+          className="px-4 py-2 text-foreground/70 hover:text-foreground transition-colors"
         >
-          Cancel
+          ← Back
         </Link>
       </div>
       <NewsForm initialData={newsItem} />

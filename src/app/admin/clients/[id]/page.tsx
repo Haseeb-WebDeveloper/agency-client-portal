@@ -180,7 +180,7 @@ export default function ClientDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 px-8 py-6">
+      <div className="space-y-6 md:px-8 md:py-6 px-4 py-6">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -192,7 +192,7 @@ export default function ClientDetailPage() {
 
   if (error) {
     return (
-      <div className="space-y-6 px-8 py-6">
+      <div className="space-y-6 md:px-8 md:py-6 px-4 py-6">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -216,7 +216,7 @@ export default function ClientDetailPage() {
 
   if (!client) {
     return (
-      <div className="space-y-6 px-8 py-6">
+      <div className="space-y-6 md:px-8 md:py-6 px-4 py-6">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <h3 className="text-lg font-medium text-foreground mb-2">
@@ -233,7 +233,7 @@ export default function ClientDetailPage() {
   }
 
   return (
-    <div className="space-y-6 px-8 py-6">
+    <div className="space-y-6 md:px-8 md:py-6 px-4 py-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -268,10 +268,10 @@ export default function ClientDetailPage() {
                 alt={client.name}
                 width={130}
                 height={130}
-                className="rounded-full object-cover aspect-square"
+                className="w-20 md:w-80 md:h-80 h-20  rounded-full object-cover aspect-square"
               />
             ) : (
-              <div className="w-130 h-130 rounded-full bg-primary/10 flex items-center justify-center">
+              <div className="w-20 md:w-80 md:h-80 h-20  rounded-full bg-primary/10 flex items-center justify-center">
                 <span className="text-2xl ">
                   {client.name.charAt(0).toUpperCase()}
                 </span>

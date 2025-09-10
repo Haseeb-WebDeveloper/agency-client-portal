@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, description, status, clientId, tags, priority } = body;
+    const { title, description, status, clientId, tags, priority, media, startDate, endDate, currency, budget, estimatedHours } = body;
 
     if (!title || !clientId) {
       return NextResponse.json(
@@ -94,6 +94,12 @@ export async function POST(request: NextRequest) {
         priority: priority || 3,
         progressPercentage: 0,
         actualHours: 0,
+        media: media || null,
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null,
+        currency: currency || 'USD',
+        budget: budget ? parseFloat(budget.toString()) : null,
+        estimatedHours: estimatedHours ? parseInt(estimatedHours.toString()) : null,
       },
     });
 
@@ -106,6 +112,7 @@ export async function POST(request: NextRequest) {
         status: contract.status,
         tags: contract.tags,
         progressPercentage: contract.progressPercentage,
+        media: contract.media,
         createdAt: contract.createdAt,
       },
     });
