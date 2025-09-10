@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { adminSidebarItems, clientSidebarItems } from "@/constants/navigation";
 import { MenuIcon, Search } from "lucide-react";
-import { GlobalLoading } from "@/components/shared/global-loading";
+// import { GlobalLoading } from "@/components/shared/global-loading";
 import { Suspense } from "react";
 
 interface AppLayoutProps {
@@ -51,6 +51,10 @@ export function AppLayout({ children, user }: AppLayoutProps) {
               alt="Logo"
               width={200}
               height={200}
+              sizes="@media (max-width: 768px) {
+                width: 100px;
+                height: 100px;
+              }"
               className="object-contain h-12"
             />
           </div>
@@ -61,6 +65,13 @@ export function AppLayout({ children, user }: AppLayoutProps) {
                 <Link
                   key={item.label}
                   href={item.href}
+                  onClick={(e) => {
+                    // Force navigation by using window.location as a fallback
+                    // if (pathname.startsWith('/admin/offers/') && pathname !== '/admin/offers') {
+                    //   e.preventDefault();
+                    //   window.location.href = item.href;
+                    // }
+                  }}
                   className={`cursor-pointer w-full flex items-center justify-between px-6 py-3.5 border-0 shadow-none text-sm rounded-l-full transition-colors dark:text-foreground text-background ${
                     isActive
                       ? "bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF]"
@@ -74,6 +85,10 @@ export function AppLayout({ children, user }: AppLayoutProps) {
                       width={20}
                       height={20}
                       className="w-5 h-5"
+                      sizes="@media (max-width: 768px) {
+                        width: 20px;
+                        height: 20px;
+                      }"
                     />
                     <span>{item.label}</span>
                   </div>
@@ -105,9 +120,7 @@ export function AppLayout({ children, user }: AppLayoutProps) {
 
   return (
     <div className="min-h-screen h-full bg-gradient-to-b from-[#0A031C] to-[#000000] text-foreground">
-      <Suspense fallback={null}>
-        <GlobalLoading />
-      </Suspense>
+      {/* <Suspense fallback={null}><GlobalLoading /></Suspense> */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent side="left" className="p-0 w-64">
           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
@@ -136,7 +149,7 @@ export function AppLayout({ children, user }: AppLayoutProps) {
                     <SidebarContent />
                   </SheetContent>
                 </Sheet>
-                <div className="relative w-full lg:min-w-2xl">
+                <div className="relative w-full lg:min-w-[70%]">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-foreground" />
                   <input
                     placeholder="Search"

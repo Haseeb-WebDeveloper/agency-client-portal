@@ -256,7 +256,7 @@ export function OfferForm({
       }));
       setInitialFiles(existingFiles);
     }
-  }, [offer, setInitialFiles]);
+  }, [offer]);
 
   // Cleanup object URL on unmount
   useEffect(() => {
@@ -431,15 +431,19 @@ export function OfferForm({
               <Label htmlFor="clientId" className="figma-paragraph">
                 Client *
               </Label>
-              {/* Custom select instead of shadcn/ui Select */}
               <div className="relative">
                 <select
                   id="clientId"
                   value={formData.clientId}
                   onChange={(e) => handleInputChange("clientId", e.target.value)}
                   required
-                  className="cursor-pointer block w-full px-3 py-2 border border-input rounded-md bg-transparent text-foreground focus:outline-none appearance-none"
-                  style={{ WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
+                  className="cursor-pointer block w-full px-3 py-2 border border-input rounded-md text-foreground bg-background focus:outline-none appearance-none"
+                  style={{
+                    WebkitAppearance: "none",
+                    MozAppearance: "none",
+                    appearance: "none",
+                    backgroundColor: "#1B1B2C", 
+                  }}
                 >
                   <option value="" disabled>
                     Select a client

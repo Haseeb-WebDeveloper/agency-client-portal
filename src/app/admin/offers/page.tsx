@@ -64,7 +64,6 @@ function OffersContent() {
 
       // Log the request for debugging
       const url = `/api/admin/offers?${params.toString()}`;
-      console.log("Fetching offers from:", url);
 
       const response = await fetch(url);
 
@@ -95,7 +94,6 @@ function OffersContent() {
       }
 
       const data = await response.json();
-      console.log("Offers data received:", data);
       setOffersData(data);
     } catch (err) {
       console.error("Error fetching offers:", err);

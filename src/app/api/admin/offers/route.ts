@@ -10,7 +10,6 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || '';
     const status = searchParams.get('status') || '';
 
-    console.log('Fetching offers with params:', { page, limit, search, status });
 
     // Get offers based on filters
     let offers;
@@ -20,7 +19,6 @@ export async function GET(request: NextRequest) {
       offers = await getOffersWithDetails();
     }
 
-    console.log('Raw offers data:', offers);
 
     // Apply search filter if provided
     if (search) {
@@ -37,8 +35,6 @@ export async function GET(request: NextRequest) {
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
     const paginatedOffers = offers.slice(startIndex, endIndex);
-
-    console.log('Paginated offers count:', paginatedOffers.length);
 
     // Transform offers to match expected format and ensure proper serialization
     const transformedOffers = paginatedOffers.map(offer => ({

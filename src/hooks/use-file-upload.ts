@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { MediaFile } from '@/types/models';
 
 interface UseFileUploadOptions {
@@ -60,9 +60,9 @@ export function useFileUpload(options: UseFileUploadOptions = {}) {
     setUploadedFiles([]);
   };
 
-  const setInitialFiles = (files: MediaFile[]) => {
+  const setInitialFiles = useCallback((files: MediaFile[]) => {
     setUploadedFiles(files);
-  };
+  }, []);
 
   return {
     uploadFiles,
