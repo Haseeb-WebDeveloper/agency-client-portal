@@ -17,6 +17,7 @@ interface Offer {
   title: string;
   description: string | null;
   status: string;
+  tags: string[];
   media: MediaFile[] | null;
   validUntil: string | null;
   clientId: string;

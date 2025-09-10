@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
       title: offer.title,
       description: offer.description,
       status: offer.status,
+      tags: offer.tags || [],
       media: offer.media,
       validUntil: offer.validUntil ? new Date(offer.validUntil).toISOString() : null,
       createdAt: new Date(offer.createdAt).toISOString(),
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, description, status, clientId, media, validUntil } = body;
+    const { title, description, status, clientId, media, validUntil, tags } = body;
 
     if (!title || !clientId) {
       return NextResponse.json(
@@ -101,6 +102,7 @@ export async function POST(request: NextRequest) {
         description,
         status: status || 'DRAFT',
         clientId,
+        tags: tags || [],
         media: media || undefined,
         validUntil: validUntil ? new Date(validUntil) : null,
         hasReviewed: false,
@@ -114,6 +116,7 @@ export async function POST(request: NextRequest) {
         title: offer.title,
         description: offer.description,
         status: offer.status,
+        tags: offer.tags,
         media: offer.media,
         validUntil: offer.validUntil,
         createdAt: offer.createdAt,

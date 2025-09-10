@@ -16,6 +16,7 @@ export async function createOrUpdateOffer(offerId: string | null, input: any) {
     description: input.description || null,
     status: input.status,
     clientId: input.clientId,
+    tags: input.tags || [],
     media: input.media || null,
     validUntil: input.validUntil || null,
     updatedBy: me.id,

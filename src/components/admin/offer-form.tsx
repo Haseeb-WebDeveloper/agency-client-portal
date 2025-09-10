@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { MediaFile } from "@/types/models";
 import {
@@ -16,6 +17,8 @@ import {
   Video,
   File,
   UploadIcon,
+  Target,
+  Plus,
 } from "lucide-react";
 
 interface Client {
@@ -30,6 +33,7 @@ interface OfferFormProps {
     title: string;
     description: string | null;
     status: string;
+    tags: string[];
     media: MediaFile[] | null;
     validUntil: string | null;
     clientId: string;
@@ -53,6 +57,146 @@ const statusOptions = [
   { value: "WITHDRAWN", label: "Withdrawn" },
 ];
 
+// Predefined service tags for suggestions
+const suggestedServiceTags = [
+  "Copywriting",
+  "Graphic design",
+  "Lead gen",
+  "SEO",
+  "Social media",
+  "Web development",
+  "Branding",
+  "Content creation",
+  "Email marketing",
+  "PPC advertising",
+  "Video production",
+  "Photography",
+  "Analytics",
+];
+
+// Custom Tag Input Component
+interface CustomTagInputProps {
+  tags: string[];
+  onTagsChange: (tags: string[]) => void;
+  suggestions: string[];
+  placeholder?: string;
+  maxTags?: number;
+}
+
+function CustomTagInput({ 
+  tags, 
+  onTagsChange, 
+  suggestions, 
+  placeholder = "Type to add tags...",
+  maxTags = 10 
+}: CustomTagInputProps) {
+  const [inputValue, setInputValue] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInputValue(value);
+    
+    if (value.trim()) {
+      const filtered = suggestions.filter(suggestion =>
+        suggestion.toLowerCase().includes(value.toLowerCase()) &&
+        !tags.includes(suggestion)
+      );
+      setFilteredSuggestions(filtered);
+      setShowSuggestions(true);
+    } else {
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addTag(inputValue.trim());
+    } else if (e.key === "Backspace" && !inputValue && tags.length > 0) {
+      removeTag(tags.length - 1);
+    }
+  };
+
+  const addTag = (tag: string) => {
+    if (tag && !tags.includes(tag) && tags.length < maxTags) {
+      onTagsChange([...tags, tag]);
+      setInputValue("");
+      setShowSuggestions(false);
+    }
+  };
+
+  const removeTag = (index: number) => {
+    onTagsChange(tags.filter((_, i) => i !== index));
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    addTag(suggestion);
+  };
+
+  const handleInputBlur = () => {
+    setTimeout(() => {
+      setShowSuggestions(false);
+    }, 200);
+  };
+
+  return (
+    <div className="relative">
+      <div className="flex flex-wrap gap-2 p-3 border border-input rounded-md bg-background min-h-[40px]">
+        {tags.map((tag, index) => (
+          <Badge
+            key={index}
+            variant="secondary"
+            className="flex items-center gap-1 px-2 py-1"
+          >
+            {tag}
+            <button
+              type="button"
+              onClick={() => removeTag(index)}
+              className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </Badge>
+        ))}
+        <input
+          type="text"
+          value={inputValue}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          onBlur={handleInputBlur}
+          onFocus={() => inputValue && setShowSuggestions(true)}
+          placeholder={tags.length === 0 ? placeholder : ""}
+          className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm"
+          disabled={tags.length >= maxTags}
+        />
+      </div>
+      
+      {showSuggestions && filteredSuggestions.length > 0 && (
+        <div className="absolute z-10 w-full mt-1 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-y-auto">
+          {filteredSuggestions.map((suggestion, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => handleSuggestionClick(suggestion)}
+              className="w-full text-left px-3 py-2 hover:bg-accent hover:text-accent-foreground text-sm"
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      )}
+      
+      {tags.length >= maxTags && (
+        <p className="text-xs text-muted-foreground mt-1">
+          Maximum {maxTags} tags allowed
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function OfferForm({
   offer,
   clients,
@@ -73,7 +217,20 @@ export function OfferForm({
     roomLogo: offer?.room?.logo || null,
     roomLogoFile: null as File | null,
     isUploadingRoomLogo: false,
+    selectedTags: offer?.tags || [],
   });
+
+  // Tags state for custom tag input
+  const [tags, setTags] = useState<string[]>(offer?.tags || []);
+
+  // Handle tags change
+  const handleTagsChange = (newTags: string[]) => {
+    setTags(newTags);
+    setFormData((prev) => ({
+      ...prev,
+      selectedTags: newTags,
+    }));
+  };
 
   const { uploadFiles, removeFile, isUploading, uploadedFiles, setInitialFiles } = useFileUpload(
     {
@@ -208,6 +365,7 @@ export function OfferForm({
     try {
       const offerData = {
         ...formData,
+        tags: formData.selectedTags,
         media: uploadedFiles.length > 0 ? uploadedFiles : null,
         validUntil: formData.validUntil ? new Date(formData.validUntil) : null,
         messaging: {
@@ -409,6 +567,27 @@ export function OfferForm({
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Service Tags */}
+      <div className="">
+        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+          <Target className="w-5 h-5" />
+          Service Tags
+        </h3>
+        <div className="space-y-2">
+          <Label htmlFor="service-tags">Add service tags (type to create custom tags)</Label>
+          <CustomTagInput
+            tags={tags}
+            onTagsChange={handleTagsChange}
+            suggestions={suggestedServiceTags}
+            placeholder="Type to add custom tags or select from suggestions..."
+            maxTags={10}
+          />
+          <p className="text-sm text-muted-foreground">
+            You can select from suggested tags or type to create custom ones. Press Enter or comma to add a tag.
+          </p>
         </div>
       </div>
 

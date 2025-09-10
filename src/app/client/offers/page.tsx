@@ -77,10 +77,10 @@ export default function ClientOffersPage() {
       <div className="flex items-center justify-between">
         <h1 className="figma-h3">Your Offers</h1>
         {/* Reuse contracts filters with status list typed in UI copy */}
-        <ContractsSearchFilters
+        {/* <ContractsSearchFilters
           onSearch={handleSearch}
           isLoading={isLoading || isPending}
-        />
+        /> */}
       </div>
 
       {error && <div className="text-sm text-red-500">{error}</div>}
@@ -125,7 +125,7 @@ export default function ClientOffersPage() {
               <ClientOfferCard key={o.id} offer={o} />
             ))}
           </div>
-          {data && (
+          {data?.offers.length > 5 && (
             <OffersPagination
               currentPage={data.pagination.page}
               totalPages={data.pagination.totalPages}
