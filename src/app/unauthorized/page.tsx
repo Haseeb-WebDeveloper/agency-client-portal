@@ -6,7 +6,7 @@ import { AlertTriangle, ArrowLeft } from "lucide-react";
 export default function UnauthorizedPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0F0A1D]">
-      <div className="max-w-md w-full space-y-8 p-8">
+      <div className="max-w-xl w-full space-y-8 p-8">
         <div className="text-center">
           <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
             <AlertTriangle className="h-6 w-6 text-red-600" />
@@ -18,17 +18,16 @@ export default function UnauthorizedPage() {
         </div>
 
         <div>
-          You don't have permission to access this area. This could be because:
+          <p className="text-lg">
+            You don't have permission to access this area.
+            <br /> This could be because:
+          </p>
           <ul className="mt-2 list-disc list-inside space-y-1">
             <li>
               Your account doesn't have the required role for this section
             </li>
-            <li>
-              You're trying to access an admin area as a client, or vice versa
-            </li>
             <li>Your account is inactive or not properly configured</li>
           </ul>
-          Please contact your administrator if you believe this is an error.
         </div>
 
         <div className="space-y-4">
@@ -38,6 +37,9 @@ export default function UnauthorizedPage() {
               Back to Login
             </Link>
           </Button>
+          <p className="text-sm">
+            Please contact your administrator if you believe this is an error.
+          </p>
         </div>
       </div>
     </div>
