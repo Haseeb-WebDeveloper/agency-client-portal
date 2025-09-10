@@ -1,3 +1,4 @@
+import NextImage from "next/image";
 import Link from "next/link";
 import { getAdminDashboardStats, getRecentNews } from "@/lib/admin-queries";
 import { requireAdmin } from "@/lib/auth";
@@ -6,7 +7,8 @@ import { ClientsTable } from "@/components/admin/clients-table";
 import { MessagesCard } from "@/components/admin/messages-card";
 import { QuickActions } from "@/components/admin/quick-actions";
 import { getGreeting, getGreetingSubtitle } from "@/utils/greeting";
-import Image from "next/image";
+
+// src/app/admin/page.tsx
 
 export default async function AdminDashboard() {
   // Require admin authentication
@@ -17,6 +19,7 @@ export default async function AdminDashboard() {
 
   // Fetch news data
   const newsData = await getRecentNews(5);
+
 
   return (
     <div className="space-y-6 md:px-8 md:py-6 px-4 py-6">
@@ -48,75 +51,56 @@ export default async function AdminDashboard() {
           {/* Messages card */}
           <MessagesCard />
 
-          {/* Recent news card - Redesigned */}
-          <div
-            className="bg-transparent border border-primary/20 rounded-2xl px-0 py-0 shadow-md"
-            style={{ minWidth: 320 }}
-          >
-            {/* Header */}
-            <div className="flex items-center gap-3 px-5 pt-5 pb-3">
-              <Image
+          {/* Recent news card */}
+          <div className="bg-transparent border-primary/20 px-7 py-6 border rounded-lg space-y-6">
+            <div className="flex items-center gap-3">
+              <NextImage
                 src="/icons/news.svg"
                 alt="Recent News"
-                width={22}
-                height={22}
-                className="opacity-90"
+                width={20}
+                height={20}
               />
-              <span className="figma-paragraph text-foreground">
-                Recent news posted
-              </span>
+              <p className="figma-paragraph text-foreground">
+                Recent News Posted
+              </p>
             </div>
-            {/* News list */}
-            <div>
-              {newsData.length === 0 && (
-                <div className="px-5 py-4 text-sm text-foreground/60">
-                  No news posted yet.
-                </div>
-              )}
-              {newsData.slice(0, 2).map((newsItem, idx) => (
-                <Link
-                  key={newsItem.id}
-                  href={`/admin/news/edit/${newsItem.id}`}
-                  className={`flex items-center px-5 py-4 ${
-                    idx !== newsData.slice(0, 2).length - 1
-                      ? "border-b border-primary/20"
-                      : ""
-                  } group`}
-                  style={{ textDecoration: "none" }}
-                >
-                  {/* Image */}
+            <div className="space-y-4">
+              {newsData.map((newsItem) => (
+                <div className="flex items-start gap-3" key={newsItem.id}>
                   {newsItem.featuredImage ? (
-                    <div className="flex-shrink-0 w-20 h-14 rounded overflow-hidden bg-primary/20">
-                      <Image
+                    <div className="flex-shrink-0">
+                      <NextImage
                         src={newsItem.featuredImage}
                         alt={newsItem.title}
-                        width={80}
-                        height={56}
-                        className="object-cover w-20 h-14"
+                        width={48}
+                        height={48}
+                        className="rounded object-cover w-12 h-12"
                       />
                     </div>
                   ) : (
-                    <div className="w-20 h-14 bg-gradient-to-r from-primary to-primary/20 rounded flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs text-foreground">Featured</span>
+                    <div className="w-12 h-12 bg-gradient-to-r from-figma-primary to-figma-primary-purple-1 rounded flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs text-figma-text-white">ai</span>
                     </div>
                   )}
-                  {/* Title*/}
-                  <div className="ml-4 flex-1">
-                    <div className="text-base font-medium leading-tight text-foreground">
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium text-foreground mb-1">
                       {newsItem.title}
-                    </div>
+                    </h4>
+                    <p className="text-xs text-foreground/60">
+                      {newsItem.description}
+                    </p>
                   </div>
-                </Link>
+                </div>
               ))}
-            </div>
-            {/* Footer link */}
-            <div className="px-5 py-3 border-t border-primary/20">
-              <Link
-                href="/admin/news"
-                className="text-sm text-foreground/80 hover:underline"
-              >
-                View all news
-              </Link>
+
+              <div className="pt-2">
+                <Link
+                  href="/admin/news"
+                  className="text-sm text-figma-primary hover:text-figma-primary-purple-1 transition-colors"
+                >
+                  View all news
+                </Link>
+              </div>
             </div>
           </div>
         </div>
