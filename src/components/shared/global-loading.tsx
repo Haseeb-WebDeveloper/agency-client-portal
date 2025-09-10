@@ -2,11 +2,22 @@
 
 import { useState, useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export function GlobalLoading() {
   const [isLoading, setIsLoading] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Create a timeout to prevent indefinite loading
+    const timeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000); // 2 seconds max loading time
+
+    return () => clearTimeout(timeout);
+  }, []);
 
   useEffect(() => {
     // Show loading indicator when route changes
@@ -16,7 +27,7 @@ export function GlobalLoading() {
     // In a real app, you might want to use router events instead
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 500);
+    }, 300); // Reduced from 500ms to 300ms for better perceived performance
 
     return () => clearTimeout(timer);
   }, [pathname, searchParams]);
