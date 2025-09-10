@@ -21,7 +21,7 @@ export function QuickActions() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-64 mr-12 bg-[#1A0F2E] border-primary/20 text-foreground">
-        <DropdownMenuItem className="hover:bg-secondary focus:bg-secondary focus:text-accent-foreground cursor-pointer">
+        {/* <DropdownMenuItem className="hover:bg-secondary focus:bg-secondary focus:text-accent-foreground cursor-pointer">
           <Link
             href="/admin/members/new"
             className="flex items-center gap-3 p-3"
@@ -41,7 +41,7 @@ export function QuickActions() {
               </span>
             </div>
           </Link>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
         <DropdownMenuItem className="hover:bg-secondary focus:bg-secondary focus:text-accent-foreground cursor-pointer">
           <Link
             href="/admin/offers/new"
@@ -85,7 +85,7 @@ export function QuickActions() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem className="hover:bg-secondary focus:bg-secondary focus:text-accent-foreground cursor-pointer">
-          <Link href="/admin/news/new" className="flex items-center gap-3 p-3">
+          <Link href="/admin/news/edit/new" className="flex items-center gap-3 p-3">
             <Image
               src="/icons/notifications.svg"
               alt="Create news"

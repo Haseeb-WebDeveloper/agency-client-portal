@@ -51,11 +51,11 @@ export async function GET(
       tags: contractInfo.tags || [],
       progressPercentage: contractInfo.progressPercentage || 0,
       mediaFilesCount: parseInt(contractInfo.media_files_count) || 0,
+      media: contractInfo.media || [],
       createdAt: new Date(contractInfo.createdAt).toISOString(),
       updatedAt: new Date(contractInfo.updatedAt).toISOString(),
       startDate: contractInfo.startDate ? new Date(contractInfo.startDate).toISOString() : null,
       endDate: contractInfo.endDate ? new Date(contractInfo.endDate).toISOString() : null,
-      value: contractInfo.value ? parseFloat(contractInfo.value) : null,
       currency: contractInfo.currency,
       budget: contractInfo.budget ? parseFloat(contractInfo.budget) : null,
       priority: contractInfo.priority,
@@ -99,10 +99,10 @@ export async function PUT(
       priority, 
       startDate, 
       endDate, 
-      value, 
       currency, 
       budget, 
-      estimatedHours 
+      estimatedHours,
+      media
     } = body;
 
     if (!title || !clientId) {
@@ -124,13 +124,17 @@ export async function PUT(
         priority: priority || 3,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
-        value: value ? parseFloat(value.toString()) : null,
         currency: currency || 'USD',
         budget: budget ? parseFloat(budget.toString()) : null,
         estimatedHours: estimatedHours ? parseInt(estimatedHours.toString()) : null,
+        media: media || null,
       },
     });
 
+    console.log(contract);
+    console.log(media);
+    console.log(contract.media);
+    
     return NextResponse.json({
       success: true,
       contract: {
@@ -142,10 +146,10 @@ export async function PUT(
         priority: contract.priority,
         startDate: contract.startDate,
         endDate: contract.endDate,
-        value: contract.value,
         currency: contract.currency,
         budget: contract.budget,
         estimatedHours: contract.estimatedHours,
+        media: contract.media,
         updatedAt: contract.updatedAt,
       },
     });

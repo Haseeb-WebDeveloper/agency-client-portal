@@ -79,7 +79,7 @@ export function OfferCard({ offer }: OfferCardProps) {
   return (
     <>
       <Link
-        className="relative z-[20] flex lg:w-[70%] cursor-pointer hover:shadow-lg transition-all duration-200 rounded-lg border "
+        className="relative z-[20] flex flex-col lg:flex-row lg:w-[70%] cursor-pointer hover:shadow-lg transition-all duration-200 rounded-lg border "
         href={`/admin/offers/${offer.id}`}
         // onClick={handleCardClick}
       >
