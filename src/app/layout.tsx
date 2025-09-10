@@ -47,9 +47,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${inter.variable} antialiased`}
         suppressHydrationWarning
       >
-        <Suspense fallback={null}>
+        {/* <Suspense fallback={null}>
           <GlobalLoading />
-        </Suspense>
+        </Suspense> */}
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

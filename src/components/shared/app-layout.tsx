@@ -63,6 +63,10 @@ export function AppLayout({ children, user }: AppLayoutProps) {
               alt="Logo"
               width={200}
               height={200}
+              sizes="@media (max-width: 768px) {
+                width: 100px;
+                height: 100px;
+              }"
               className="object-contain h-12"
             />
           </div>
@@ -87,6 +91,10 @@ export function AppLayout({ children, user }: AppLayoutProps) {
                       width={20}
                       height={20}
                       className="w-5 h-5"
+                      sizes="@media (max-width: 768px) {
+                        width: 20px;
+                        height: 20px;
+                      }"
                     />
                     <span>{item.label}</span>
                   </div>
@@ -118,9 +126,7 @@ export function AppLayout({ children, user }: AppLayoutProps) {
 
   return (
     <div className="min-h-screen h-full bg-gradient-to-b from-[#0A031C] to-[#000000] text-foreground">
-      <Suspense fallback={null}>
-        <GlobalLoading />
-      </Suspense>
+      {/* <Suspense fallback={null}><GlobalLoading /></Suspense> */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent side="left" className="p-0 w-64">
           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
@@ -149,7 +155,7 @@ export function AppLayout({ children, user }: AppLayoutProps) {
                     <SidebarContent />
                   </SheetContent>
                 </Sheet>
-                <div className="relative w-full lg:min-w-2xl">
+                <div className="relative w-full lg:min-w-[70%]">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-foreground" />
                   <input
                     placeholder="Search"
