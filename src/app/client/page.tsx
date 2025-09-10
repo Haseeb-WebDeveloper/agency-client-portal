@@ -3,7 +3,7 @@ import {
   getClientDashboardStats,
   getClientRecentNews,
 } from "@/lib/client-queries";
-import { getCurrentUser } from "@/lib/auth";
+import { requireClient } from "@/lib/auth";
 import { ClientStatsCards } from "@/components/client/client-stats-cards";
 import { OngoingContracts } from "@/components/client/ongoing-contracts";
 import { MessagesCard } from "@/components/client/messages-card";
@@ -14,8 +14,8 @@ import ClientDashboardClient from "./client-dashboard-client";
 
 export default async function ClientDashboard() {
   try {
-    // Get current user (server-side)
-    const user = await getCurrentUser();
+    // Get current user (server-side) - enforce client role
+    const user = await requireClient();
 
     // Get dashboard data (server-side)
     const dashboardData = await getClientDashboardStats(user.id);

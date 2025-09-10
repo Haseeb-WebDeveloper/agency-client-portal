@@ -3,12 +3,16 @@ import React from "react";
 import Link from "next/link";
 import NewsForm from "../../../../../components/admin/news-form";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
 
 const EditNewsPage = async ({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) => {
+  // Require admin authentication
+  await requireAdmin();
+  
   const { id } = await params;
 
   // If id is "new", we're creating a new news item
