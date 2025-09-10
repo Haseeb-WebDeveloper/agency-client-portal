@@ -5,7 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { adminSidebarItems, clientSidebarItems } from "@/constants/navigation";
@@ -96,6 +101,7 @@ export function AppLayout({ children, user }: AppLayoutProps) {
       </Suspense>
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent side="left" className="p-0 w-64">
+          <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
           <SidebarContent />
         </SheetContent>
       </Sheet>
@@ -117,6 +123,7 @@ export function AppLayout({ children, user }: AppLayoutProps) {
                     </Button>
                   </SheetTrigger>
                   <SheetContent side="left" className="p-0 w-64">
+                    <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                     <SidebarContent />
                   </SheetContent>
                 </Sheet>
