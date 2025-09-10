@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -16,7 +16,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { adminSidebarItems, clientSidebarItems } from "@/constants/navigation";
 import { MenuIcon, Search } from "lucide-react";
 import { GlobalLoading } from "@/components/shared/global-loading";
-import { Suspense } from "react";
+import { Suspense, useCallback } from "react";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -31,6 +31,7 @@ interface AppLayoutProps {
 export function AppLayout({ children, user }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const isMobile = useIsMobile();
 
   const items = useMemo(
@@ -39,6 +40,17 @@ export function AppLayout({ children, user }: AppLayoutProps) {
         ? adminSidebarItems
         : clientSidebarItems,
     [user.role]
+  );
+
+  const handleNavigation = useCallback(
+    (href: string, e: React.MouseEvent) => {
+      e.preventDefault();
+      router.push(href);
+      if (isMobile) {
+        setSidebarOpen(false);
+      }
+    },
+    [router, isMobile]
   );
 
   const SidebarContent = useMemo(
@@ -61,6 +73,7 @@ export function AppLayout({ children, user }: AppLayoutProps) {
                 <Link
                   key={item.label}
                   href={item.href}
+                  onClick={(e) => handleNavigation(item.href, e)}
                   className={`cursor-pointer w-full flex items-center justify-between px-6 py-3.5 border-0 shadow-none text-sm rounded-l-full transition-colors dark:text-foreground text-background ${
                     isActive
                       ? "bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF]"
@@ -100,7 +113,7 @@ export function AppLayout({ children, user }: AppLayoutProps) {
           </div>
         </div>
       ),
-    [items, pathname, user.avatar, user.firstName]
+    [items, pathname, user.avatar, user.firstName, handleNavigation]
   );
 
   return (
