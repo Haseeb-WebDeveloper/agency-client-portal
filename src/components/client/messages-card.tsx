@@ -1,5 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ChevronRight } from "lucide-react";
 
 interface Message {
   id: string;
@@ -47,55 +49,64 @@ export function MessagesCard({ messages }: MessagesCardProps) {
   };
 
   return (
-    <div className="bg-transparent border-primary/20 px-7 py-6 border rounded-lg space-y-6">
-      <div className="flex items-center gap-3">
-        <Image
-          src="/icons/messages.svg"
-          alt="Recent Messages"
-          width={20}
-          height={20}
-        />
-        <p className="figma-paragraph text-foreground">Recent Messages</p>
+    <div className="bg-transparent border border-primary/20  rounded-xl p-0 shadow-md" style={{ minWidth: 320 }}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 pt-4 pb-2">
+        <div className="flex items-center gap-2">
+          <Image
+            src="/icons/messages.svg"
+            alt="Messages"
+            width={22}
+            height={22}
+            className="opacity-90"
+          />
+          <span className="figma-paragraph text-foreground">Messages</span>
+        </div>
       </div>
 
-      {messages.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-foreground/60">No recent messages</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {messages.map((message) => (
-            <div key={message.id} className="space-y-2">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-figma-primary flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs text-figma-text-white font-medium">
-                    {message.user.firstName.charAt(0)}
-                    {message.user.lastName.charAt(0)}
+      {/* Message previews */}
+      <div>
+        {messages.length === 0 ? (
+          <div className="px-5 py-6 text-center">
+            <p className="text-foreground/60">No recent messages</p>
+          </div>
+        ) : (
+          messages.slice(0, 2).map((message, idx) => (
+            <Link
+              key={message.id}
+              href={`/messages`}
+              className={`flex items-center px-5 py-4 ${idx !== Math.min(messages.length, 2) - 1 ? "border-b border-primary/20" : ""} group`}
+              style={{ textDecoration: "none" }}
+            >
+              <Avatar className="w-10 h-10 flex-shrink-0">
+                <AvatarImage src={message.user.avatar || undefined} alt={`${message.user.firstName} ${message.user.lastName}`} />
+                <AvatarFallback className="bg-primary/20 ">
+                  {`${message.user.firstName.charAt(0)}${message.user.lastName.charAt(0)}`.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0 ml-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-base ">
+                    {message.user.firstName} {message.user.lastName}
                   </span>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-foreground">
-                      {message.user.firstName} {message.user.lastName}
-                    </span>
-                    <span className="text-xs text-foreground/60">
-                      {formatTime(message.createdAt)}
-                    </span>
-                  </div>
-                  <p className="text-sm text-foreground/80">
-                    {truncateContent(message.content)}
-                  </p>
-                </div>
+                <p className="text-sm text-foreground/80 truncate mt-1">
+                  {truncateContent(message.content)}
+                </p>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+              <span className="ml-3 flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 group-hover:bg-primary/30 transition-colors">
+                <ChevronRight className="text-foreground/80 w-5 h-5" />
+              </span>
+            </Link>
+          ))
+        )}
+      </div>
 
-      <div className="pt-2">
+      {/* Footer */}
+      <div className="px-5 py-3 border-t border-primary/20">
         <Link
           href="/messages"
-          className="cursor-pointer text-sm text-figma-primary hover:text-figma-primary-purple-1 transition-colors"
+          className="text-sm text-foreground/80 hover:underline"
         >
           View all messages
         </Link>

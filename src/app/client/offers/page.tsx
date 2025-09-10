@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { ContractsSearchFilters } from "@/components/admin/contracts-search-filters";
+// import { ContractsSearchFilters } from "@/components/admin/contracts-search-filters";
 import { OffersPagination } from "@/components/admin/offers-pagination";
 import { ClientOfferCard } from "@/components/client/offer-card";
 
@@ -10,6 +10,7 @@ interface Offer {
   title: string;
   description: string | null;
   status: string;
+  tags: string[];
   media: any[] | null;
   validUntil: string | null;
   createdAt: string;
@@ -77,10 +78,10 @@ export default function ClientOffersPage() {
       <div className="flex items-center justify-between">
         <h1 className="figma-h3">Your Offers</h1>
         {/* Reuse contracts filters with status list typed in UI copy */}
-        <ContractsSearchFilters
+        {/* <ContractsSearchFilters
           onSearch={handleSearch}
           isLoading={isLoading || isPending}
-        />
+        /> */}
       </div>
 
       {error && <div className="text-sm text-red-500">{error}</div>}
@@ -125,7 +126,7 @@ export default function ClientOffersPage() {
               <ClientOfferCard key={o.id} offer={o} />
             ))}
           </div>
-          {data && (
+          {data?.offers.length > 5 && (
             <OffersPagination
               currentPage={data.pagination.page}
               totalPages={data.pagination.totalPages}

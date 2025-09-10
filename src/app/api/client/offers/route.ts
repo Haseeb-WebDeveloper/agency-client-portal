@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     let offers = await prisma.$queryRaw<any[]>`
       SELECT 
-        o.id, o.title, o.description, o.status, o.media, o."validUntil", o."createdAt"
+        o.id, o.title, o.description, o.status, o.tags, o.media, o."validUntil", o."createdAt"
       FROM offers o
       WHERE o."clientId" = ${membership.clientId} AND o."deletedAt" IS NULL
       ORDER BY o."updatedAt" DESC`;
@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
       title: o.title,
       description: o.description,
       status: o.status,
+      tags: o.tags || [],
       media: o.media || null,
       validUntil: o.validUntil ? new Date(o.validUntil).toISOString() : null,
       createdAt: new Date(o.createdAt).toISOString(),
