@@ -3,8 +3,11 @@ import React from "react";
 import Link from "next/link";
 import NewsList from "../../../components/admin/news-list";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
 
 const AdminNewsPage = async () => {
+  // Require admin authentication
+  await requireAdmin();
   const news = await prisma.news.findMany({
     orderBy: {
       createdAt: "desc",

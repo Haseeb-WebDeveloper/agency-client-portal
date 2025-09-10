@@ -1,4 +1,4 @@
-import { getCurrentUser } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import { AppLayout } from '@/components/shared/app-layout';
 
 export default async function AdminLayoutWrapper({
@@ -6,8 +6,8 @@ export default async function AdminLayoutWrapper({
 }: {
   children: React.ReactNode;
 }) {
-  // Get user data for the layout
-  const user = await getCurrentUser();
+  // Get user data for the layout - enforce admin role
+  const user = await requireAdmin();
   
   // Serialize user data to ensure it's safe for client components
   const serializedUser = {
