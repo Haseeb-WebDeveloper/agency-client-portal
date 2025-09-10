@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { ContractsSearchFilters } from "@/components/admin/contracts-search-filters";
+// import { ContractsSearchFilters } from "@/components/admin/contracts-search-filters";
 import { OffersPagination } from "@/components/admin/offers-pagination";
 import { ClientOfferCard } from "@/components/client/offer-card";
 
@@ -10,6 +10,7 @@ interface Offer {
   title: string;
   description: string | null;
   status: string;
+  tags: string[];
   media: any[] | null;
   validUntil: string | null;
   createdAt: string;
