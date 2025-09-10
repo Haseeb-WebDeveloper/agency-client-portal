@@ -1,14 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import NextImage from "next/image";
-import { ClientStatsCards } from "@/components/client/client-stats-cards";
 import { OngoingContracts } from "@/components/client/ongoing-contracts";
 import { MessagesCard } from "@/components/client/messages-card";
 import { getGreeting, getGreetingSubtitle } from "@/utils/greeting";
 import Link from "next/link";
-
-// src/app/client/client-dashboard-client.tsx
+import Image from "next/image";
+import { ClientStatsCards } from "@/components/client/client-stats-cards";
 
 interface SerializedData {
   user: {
@@ -49,7 +46,6 @@ interface SerializedData {
       };
     }[];
     recentNews: {
-      // Add this property for news data
       id: string;
       title: string;
       description: string;
@@ -94,56 +90,78 @@ export default function ClientDashboardClient({
           {/* Messages card */}
           <MessagesCard messages={dashboardData.recentMessages} />
 
-          {/* Recent news card */}
-          <div className="bg-transparent border-primary/20 px-7 py-6 border rounded-lg space-y-6">
-            <div className="flex items-center gap-3">
-              <NextImage
+          {/* Recent news card - styled like admin */}
+          <div
+            className="bg-transparent border border-primary/20 rounded-2xl px-0 py-0 shadow-md"
+            style={{ minWidth: 320 }}
+          >
+            {/* Header */}
+            <div className="flex items-center gap-3 px-5 pt-5 pb-3">
+              <Image
                 src="/icons/news.svg"
                 alt="Recent News"
-                width={20}
-                height={20}
+                width={22}
+                height={22}
+                className="opacity-90"
               />
-              <p className="figma-paragraph text-foreground">
-                Recent News Posted
-              </p>
+              <span className="figma-paragraph text-foreground">
+                Recent news posted
+              </span>
             </div>
-            <div className="space-y-4">
-              {dashboardData.recentNews.map((newsItem) => (
-                <div className="flex items-start gap-3" key={newsItem.id}>
+            {/* News list */}
+            <div>
+              {dashboardData.recentNews.length === 0 && (
+                <div className="px-5 py-4 text-sm text-foreground/60">
+                  No news posted yet.
+                </div>
+              )}
+              {dashboardData.recentNews.slice(0, 2).map((newsItem, idx) => (
+                <Link
+                  key={newsItem.id}
+                  href={`/client/news/${newsItem.id}`}
+                  className={`flex items-center px-5 py-4 ${
+                    idx !== dashboardData.recentNews.slice(0, 2).length - 1
+                      ? "border-b border-primary/20"
+                      : ""
+                  } group`}
+                  style={{ textDecoration: "none" }}
+                >
+                  {/* Image */}
                   {newsItem.featuredImage ? (
-                    <div className="flex-shrink-0">
-                      <NextImage
+                    <div className="flex-shrink-0 w-20 h-14 rounded overflow-hidden bg-primary/20">
+                      <Image
                         src={newsItem.featuredImage}
                         alt={newsItem.title}
-                        width={48}
-                        height={48}
-                        className="rounded object-cover w-12 h-12"
+                        width={80}
+                        height={56}
+                        className="object-cover w-20 h-14"
                       />
                     </div>
                   ) : (
-                    <div className="w-12 h-12 bg-gradient-to-r from-figma-primary to-figma-primary-purple-1 rounded flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs text-figma-text-white">AI</span>
+                    <div className="w-20 h-14 bg-gradient-to-r from-primary to-primary/20 rounded flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs text-foreground">Featured</span>
                     </div>
                   )}
-                  <div className="flex-1">
-                    <h4 className="text-sm font-medium text-foreground mb-1">
+                  {/* Title */}
+                  <div className="ml-4 flex-1">
+                    <div className="text-base font-medium leading-tight text-foreground">
                       {newsItem.title}
-                    </h4>
-                    <p className="text-xs text-foreground/60">
+                    </div>
+                    <div className="text-xs text-foreground/60 mt-1 line-clamp-2">
                       {newsItem.description}
-                    </p>
+                    </div>
                   </div>
-                </div>
-              ))}
-
-              <div className="pt-2">
-                <Link
-                  href="/client/news"
-                  className="text-sm text-figma-primary hover:text-figma-primary-purple-1 transition-colors"
-                >
-                  View all news
                 </Link>
-              </div>
+              ))}
+            </div>
+            {/* Footer link */}
+            <div className="px-5 py-3 border-t border-primary/20">
+              <Link
+                href="/client/news"
+                className="text-sm text-foreground/80 hover:underline"
+              >
+                View all news
+              </Link>
             </div>
           </div>
         </div>

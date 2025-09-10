@@ -205,6 +205,7 @@ model Offer {
   updatedBy   String?
   deletedAt   DateTime?
   hasReviewed Boolean     @default(false)
+  tags        String[]
   media       Json?
   client      Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
   creator     User?       @relation("OfferCreator", fields: [createdBy], references: [id])

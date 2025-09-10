@@ -268,10 +268,10 @@ export default function ClientDetailPage() {
                 alt={client.name}
                 width={130}
                 height={130}
-                className="w-20 md:w-80 md:h-80 h-20  rounded-full object-cover aspect-square"
+                className="w-20 md:w-32 md:h-32 h-20  rounded-full object-cover aspect-square"
               />
             ) : (
-              <div className="w-20 md:w-80 md:h-80 h-20  rounded-full bg-primary/10 flex items-center justify-center">
+              <div className="w-20 md:w-32 md:h-32 h-20  rounded-full bg-primary/10 flex items-center justify-center">
                 <span className="text-2xl ">
                   {client.name.charAt(0).toUpperCase()}
                 </span>

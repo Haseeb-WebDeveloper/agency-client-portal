@@ -16,6 +16,7 @@ interface Offer {
   title: string;
   description: string | null;
   status: string;
+  tags: string[];
   media: MediaFile[] | null | any; // Make it more flexible to handle different data types
   validUntil: string | null;
   createdAt: string;
@@ -67,7 +68,6 @@ const statusConfig = {
   },
 };
 
-const serviceTags = ["Copywriting", "Graphic design", "Lead gen"];
 
 export function OfferCard({ offer }: OfferCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -99,14 +99,20 @@ export function OfferCard({ offer }: OfferCardProps) {
         <div className="z-20 p-5 min-h-full lg:border-l flex flex-col  gap-4 ">
           {/* Service Tags */}
           <div className="w-fit flex flex-wrap gap-2">
-            {serviceTags.map((tag) => (
-              <div
-                key={tag}
-                className="px-2 py-1 text-sm rounded-xl border border-foreground/20 font-medium"
-              >
-                {tag}
+            {offer.tags && offer.tags.length > 0 ? (
+              offer.tags.map((tag, index) => (
+                <div
+                  key={index}
+                  className="px-2 py-1 text-sm rounded-xl border border-foreground/20 font-medium"
+                >
+                  {tag}
+                </div>
+              ))
+            ) : (
+              <div className="px-2 py-1 text-sm rounded-xl border border-foreground/20 font-medium text-muted-foreground">
+                No tags
               </div>
-            ))}
+            )}
           </div>
 
           {/* File Count and Date */}
