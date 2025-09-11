@@ -75,7 +75,7 @@ export default function ClientOffersPage() {
   return (
     <div className="space-y-6 md:px-8 md:py-6 px-4 py-6">
       <div className="flex items-center justify-between">
-        <h1 className="figma-h3">Your Offers</h1>
+        <h1 className="figma-h3">Your Proposals</h1>
         {/* Reuse contracts filters with status list typed in UI copy */}
         {/* <ContractsSearchFilters
           onSearch={handleSearch}
@@ -109,10 +109,10 @@ export default function ClientOffersPage() {
       {!isLoading && !isPending && data && data.offers.length === 0 ? (
         <div className="rounded-lg border border-primary/20 p-16 text-center">
           <p className="figma-h4">
-            There are no offers <em>yet</em>
+            There are no Proposals <em>yet</em>
           </p>
           <p className="mt-2 text-foreground/60">
-            We'll notify you as soon as new offers are available.
+            We'll notify you as soon as new Proposals are available.
           </p>
         </div>
       ) : null}

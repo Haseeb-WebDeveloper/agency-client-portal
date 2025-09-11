@@ -583,7 +583,7 @@ export default function ChatRoom({
 
               return (
                 <div
-                  key={message.id}
+                  key={`message-${message.id}`}
                   className={`flex ${
                     isCurrent ? "justify-end" : "justify-start"
                   } group`}
@@ -680,7 +680,7 @@ export default function ChatRoom({
                                       if (isImage) {
                                         return (
                                           <div
-                                            key={att.id}
+                                            key={`attachment-${att.id}`}
                                             className="relative"
                                           >
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -717,7 +717,7 @@ export default function ChatRoom({
                                       if (isVideo) {
                                         return (
                                           <div
-                                            key={att.id}
+                                            key={`video-${att.id}`}
                                             className="relative"
                                           >
                                             <video
@@ -746,7 +746,7 @@ export default function ChatRoom({
                                       }
                                       return (
                                         <div
-                                          key={att.id}
+                                          key={`file-${att.id}`}
                                           className="flex items-center gap-2 text-xs"
                                         >
                                           <button
@@ -983,7 +983,7 @@ export default function ChatRoom({
                 <div className="absolute right-0 -top-2 translate-y-[-100%] z-10 bg-background border rounded-md p-2 grid grid-cols-6 gap-1">
                   {EMOJIS.map((e) => (
                     <button
-                      key={e}
+                      key={`emoji-${e}`}
                       type="button"
                       className="hover:bg-muted rounded p-1"
                       onClick={() => {
@@ -1023,7 +1023,7 @@ export default function ChatRoom({
                 f.type === "video" || f.url.match(/\.(mp4|webm|ogg)$/i) != null;
               return (
                 <div
-                  key={`${f.url}-${idx}`}
+                  key={`attachment-${f.url}-${idx}`}
                   className="relative border border-border/40 rounded-md p-1"
                 >
                   <button

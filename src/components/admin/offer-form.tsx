@@ -213,7 +213,7 @@ export function OfferForm({
       ? new Date(offer.validUntil).toISOString().split("T")[0]
       : "",
     createRoom: !!offer?.room,
-    roomName: offer?.room?.name || (offer?.title ? `Offer: ${offer.title}` : ""),
+    roomName: offer?.room?.name || (offer?.title ? `Proposal: ${offer.title}` : ""),
     roomLogo: offer?.room?.logo || null,
     roomLogoFile: null as File | null,
     isUploadingRoomLogo: false,
@@ -370,14 +370,14 @@ export function OfferForm({
         validUntil: formData.validUntil ? new Date(formData.validUntil) : null,
         messaging: {
           createRoom: formData.createRoom,
-          roomName: formData.roomName || `Offer: ${formData.title}`,
+          roomName: formData.roomName || `Proposal: ${formData.title}`,
           roomLogo: formData.roomLogo || null,
         },
       };
 
       await onSave(offerData);
     } catch (error) {
-      console.error("Error saving offer:", error);
+      console.error("Error saving proposal:", error);
     }
   };
 
@@ -402,7 +402,7 @@ export function OfferForm({
         <div className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="title" className="figma-paragraph">
-              Offer Title *
+              Proposal Title *
             </Label>
             <Input
               id="title"
@@ -421,7 +421,7 @@ export function OfferForm({
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
-              placeholder="Describe the offer details..."
+              placeholder="Describe the proposal details..."
               rows={4}
               className="bg-transparent"
             />
@@ -483,7 +483,7 @@ export function OfferForm({
 
       {/* Messaging Room */}
       <div className="">
-        <p className="mb-4 text-lg">Offer Room</p>
+        <p className="mb-4 text-lg">Proposal Room</p>
         <div className="space-y-6">
           <div className="flex items-center gap-2">
             <input
@@ -495,7 +495,7 @@ export function OfferForm({
               }
             />
             <Label htmlFor="createRoom">
-              Create a discussion room for this offer
+              Create a discussion room for this Proposal
             </Label>
           </div>
           {formData.createRoom && (
@@ -603,7 +603,7 @@ export function OfferForm({
           <div className="border-2 border-dashed border-primary/20 rounded-lg p-6 text-center">
             <UploadIcon className="w-8 h-8 mx-auto mb-2 text-primary/60" />
             <p className="text-sm text-foreground/60 mb-4">
-              Upload files to attach to this offer
+              Upload files to attach to this Proposal
             </p>
             <input
               type="file"
@@ -680,7 +680,7 @@ export function OfferForm({
           disabled={isLoading || isUploading}
           className="bg-primary hover:bg-primary/90"
         >
-          {isLoading ? "Saving..." : offer ? "Update Offer" : "Create Offer"}
+          {isLoading ? "Saving..." : offer ? "Update Proposal" : "Create Proposal"}
         </Button>
       </div>
     </form>

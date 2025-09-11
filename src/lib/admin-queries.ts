@@ -64,13 +64,13 @@ export async function getAdminDashboardStats() {
 
   // Process contracts stats
   const contractsData = contractsStats as any[];
-  const activeContracts = contractsData.find(stat => stat.status === 'ACTIVE')?.count || 0;
-  const draftContracts = contractsData.find(stat => stat.status === 'DRAFT')?.count || 0;
+  const activeContracts = parseInt(contractsData.find(stat => stat.status === 'ACTIVE')?.count.toString() || '0') || 0;
+  const draftContracts = parseInt(contractsData.find(stat => stat.status === 'DRAFT')?.count.toString() || '0') || 0;
 
   // Process offers stats
   const offersData = offersStats as any[];
-  const newOffers = offersData.find(stat => stat.status === 'SENT')?.count || 0;
-  const pendingOffers = offersData.find(stat => stat.status === 'DRAFT')?.count || 0;
+  const newOffers = parseInt(offersData.find(stat => stat.status === 'SENT')?.count.toString() || '0') || 0;
+  const pendingOffers = parseInt(offersData.find(stat => stat.status === 'DRAFT')?.count.toString() || '0') || 0;
 
   // Process clients data
   const clientsData = clients as any[];
@@ -80,8 +80,8 @@ export async function getAdminDashboardStats() {
     description: client.description || '',
     logo: client.logo,
     website: client.website,
-    activeContracts: parseInt(client.active_contracts) || 0,
-    pendingContracts: parseInt(client.pending_contracts) || 0, // Fixed: was pendingOffers
+    activeContracts: parseInt(client.active_contracts.toString() || '0') || 0,
+    pendingContracts: parseInt(client.pending_contracts.toString() || '0') || 0, // Fixed: was pendingOffers
     lastActivity: client.updatedAt ? new Date(client.updatedAt).toISOString() : new Date().toISOString(),
     teamMembers: [], // Empty array for now - will be populated when needed
     totalTeamMembers: 0, // Will be populated when needed

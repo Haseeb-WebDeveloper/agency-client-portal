@@ -53,15 +53,15 @@ export async function getClientDashboardStats(userId: string) {
 
   // Process contracts stats
   const contractsData = contractsStats as any[];
-  const activeContracts = contractsData.find(stat => stat.status === 'ACTIVE')?.count || 0;
+  const activeContracts = parseInt(contractsData.find(stat => stat.status === 'ACTIVE')?.count.toString() || '0') || 0;
 
   // Process offers to review
   const offersToReviewData = offersToReview as any[];
-  const offersToReviewCount = parseInt(offersToReviewData[0]?.count) || 0;
+  const offersToReviewCount = parseInt(offersToReviewData[0]?.count.toString() || '0') || 0;
 
   // Process offers pending
   const offersPendingData = offersPending as any[];
-  const offersPendingCount = parseInt(offersPendingData[0]?.count) || 0;
+  const offersPendingCount = parseInt(offersPendingData[0]?.count.toString() || '0') || 0;
 
   // Get ongoing contracts with task progress
   const ongoingContracts = await prisma.$queryRaw`
@@ -120,16 +120,29 @@ export async function getClientDashboardStats(userId: string) {
     },
   }));
 
+  // Process ongoing contracts to handle BigInt values
+  const processedOngoingContracts = (ongoingContracts as any[]).map(contract => ({
+    id: contract.id,
+    title: contract.title,
+    status: contract.status,
+    total_tasks: parseInt(contract.total_tasks.toString() || '0') || 0,
+    completed_tasks: parseInt(contract.completed_tasks.toString() || '0') || 0,
+  }));
+
+  // Get recent news for client dashboard
+  const recentNews = await getClientRecentNews(5);
+
   return {
     contracts: {
-      active: parseInt(activeContracts),
+      active: activeContracts,
     },
     offers: {
       toReview: offersToReviewCount,
       pending: offersPendingCount,
     },
-    ongoingContracts: ongoingContracts as any[],
+    ongoingContracts: processedOngoingContracts,
     recentMessages: processedMessages,
+    recentNews: recentNews, // Add recentNews to the returned data
   };
 }
 

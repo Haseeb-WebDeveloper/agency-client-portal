@@ -1,8 +1,9 @@
 // src/app/client/news/page.tsx
-import { requireClient } from "@/lib/auth";
-import { getClientNews } from "@/lib/client-queries";
+"use client";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import NextImage from "next/image";
+import { SkeletonLoading } from "@/components/shared/skeleton-loading";
 
 // Define the news item type
 interface NewsItem {
@@ -11,7 +12,7 @@ interface NewsItem {
   description: string | null;
   featuredImage: string | null;
   content: string;
-  createdAt: Date;
+  createdAt: string;
   creator: {
     id: string;
     firstName: string;
@@ -19,18 +20,53 @@ interface NewsItem {
   } | null;
 }
 
-export default async function ClientNewsPage() {
-  // Require client authentication
-  const user = await requireClient();
+export default function ClientNewsPage() {
+  const [newsData, setNewsData] = useState<NewsItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  let newsData: NewsItem[] = [];
-  let error = null;
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/client/news");
+        if (!response.ok) {
+          throw new Error("Failed to load news");
+        }
+        const data = await response.json();
+        setNewsData(data);
+      } catch (err) {
+        setError("Failed to load news: " + (err as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  try {
-    // Fetch news data directly from database
-    newsData = await getClientNews(user.id);
-  } catch (err) {
-    error = "Failed to load news: " + (err as Error).message;
+    fetchNews();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="space-y-6 md:px-8 md:py-6 px-4 py-6">
+        <div className="flex items-center justify-between">
+          <h1 className="figma-h3">News</h1>
+        </div>
+        <SkeletonLoading type="list" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6 md:px-8 md:py-6 px-4 py-6">
+        <div className="flex items-center justify-between">
+          <h1 className="figma-h3">News</h1>
+        </div>
+        <div className="bg-transparent border-primary/20 px-7 py-6 border rounded-lg">
+          <p className="text-red-500">Error: {error}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -39,11 +75,7 @@ export default async function ClientNewsPage() {
         <h1 className="figma-h3">News</h1>
       </div>
 
-      {error ? (
-        <div className="bg-transparent border-primary/20 px-7 py-6 border rounded-lg">
-          <p className="text-red-500">Error: {error}</p>
-        </div>
-      ) : newsData.length === 0 ? (
+      {newsData.length === 0 ? (
         <div className="bg-transparent border-primary/20 px-7 py-6 border rounded-lg">
           <p className="text-center text-foreground/60">
             No news available at the moment.

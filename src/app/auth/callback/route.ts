@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       } else if (existingUser.role === UserRole.CLIENT || existingUser.role === UserRole.CLIENT_MEMBER) {
         redirectPath = '/client'
       } else if (existingUser.role === UserRole.AGENCY_MEMBER) {
-        redirectPath = '/agency'
+        redirectPath = '/admin'
       }
 
       return NextResponse.redirect(`${origin}${redirectPath}`)

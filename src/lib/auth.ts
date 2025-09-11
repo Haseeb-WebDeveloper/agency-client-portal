@@ -11,7 +11,9 @@ export async function getCurrentUser() {
   } = await supabase.auth.getUser();
 
   if (authError || !authUser) {
-    redirect('/login');
+    // Instead of redirecting, return null for API routes
+    // The calling function can handle the redirect if needed
+    return null;
   }
 
   const user = await prisma.user.findUnique({
@@ -30,7 +32,8 @@ export async function getCurrentUser() {
   });
 
   if (!user || !user.isActive) {
-    redirect('/unauthorized');
+    // Instead of redirecting, return null for API routes
+    return null;
   }
 
   return user;
@@ -38,6 +41,10 @@ export async function getCurrentUser() {
 
 export async function requireAdmin() {
   const user = await getCurrentUser();
+  
+  if (!user) {
+    redirect('/login');
+  }
   
   if (user.role !== 'PLATFORM_ADMIN') {
     redirect('/unauthorized');
@@ -48,6 +55,10 @@ export async function requireAdmin() {
 
 export async function requireClient() {
   const user = await getCurrentUser();
+  
+  if (!user) {
+    redirect('/login');
+  }
   
   if (user.role !== 'CLIENT' && user.role !== 'CLIENT_MEMBER') {
     redirect('/unauthorized');
