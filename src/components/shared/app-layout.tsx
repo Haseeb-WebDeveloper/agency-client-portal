@@ -15,8 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { adminSidebarItems, clientSidebarItems } from "@/constants/navigation";
 import { MenuIcon, Search } from "lucide-react";
-import { GlobalLoading } from "@/components/shared/global-loading";
-import { Suspense, useCallback } from "react";
+import { useCallback } from "react";
 
 interface AppLayoutProps {
   children: React.ReactNode;
