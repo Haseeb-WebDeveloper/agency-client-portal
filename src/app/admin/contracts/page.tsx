@@ -64,7 +64,7 @@ function ContractsContent() {
       });
 
       const response = await fetch(`/api/admin/contracts?${params.toString()}`, {
-        next: { revalidate: 30, tags: ['contracts:list'] }
+        next: { revalidate: 300, tags: ['contracts:list'] } // 5 minutes
       });
 
       if (!response.ok) {

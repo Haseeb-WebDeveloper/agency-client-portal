@@ -6,7 +6,7 @@ export const getAdminDashboardStats = cache(
     return rawGetAdminDashboardStats();
   },
   ['admin:dashboard'],
-  { revalidate: 60, tags: ['admin:dashboard'] }
+  { revalidate: 300, tags: ['admin:dashboard'] } // 5 minutes
 );
 
 export const getRecentNews = cache(
@@ -14,7 +14,7 @@ export const getRecentNews = cache(
     return rawGetRecentNews(limit);
   },
   ['admin:news:recent'],
-  { revalidate: 60, tags: ['news:list'] }
+  { revalidate: 300, tags: ['news:list'] } // 5 minutes
 );
 
 

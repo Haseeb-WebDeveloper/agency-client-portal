@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/auth';
 import { revalidateTag } from 'next/cache';
+import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 
 export async function GET(request: NextRequest) {
   try {
@@ -59,7 +61,7 @@ export async function GET(request: NextRequest) {
       totalTeamMembers: 0,
     }));
 
-    const cacheHeaders = { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } as const;
+    const cacheHeaders = { 'Cache-Control': 'private, max-age=300, stale-while-revalidate=600' } as const; // 5min + 10min stale
 
     return NextResponse.json({
       clients: clientsData,
@@ -115,10 +117,46 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create primary contact user
+
+    // Create user in Supabase Auth first using admin client
+    const supabaseAdmin = await createAdminClient();
+    
+    console.log('Creating user in Supabase Auth for:', { email, firstName, lastName });
+    
+    const { data: authData, error: authCreateError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      email_confirm: true, // Auto-confirm the email
+      user_metadata: {
+        first_name: firstName,
+        last_name: lastName,
+        role: 'CLIENT'
+      }
+    });
+
+    console.log('Supabase Auth response:', { authData, authCreateError });
+
+    if (authCreateError || !authData.user) {
+      console.error('Failed to create user in Supabase Auth:', authCreateError);
+      
+      // If auth creation fails, clean up the client record
+      await prisma.client.delete({
+        where: { id: client.id }
+      });
+      
+      return NextResponse.json(
+        { 
+          error: 'Failed to create user in authentication system', 
+          details: authCreateError?.message || 'Unknown auth error',
+          authError: authCreateError
+        },
+        { status: 500 }
+      );
+    }
+
+    // Create primary contact user with real authId
     const user = await prisma.user.create({
       data: {
-        authId: `temp-${Date.now()}`, // Temporary auth ID, will be updated when user signs up
+        authId: authData.user.id,
         firstName,
         lastName,
         email,
@@ -135,6 +173,20 @@ export async function POST(request: NextRequest) {
         role: 'PRIMARY_CONTACT',
       },
     });
+
+    // Send magic link to the newly created user
+    // const supabase = await createClient();
+    // const { error: magicLinkError } = await supabase.auth.signInWithOtp({
+    //   email,
+    //   options: {
+    //     emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?redirectTo=/client`
+    //   }
+    // });
+
+    // if (magicLinkError) {
+    //   console.warn('Failed to send magic link:', magicLinkError.message);
+    //   // Don't fail the entire operation, just log the warning
+    // }
 
     revalidateTag('clients:list');
     revalidateTag('admin:dashboard');

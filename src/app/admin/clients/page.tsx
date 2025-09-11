@@ -6,6 +6,7 @@ import { ClientCard } from "@/components/admin/client-card";
 import { ClientsPagination } from "@/components/admin/clients-pagination";
 import { CreateClientModal } from "@/components/admin/create-client-modal";
 import { ClientsData } from "@/types/admin";
+import { fetchWithCache, ClientCache } from "@/lib/cache-strategy";
 
 function ClientsContent() {
   const searchParams = useSearchParams();
@@ -36,15 +37,13 @@ function ClientsContent() {
         ...(sortFilter && { sortBy: sortFilter }),
       });
 
-      const response = await fetch(`/api/admin/clients?${params.toString()}`, {
-        next: { revalidate: 30, tags: ['clients:list'] }
+      const data = await fetchWithCache<ClientsData>(`/api/admin/clients?${params.toString()}`, {
+        cacheKey: `clients_${searchTerm}_${sortFilter}_${pageNum}`,
+        ttl: 15 * 60 * 1000, // 15 minutes client cache
+        revalidate: 300, // 5 minutes server cache
+        tags: ['clients:list']
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch clients");
-      }
-
-      const data = await response.json();
+      
       setClientsData(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -66,7 +65,8 @@ function ClientsContent() {
 
   const handleClientCreated = () => {
     setShowCreateModal(false);
-    // Refresh the clients list
+    // Clear client cache and refresh
+    ClientCache.invalidatePattern('clients_');
     fetchClients();
   };
 

@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     const totalPages = Math.max(Math.ceil(total / limit), 1);
-    const cacheHeaders = { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } as const;
+    const cacheHeaders = { 'Cache-Control': 'private, max-age=300, stale-while-revalidate=600' } as const; // 5min + 10min stale
 
     return NextResponse.json(
       {

@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       creator_last_name: contract.creator_last_name,
     }));
 
-    const cacheHeaders = { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } as const;
+    const cacheHeaders = { 'Cache-Control': 'private, max-age=300, stale-while-revalidate=600' } as const; // 5min + 10min stale
 
     return NextResponse.json({
       contracts: transformedContracts,
