@@ -16,6 +16,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { adminSidebarItems, clientSidebarItems } from "@/constants/navigation";
 import { MenuIcon, Search } from "lucide-react";
 import { useCallback } from "react";
+import { Suspense, useCallback } from "react";
+import { createClient as createBrowserSupabaseClient } from "@/utils/supabase/clients";
+
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -32,6 +35,12 @@ export function AppLayout({ children, user }: AppLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const isMobile = useIsMobile();
+
+  const handleLogout = useCallback(async () => {
+    const supabase = createBrowserSupabaseClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+  }, [router]);
 
   const items = useMemo(
     () =>
@@ -164,15 +173,25 @@ export function AppLayout({ children, user }: AppLayoutProps) {
                   />
                 </div>
               </div>
-              <div className="relative flex items-center justify-center w-fit h-fit">
-                <Image
-                  src="/icons/notification.svg"
-                  alt="Notification"
-                  width={20}
-                  height={20}
-                  className={`${isMobile ? "w-5 h-5" : "w-6 h-6"}`}
-                />
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full text-xs"></span>
+              <div className="flex items-center gap-3">
+                <div className="relative flex items-center justify-center w-fit h-fit">
+                  <Image
+                    src="/icons/notification.svg"
+                    alt="Notification"
+                    width={20}
+                    height={20}
+                    className={`${isMobile ? "w-5 h-5" : "w-6 h-6"}`}
+                  />
+                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full text-xs"></span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="border-primary/40"
+                >
+                  Logout
+                </Button>
               </div>
             </div>
           </header>

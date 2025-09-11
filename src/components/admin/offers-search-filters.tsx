@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect, useRef } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 import Image from "next/image";
 
 interface OffersSearchFiltersProps {
@@ -29,6 +30,7 @@ export function OffersSearchFilters({
   const [status, setStatus] = useState(currentStatus);
   const [showFilters, setShowFilters] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const debouncedStatus = useDebounce(status, 300);
 
   // Sync status with currentStatus prop
   useEffect(() => {
@@ -38,15 +40,18 @@ export function OffersSearchFilters({
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setShowFilters(false);
       }
     };
     if (showFilters) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showFilters]);
 
@@ -69,6 +74,14 @@ export function OffersSearchFilters({
       handleSearch();
     }
   };
+
+  // Auto-apply when status changes with debounce
+  useEffect(() => {
+    if (!showFilters) {
+      startTransition(() => onSearch(search, debouncedStatus));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedStatus]);
 
   return (
     <div className="flex items-center gap-3 relative">
@@ -119,7 +132,9 @@ export function OffersSearchFilters({
                       className="accent-primary"
                       disabled={isLoading || isPending}
                     />
-                    <span className="text-sm text-foreground">{option.label}</span>
+                    <span className="text-sm text-foreground">
+                      {option.label}
+                    </span>
                   </label>
                 ))}
               </div>
