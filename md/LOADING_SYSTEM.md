@@ -8,7 +8,6 @@ This document explains the loading system implementation across the agency-clien
 
 ### 1. Global Loading (`GlobalLoading`)
 
-- **Location**: `src/components/shared/global-loading.tsx`
 - **Purpose**: Shows a loading indicator when navigating between routes
 - **Implementation**: Uses Next.js router events to detect navigation changes
 - **Usage**: Automatically included in `AppLayout`
