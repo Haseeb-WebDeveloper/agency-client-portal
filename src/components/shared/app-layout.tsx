@@ -16,7 +16,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { adminSidebarItems, clientSidebarItems } from "@/constants/navigation";
 import { MenuIcon, Search } from "lucide-react";
 import { useCallback } from "react";
-import { Suspense, useCallback } from "react";
 import { createClient as createBrowserSupabaseClient } from "@/utils/supabase/clients";
 
 
