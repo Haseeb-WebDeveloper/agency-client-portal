@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Poppins, Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { GlobalLoading } from "@/components/shared/global-loading";
-import { Suspense } from "react";
+// import { GlobalLoading } from "@/components/shared/global-loading";
+// import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

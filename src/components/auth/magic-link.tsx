@@ -1,12 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Mail, CheckCircle } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/clients";
@@ -26,7 +23,6 @@ export function MagicLinkLogin({
   const [isLoading, setIsLoading] = useState(false);
   const [isEmailSent, setIsEmailSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
   const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,8 +34,10 @@ export function MagicLinkLogin({
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`
-        }
+          emailRedirectTo: `${
+            window.location.origin
+          }/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`,
+        },
       });
 
       if (error) {
@@ -50,7 +48,7 @@ export function MagicLinkLogin({
 
       setIsEmailSent(true);
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+      setError("An unexpected error occurred. Please try again.");
       setIsLoading(false);
     }
   };

@@ -8,15 +8,12 @@ import {
   ArrowLeft,
   Edit,
   Users,
-  Gift,
   Calendar,
-  Building,
   Clock,
   CheckCircle,
   XCircle,
   AlertCircle,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { EditClientModal } from "@/components/admin/edit-client-modal";
@@ -338,9 +335,7 @@ export default function ClientDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-6">
         {/* Team Members */}
         <div className="space-y-6">
-          <h3 className="text-lg ">
-            Client team members
-          </h3>
+          <h3 className="text-lg ">Client team members</h3>
           <div className="space-y-4">
             {client.teamMembers.map((member) => (
               <div key={member.id} className="flex items-center gap-4">

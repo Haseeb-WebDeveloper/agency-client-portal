@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useFileUpload } from "@/hooks/use-file-upload";
-import { MediaFile, Contract } from "@/types/models";
+import { MediaFile } from "@/types/models";
 import {
   Calendar,
   Upload,

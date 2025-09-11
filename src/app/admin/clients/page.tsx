@@ -3,40 +3,10 @@
 import { useState, useEffect, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { ClientCard } from "@/components/admin/client-card";
-import { ClientsSearchFilters } from "@/components/admin/clients-search-filters";
+// import { ClientsSearchFilters } from "@/components/admin/clients-search-filters";
 import { ClientsPagination } from "@/components/admin/clients-pagination";
 import { CreateClientModal } from "@/components/admin/create-client-modal";
-
-interface TeamMember {
-  id: string;
-  name: string;
-  avatar?: string | null;
-}
-
-interface Client {
-  id: string;
-  name: string;
-  description: string;
-  logo?: string | null;
-  website?: string | null;
-  activeContracts: number;
-  pendingOffers: number;
-  lastActivity: string;
-  teamMembers: TeamMember[];
-  totalTeamMembers: number;
-}
-
-interface ClientsData {
-  clients: Client[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
-}
+import { ClientsData } from "@/types/admin";
 
 function ClientsContent() {
   const searchParams = useSearchParams();

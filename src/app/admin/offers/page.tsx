@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { OfferCard } from "@/components/admin/offer-card";
-import { OffersSearchFilters } from "@/components/admin/offers-search-filters";
+// import { OffersSearchFilters } from "@/components/admin/offers-search-filters";
 import { OffersPagination } from "@/components/admin/offers-pagination";
 import { MediaFile } from "@/types/models";
 
