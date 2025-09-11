@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-// import { ContractsSearchFilters } from "@/components/admin/contracts-search-filters";
 import { OffersPagination } from "@/components/admin/offers-pagination";
 import { ClientOfferCard } from "@/components/client/offer-card";
 

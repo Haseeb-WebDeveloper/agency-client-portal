@@ -15,7 +15,7 @@ interface MagicLinkLoginProps {
 }
 
 export function MagicLinkLogin({
-  redirectTo = "/dashboard",
+  redirectTo = "/",
   title = "",
   description = "",
 }: MagicLinkLoginProps) {
@@ -31,12 +31,36 @@ export function MagicLinkLogin({
     setError(null);
 
     try {
+      // Pre-check if user exists in our database
+      const checkResponse = await fetch("/api/auth/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const checkJson = await checkResponse.json();
+
+      if (!checkResponse.ok || !checkJson.ok) {
+        throw new Error(checkJson.error || "Unable to verify user");
+      }
+
+      if (!checkJson.exists) {
+        setError(
+          "You are not registered on Figmenta client portal. Please contact the administration team for more info."
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      const appOrigin =
+        process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
+
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${
-            window.location.origin
-          }/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`,
+          emailRedirectTo: `${appOrigin}/auth/callback?redirectTo=${encodeURIComponent(
+            redirectTo
+          )}`,
         },
       });
 
@@ -75,6 +99,8 @@ export function MagicLinkLogin({
             onClick={() => {
               setIsEmailSent(false);
               setEmail("");
+              setIsLoading(false);
+              setError(null);
             }}
           >
             Use different email
