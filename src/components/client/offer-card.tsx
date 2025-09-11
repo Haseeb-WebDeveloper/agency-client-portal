@@ -28,7 +28,6 @@ interface OfferCardProps {
   offer: Offer;
 }
 
-
 const statusConfig = {
   DRAFT: {
     label: "Draft",
@@ -140,22 +139,6 @@ export function ClientOfferCard({ offer }: OfferCardProps) {
           </DialogHeader>
           <div className="space-y-6">
             <p className="text-muted-foreground">{offer.description}</p>
-            <div className="flex flex-wrap gap-3">
-              <Button variant="outline" className="border-primary/20">
-                <FileText className="w-4 h-4 mr-2" /> Project Scope
-              </Button>
-              <Button variant="outline" className="border-primary/20">
-                Reference 1
-              </Button>
-              <Button variant="outline" className="border-primary/20">
-                Reference 2
-              </Button>
-            </div>
-            <div>
-              <Button className="bg-primary">
-                <MessageCircle className="w-4 h-4 mr-2" /> Message us
-              </Button>
-            </div>
           </div>
         </DialogContent>
       </Dialog>
