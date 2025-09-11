@@ -138,6 +138,8 @@ model Contract {
   @@index([status])
   @@index([progressPercentage])
   @@index([priority])
+  @@index([updatedAt])
+  @@index([title])
   @@index([deletedAt])
   @@map("contracts")
 }
@@ -216,6 +218,8 @@ model Offer {
   @@index([status])
   @@index([validUntil])
   @@index([hasReviewed])
+  @@index([updatedAt])
+  @@index([title])
   @@index([deletedAt])
   @@map("offers")
 }
@@ -295,6 +299,7 @@ model Message {
   user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([roomId, createdAt])
+  @@index([createdAt])
   @@index([userId])
   @@index([contractId])
   @@index([parentId])

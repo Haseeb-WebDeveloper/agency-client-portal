@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 import { Search, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ export function ContractsSearchFilters({
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState(currentStatus);
   const [showFilters, setShowFilters] = useState(false);
+  const debouncedStatus = useDebounce(status, 300);
 
   // Sync status with currentStatus prop
   useEffect(() => {
@@ -55,6 +57,14 @@ export function ContractsSearchFilters({
   };
 
   const hasActiveFilters = search || status;
+
+  // Auto-apply when status changes with debounce
+  useEffect(() => {
+    if (!showFilters) {
+      startTransition(() => onSearch(search, debouncedStatus));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedStatus]);
 
   return (
     <div className="flex items-center gap-3">

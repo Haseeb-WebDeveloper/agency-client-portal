@@ -1,101 +1,122 @@
-'use client';
+"use client";
 
-import { useState, useTransition, useRef, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, Filter, X, Check } from 'lucide-react';
-import Image from 'next/image';
+import { useState, useTransition, useRef, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useDebounce } from "@/hooks/use-debounce";
+import { Search, Filter, X, Check } from "lucide-react";
+import Image from "next/image";
 
 interface ClientsSearchFiltersProps {
   onSearch: (search: string, sortBy: string) => void;
   isLoading?: boolean;
 }
 
-export function ClientsSearchFilters({ onSearch, isLoading }: ClientsSearchFiltersProps) {
+export function ClientsSearchFilters({
+  onSearch,
+  isLoading,
+}: ClientsSearchFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
-  const [search, setSearch] = useState(searchParams.get('search') || '');
-  const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || '');
+
+  const [search, setSearch] = useState(searchParams.get("search") || "");
+  const [sortBy, setSortBy] = useState(searchParams.get("sortBy") || "");
   const [showFilters, setShowFilters] = useState(false);
+  const debouncedSearch = useDebounce(search, 350);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setShowFilters(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   const handleSearch = () => {
     startTransition(() => {
       const params = new URLSearchParams(searchParams);
-      
+
       if (search) {
-        params.set('search', search);
+        params.set("search", search);
       } else {
-        params.delete('search');
+        params.delete("search");
       }
-      
+
       if (sortBy) {
-        params.set('sortBy', sortBy);
+        params.set("sortBy", sortBy);
       } else {
-        params.delete('sortBy');
+        params.delete("sortBy");
       }
-      
-      params.delete('page'); // Reset to first page
-      
-      router.push(`/admin/clients?${params.toString()}`);
+
+      params.delete("page"); // Reset to first page
+
+      router.replace(`/admin/clients?${params.toString()}`);
       onSearch(search, sortBy);
     });
   };
 
   const handleClear = () => {
-    setSearch('');
-    setSortBy('');
+    setSearch("");
+    setSortBy("");
     startTransition(() => {
-      router.push('/admin/clients');
-      onSearch('', '');
+      router.push("/admin/clients");
+      onSearch("", "");
     });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSearch();
     }
   };
 
   const handleFilterChange = (filterType: string) => {
-    const newSortBy = sortBy === filterType ? '' : filterType;
+    const newSortBy = sortBy === filterType ? "" : filterType;
     setSortBy(newSortBy);
     startTransition(() => {
       const params = new URLSearchParams(searchParams);
-      
+
       if (search) {
-        params.set('search', search);
+        params.set("search", search);
       } else {
-        params.delete('search');
+        params.delete("search");
       }
-      
+
       if (newSortBy) {
-        params.set('sortBy', newSortBy);
+        params.set("sortBy", newSortBy);
       } else {
-        params.delete('sortBy');
+        params.delete("sortBy");
       }
-      
-      params.delete('page');
-      
-      router.push(`/admin/clients?${params.toString()}`);
+
+      params.delete("page");
+
+      router.replace(`/admin/clients?${params.toString()}`);
       onSearch(search, newSortBy);
     });
   };
+
+  // Auto-apply debounced text search
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    if (debouncedSearch) params.set("search", debouncedSearch);
+    else params.delete("search");
+    if (sortBy) params.set("sortBy", sortBy);
+    else params.delete("sortBy");
+    params.delete("page");
+    router.replace(`/admin/clients?${params.toString()}`);
+    onSearch(debouncedSearch, sortBy);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
 
   return (
     <div className="flex items-center gap-3">

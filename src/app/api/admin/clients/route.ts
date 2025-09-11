@@ -5,75 +5,47 @@ import { requireAdmin } from '@/lib/auth';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100); // Reduced default and added max limit
-    const search = searchParams.get('search') || '';
+    const page = Math.max(parseInt(searchParams.get('page') || '1'), 1);
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20'), 1), 100);
+    const search = (searchParams.get('search') || '').trim();
 
-    // Build where clause
-    const whereClause: any = {
-      deletedAt: null,
-    };
-
+    const params: any[] = [];
+    let whereSql = 'WHERE c."deletedAt" IS NULL';
     if (search) {
-      whereClause.name = {
-        contains: search,
-        mode: 'insensitive',
-      };
+      const like = `%${search.toLowerCase()}%`;
+      params.push(like);
+      whereSql += ` AND LOWER(c.name) LIKE $${params.length}`;
     }
 
-    // Get clients with contract statistics
-    let clients;
-    if (search) {
-      clients = await prisma.$queryRaw`
-        SELECT 
-          c.*,
-          COALESCE(contract_stats.active_contracts, 0) as active_contracts,
-          COALESCE(contract_stats.pending_contracts, 0) as pending_contracts
-        FROM clients c
-        LEFT JOIN (
-          SELECT 
-            co."clientId",
-            SUM(CASE WHEN co.status = 'ACTIVE' THEN 1 ELSE 0 END) as active_contracts,
-            SUM(CASE WHEN co.status = 'DRAFT' THEN 1 ELSE 0 END) as pending_contracts
-          FROM contracts co
-          WHERE co."deletedAt" IS NULL
-          GROUP BY co."clientId"
-        ) contract_stats ON c.id = contract_stats."clientId"
-        WHERE c."deletedAt" IS NULL
-        AND c.name ILIKE ${'%' + search + '%'}
-        ORDER BY c."updatedAt" DESC
-        LIMIT ${limit} OFFSET ${(page - 1) * limit}
-      `;
-    } else {
-      clients = await prisma.$queryRaw`
-        SELECT 
-          c.*,
-          COALESCE(contract_stats.active_contracts, 0) as active_contracts,
-          COALESCE(contract_stats.pending_contracts, 0) as pending_contracts
-        FROM clients c
-        LEFT JOIN (
-          SELECT 
-            co."clientId",
-            SUM(CASE WHEN co.status = 'ACTIVE' THEN 1 ELSE 0 END) as active_contracts,
-            SUM(CASE WHEN co.status = 'DRAFT' THEN 1 ELSE 0 END) as pending_contracts
-          FROM contracts co
-          WHERE co."deletedAt" IS NULL
-          GROUP BY co."clientId"
-        ) contract_stats ON c.id = contract_stats."clientId"
-        WHERE c."deletedAt" IS NULL
-        ORDER BY c."updatedAt" DESC
-        LIMIT ${limit} OFFSET ${(page - 1) * limit}
-      `;
-    }
+    const totalRows = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT COUNT(*)::int AS count FROM clients c ${whereSql}`,
+      ...params
+    );
+    const total: number = totalRows?.[0]?.count ?? 0;
+    const totalPages = Math.max(Math.ceil(total / limit), 1);
+    const offset = (page - 1) * limit;
 
-    const total = await prisma.client.count({
-      where: whereClause,
-    });
+    const rows = await prisma.$queryRawUnsafe<any[]>(
+      `WITH contract_stats AS (
+         SELECT co."clientId",
+                SUM(CASE WHEN co.status = 'ACTIVE' THEN 1 ELSE 0 END) AS active_contracts,
+                SUM(CASE WHEN co.status = 'DRAFT' THEN 1 ELSE 0 END)  AS pending_contracts
+         FROM contracts co
+         WHERE co."deletedAt" IS NULL
+         GROUP BY co."clientId"
+       )
+       SELECT c.id, c.name, c.description, c.logo, c.website, c."updatedAt",
+              COALESCE(cs.active_contracts, 0)  AS active_contracts,
+              COALESCE(cs.pending_contracts, 0) AS pending_contracts
+       FROM clients c
+       LEFT JOIN contract_stats cs ON c.id = cs."clientId"
+       ${whereSql}
+       ORDER BY c."updatedAt" DESC
+       LIMIT ${limit} OFFSET ${offset}`,
+      ...params
+    );
 
-    const totalPages = Math.ceil(total / limit);
-
-    // Process clients data to ensure proper serialization
-    const clientsData = (clients as any[]).map(client => ({
+    const clientsData = rows.map((client) => ({
       id: client.id,
       name: client.name,
       description: client.description || '',
@@ -82,9 +54,11 @@ export async function GET(request: NextRequest) {
       activeContracts: parseInt(client.active_contracts) || 0,
       pendingOffers: parseInt(client.pending_contracts) || 0,
       lastActivity: client.updatedAt ? new Date(client.updatedAt).toISOString() : new Date().toISOString(),
-      teamMembers: [], // Empty array for now
-      totalTeamMembers: 0, // Will be populated when needed
+      teamMembers: [],
+      totalTeamMembers: 0,
     }));
+
+    const cacheHeaders = { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } as const;
 
     return NextResponse.json({
       clients: clientsData,
@@ -96,7 +70,7 @@ export async function GET(request: NextRequest) {
         hasNext: page < totalPages,
         hasPrev: page > 1,
       },
-    });
+    }, { headers: cacheHeaders });
   } catch (error) {
     console.error('Error fetching clients:', error);
     return NextResponse.json(

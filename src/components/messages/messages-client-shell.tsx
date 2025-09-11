@@ -286,80 +286,50 @@ export default function MessagesClientShell({
     }
   };
 
-  // Set up realtime subscriptions for all rooms
+  // Subscribe only to selected room to cut overhead
   useEffect(() => {
-    const channels: any[] = [];
-
-    rooms.forEach((room) => {
-      const channel = supabase
-        .channel(`room:${room.id}`, {
-          config: {
-            presence: { key: `room:${room.id}` },
-          },
-        })
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "messages",
-            filter: `roomId=eq.${room.id}`,
-          },
-          (payload) => {
-            console.log(`Realtime update for room ${room.id}:`, payload);
-            if (payload.eventType === "INSERT") {
-              const newMessage = payload.new as Message;
-              setMessagesCache((prev) => {
-                const existing = prev[room.id] || [];
-                // Check if message already exists to prevent duplicates
-                if (existing.some((m) => m.id === newMessage.id)) {
-                  console.log(
-                    `Message ${newMessage.id} already exists, skipping duplicate`
-                  );
-                  return prev;
-                }
-
-                // Add new message and sort by creation time
-                const updated = [...existing, newMessage].sort(
-                  (a, b) =>
-                    new Date(a.createdAt).getTime() -
-                    new Date(b.createdAt).getTime()
-                );
-
-                console.log(
-                  `Added new message ${newMessage.id} to room ${room.id}`
-                );
-                return {
-                  ...prev,
-                  [room.id]: updated,
-                };
-              });
-
-              // Update latest message in rooms list
-              setRooms((prev) =>
-                prev.map((r) =>
-                  r.id === room.id
-                    ? { ...r, latestMessage: { content: newMessage.content } }
-                    : r
-                )
-              );
-            }
-          }
-        )
-        .subscribe(async (status) => {
-          console.log(`Channel ${room.id} status:`, status);
-        });
-
-      channels.push(channel);
-    });
+    if (!selectedRoomId) return;
+    const channel = supabase
+      .channel(`room:${selectedRoomId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "messages",
+          filter: `roomId=eq.${selectedRoomId}`,
+        },
+        (payload) => {
+          if (payload.eventType !== "INSERT") return;
+          const newMessage = payload.new as Message;
+          setMessagesCache((prev) => {
+            const existing = prev[selectedRoomId] || [];
+            if (existing.some((m) => m.id === newMessage.id)) return prev;
+            const updated = [...existing, newMessage].sort(
+              (a, b) =>
+                new Date(a.createdAt).getTime() -
+                new Date(b.createdAt).getTime()
+            );
+            return { ...prev, [selectedRoomId]: updated };
+          });
+          setRooms((prev) =>
+            prev.map((r) =>
+              r.id === selectedRoomId
+                ? {
+                    ...r,
+                    latestMessage: { content: (payload.new as any).content },
+                  }
+                : r
+            )
+          );
+        }
+      )
+      .subscribe();
 
     return () => {
-      console.log("Cleaning up channels:", channels.length);
-      channels.forEach((channel) => {
-        supabase.removeChannel(channel);
-      });
+      supabase.removeChannel(channel);
     };
-  }, [rooms, supabase]);
+  }, [selectedRoomId, supabase]);
 
   // Load messages for selected room on mount
   useEffect(() => {
