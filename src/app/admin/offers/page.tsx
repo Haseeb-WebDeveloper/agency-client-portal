@@ -65,7 +65,7 @@ function OffersContent() {
       const url = `/api/admin/offers?${params.toString()}`;
 
       const response = await fetch(url, {
-        next: { revalidate: 30, tags: ['offers:list'] }
+        next: { revalidate: 300, tags: ['offers:list'] } // 5 minutes
       });
 
       if (!response.ok) {

@@ -1,6 +1,6 @@
-import { listMyRooms } from "@/actions/messaging";
+import { getRoomsWithUnreadOptimized } from "@/actions/messages-optimized";
 import { getCurrentUser } from "@/lib/auth";
-import MessagesClientShell from "@/components/messages/messages-client-shell";
+import MessagesOptimizedShell from "@/components/messages/messages-optimized-shell";
 
 interface MessagesPageProps {
   searchParams: Promise<{ roomId?: string }>;
@@ -8,14 +8,14 @@ interface MessagesPageProps {
 
 export default async function MessagesIndex({ searchParams }: MessagesPageProps) {
   const me = await getCurrentUser();
-  const rooms = await listMyRooms();
+  const rooms = await getRoomsWithUnreadOptimized();
   const isAdmin = me.role === "PLATFORM_ADMIN" || me.role === "AGENCY_MEMBER";
   const resolvedSearchParams = await searchParams;
   const selectedRoomId = resolvedSearchParams.roomId;
 
   return (
     <div className="bg-[#0F0A1D]">
-      <MessagesClientShell
+      <MessagesOptimizedShell
         initialRooms={rooms}
         isAdmin={isAdmin}
         currentUserId={me.id}

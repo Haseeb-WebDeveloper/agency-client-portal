@@ -9,7 +9,7 @@ import { QuickActions } from "@/components/admin/quick-actions";
 import { getGreeting, getGreetingSubtitle } from "@/utils/greeting";
 import Image from "next/image";
 
-export const revalidate = 60;
+export const revalidate = 300; // 5 minutes
 
 export default async function AdminDashboard() {
   // Require admin authentication

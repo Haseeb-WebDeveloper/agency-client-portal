@@ -4,7 +4,7 @@ import Link from "next/link";
 import NewsList from "../../../components/admin/news-list";
 import { requireAdmin } from "@/lib/auth";
 
-export const revalidate = 30;
+export const revalidate = 60;
 
 const AdminNewsPage = async () => {
   // Require admin authentication

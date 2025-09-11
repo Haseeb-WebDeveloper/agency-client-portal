@@ -36,18 +36,38 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_contracts_status_deleted_at
 ON contracts (status, deleted_at) 
 WHERE deleted_at IS NULL;
 
--- Messages table indexes
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_deleted_at_created_at 
-ON messages (deleted_at, created_at DESC) 
+-- Messages table indexes - OPTIMIZED FOR BLAZING FAST PERFORMANCE
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_room_id_created_at_desc 
+ON messages (room_id, created_at DESC) 
 WHERE deleted_at IS NULL;
 
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_room_id_deleted_at_created_at 
 ON messages (room_id, deleted_at, created_at DESC) 
 WHERE deleted_at IS NULL;
 
+-- Critical index for message pagination
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_room_id_id_desc 
+ON messages (room_id, id DESC) 
+WHERE deleted_at IS NULL;
+
+-- Index for user message queries
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_user_id_created_at 
+ON messages (user_id, created_at DESC) 
+WHERE deleted_at IS NULL;
+
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_contract_id_deleted_at 
 ON messages (contract_id, deleted_at) 
 WHERE deleted_at IS NULL AND contract_id IS NOT NULL;
+
+-- Client memberships indexes
+-- Room participants indexes - OPTIMIZED FOR MESSAGE PERFORMANCE
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_room_participants_user_room_active 
+ON room_participants (user_id, room_id, is_active) 
+WHERE deleted_at IS NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_room_participants_room_user_active 
+ON room_participants (room_id, user_id, is_active) 
+WHERE deleted_at IS NULL;
 
 -- Client memberships indexes
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_client_memberships_user_id_active_deleted 

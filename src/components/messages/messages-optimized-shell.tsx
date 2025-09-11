@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { createClient } from "@/utils/supabase/clients";
-import ChatRoom from "@/components/admin/chat-room";
+import ChatRoomOptimized from "@/components/messages/chat-room-optimized";
 import Image from "next/image";
 import CreateRoomModal from "@/components/admin/create-room-modal";
 import {
@@ -21,6 +21,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { MessageCache, UserSessionCache } from "@/lib/message-cache";
+import { getRoomsWithUnreadOptimized, sendMessageOptimized, markRoomReadOptimized, getMessagesOptimized } from "@/actions/messages-optimized";
+import PerformanceMonitor from "@/components/messages/performance-monitor";
 
 type Room = {
   id: string;
@@ -30,50 +33,23 @@ type Room = {
   latestMessage?: { content?: string } | null;
 };
 
-type Message = {
-  id: string;
-  roomId: string;
-  userId: string;
-  content: string;
-  createdAt: string;
-  isEdited: boolean;
-  user?: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    avatar?: string | null;
-  };
-  attachments?: Array<{
-    id: string;
-    fileName: string;
-    filePath: string;
-    fileSize: number;
-    mimeType: string;
-  }>;
-};
-
-interface MessagesClientShellProps {
+interface MessagesOptimizedShellProps {
   initialRooms: Room[];
   isAdmin: boolean;
   currentUserId: string;
   initialSelectedRoomId?: string;
 }
 
-export default function MessagesClientShell({
+export default function MessagesOptimizedShell({
   initialRooms,
   isAdmin,
   currentUserId,
   initialSelectedRoomId,
-}: MessagesClientShellProps) {
+}: MessagesOptimizedShellProps) {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(
     initialSelectedRoomId || initialRooms[0]?.id || null
   );
   const [rooms, setRooms] = useState<Room[]>(initialRooms);
-  const [messagesCache, setMessagesCache] = useState<Record<string, Message[]>>(
-    {}
-  );
-  const [isPending, startTransition] = useTransition();
-  const supabase = useMemo(() => createClient(), []);
   const [isMobile, setIsMobile] = useState(false);
   const [isRoomsSheetOpen, setIsRoomsSheetOpen] = useState(false);
 
@@ -92,68 +68,97 @@ export default function MessagesClientShell({
   }>({ rooms: [], users: [] });
   const [isSearching, setIsSearching] = useState(false);
 
-  // Add loading state
-  const [isLoading, setIsLoading] = useState(false);
+  const supabase = useMemo(() => createClient(), []);
 
-  // Fetch messages for a room (always fetch and merge with cache to avoid partial lists)
-  const fetchMessages = async (roomId: string) => {
+  // Cache initial data
+  useEffect(() => {
+    // Cache rooms for instant access
+    UserSessionCache.setRooms(rooms);
+    
+    // Pre-cache messages for first room
+    if (rooms.length > 0) {
+      const firstRoomId = rooms[0].id;
+      const cachedMessages = MessageCache.get(firstRoomId);
+      if (!cachedMessages) {
+        // Pre-load first room messages
+        loadRoomMessages(firstRoomId);
+      }
+    }
+  }, [rooms]);
+
+  // Load messages for a room - USING SERVER ACTION!
+  const loadRoomMessages = async (roomId: string) => {
     try {
-      setIsLoading(true);
-      const response = await fetch(
-        `/api/messages/rooms/${roomId}/messages?limit=50`,
-        {
-          cache: "no-store",
-        }
-      );
-      if (!response.ok) return;
+      // Check cache first
+      const cached = MessageCache.get(roomId);
+      if (cached && cached.length > 0) {
+        console.log("💾 [CACHE] Using cached messages for room:", roomId);
+        return cached;
+      }
 
-      const data = await response.json();
-      setMessagesCache((prev) => {
-        const existing = prev[roomId] || [];
-        const byId: Record<string, Message> = {};
-        for (const m of existing) byId[m.id] = m;
-        for (const m of data.items || []) byId[m.id] = m;
-        const merged = Object.values(byId).sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-        return {
-          ...prev,
-          [roomId]: merged,
-        };
-      });
+      console.log("📡 [SERVER ACTION] Fetching messages for room:", roomId);
+      
+      // Use server action instead of API route
+      const result = await getMessagesOptimized(roomId, null, 50);
+      const serverMessages = result.items || [];
+      
+      // Convert Date objects to strings to match CachedMessage type
+      const convertedMessages = serverMessages.map(msg => ({
+        ...msg,
+        createdAt: msg.createdAt instanceof Date ? msg.createdAt.toISOString() : msg.createdAt,
+        updatedAt: msg.updatedAt instanceof Date ? msg.updatedAt.toISOString() : msg.updatedAt,
+        attachments: msg.attachments?.map(att => ({
+          ...att,
+          createdAt: att.createdAt instanceof Date ? att.createdAt.toISOString() : att.createdAt,
+          updatedAt: att.updatedAt instanceof Date ? att.updatedAt.toISOString() : att.updatedAt,
+        })) || [],
+        parent: msg.parent ? {
+          ...msg.parent,
+          createdAt: msg.parent.createdAt instanceof Date ? msg.parent.createdAt.toISOString() : msg.parent.createdAt,
+          updatedAt: msg.parent.updatedAt instanceof Date ? msg.parent.updatedAt.toISOString() : msg.parent.updatedAt,
+          attachments: (msg.parent as any).attachments?.map((att: any) => ({
+            ...att,
+            createdAt: att.createdAt instanceof Date ? att.createdAt.toISOString() : att.createdAt,
+            updatedAt: att.updatedAt instanceof Date ? att.updatedAt.toISOString() : att.updatedAt,
+          })) || [],
+        } : null,
+      }));
+      
+      // Cache the messages
+      MessageCache.set(roomId, convertedMessages);
+      console.log("💾 [CACHE] Cached", convertedMessages.length, "messages for room:", roomId);
+      
+      return convertedMessages;
     } catch (error) {
-      console.error("Error fetching messages:", error);
-    } finally {
-      setIsLoading(false);
+      console.error("❌ [SERVER ACTION] Error loading room messages:", error);
+      return [];
     }
   };
 
-  // Mark room as read
-  const markRoomRead = async (roomId: string) => {
-    try {
-      await fetch(`/api/messages/rooms/${roomId}/read`, {
-        method: "POST",
-      });
-    } catch (error) {
-      console.error("Error marking room as read:", error);
-    }
-  };
-
-  // Handle room selection
-  const handleRoomSelect = (roomId: string) => {
+  // Handle room selection with instant loading - USING SERVER ACTION!
+  const handleRoomSelect = async (roomId: string) => {
     setSelectedRoomId(roomId);
-    fetchMessages(roomId);
-    markRoomRead(roomId);
+    
+    // Mark as read immediately using server action
+    try {
+      console.log("📖 [SERVER ACTION] Marking room as read:", roomId);
+      await markRoomReadOptimized(roomId);
+      console.log("✅ [SERVER ACTION] Room marked as read successfully");
+    } catch (error) {
+      console.error("❌ [SERVER ACTION] Error marking room as read:", error);
+    }
+
     if (isMobile) {
       setIsRoomsSheetOpen(false);
     }
   };
 
-  // Prefetch messages on hover
-  const handleRoomHover = (roomId: string) => {
-    if (!messagesCache[roomId]) {
-      fetchMessages(roomId);
+  // Prefetch messages on hover for instant switching
+  const handleRoomHover = async (roomId: string) => {
+    const cached = MessageCache.get(roomId);
+    if (!cached || cached.length === 0) {
+      // Pre-load messages in background
+      loadRoomMessages(roomId);
     }
   };
 
@@ -217,10 +222,6 @@ export default function MessagesClientShell({
       setSelectedRoomId(room.id);
       clearSearch();
 
-      // Fetch messages for the room
-      fetchMessages(room.id);
-      markRoomRead(room.id);
-
       if (isMobile) {
         setIsRoomsSheetOpen(false);
       }
@@ -260,86 +261,88 @@ export default function MessagesClientShell({
     }
   };
 
-  const handleSendMessage = async (formData: FormData) => {
+  // ACTUAL server action implementation (not API routes!)
+  const handleSendMessage = async (formData: FormData): Promise<void> => {
+    const startTime = performance.now();
+    console.log("🚀 [SERVER ACTION] Starting message send at:", new Date().toISOString());
+    
     const content = String(formData.get("content") || "");
-    const hasAttachments = Boolean(formData.get("attachments"));
-    if ((!content.trim() && !hasAttachments) || !selectedRoomId) return;
+    const parentId = formData.get("parentId") as string | null;
+    
+    if (!content.trim() || !selectedRoomId) return;
 
     try {
-      const response = await fetch(
-        `/api/messages/rooms/${selectedRoomId}/send`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const serverActionStartTime = performance.now();
+      console.log("⚡ [SERVER ACTION] Calling sendMessageOptimized at:", new Date().toISOString());
+      
+      // ACTUAL SERVER ACTION - NOT API ROUTE!
+      await sendMessageOptimized(selectedRoomId, content, parentId);
 
-      if (!response.ok) {
-        console.error("Failed to send message");
-        throw new Error("Failed to send message");
-      }
-      // Refresh messages to include attachments since realtime payload doesn't include relations
-      await fetchMessages(selectedRoomId);
+      const serverActionEndTime = performance.now();
+      console.log("⚡ [SERVER ACTION] Server action completed in:", serverActionEndTime - serverActionStartTime, "ms");
+      
+      const totalTime = performance.now() - startTime;
+      console.log("✅ [SERVER ACTION] Total server action time:", totalTime, "ms");
+      
     } catch (error) {
-      console.error("Error sending message:", error);
-      throw error; // Re-throw to let ChatRoom handle the error
+      console.error("❌ [SERVER ACTION] Error sending message:", error);
+      throw error;
     }
   };
 
-  // Subscribe only to selected room to cut overhead
+  // Optimized realtime subscription - single channel for all rooms
   useEffect(() => {
     if (!selectedRoomId) return;
+    console.log("🔄 [PERFORMANCE] Subscribed to channel for room:", selectedRoomId);
     const channel = supabase
-      .channel(`room:${selectedRoomId}`)
+      .channel(`messages:${selectedRoomId}`)
       .on(
         "postgres_changes",
         {
-          event: "*",
+          event: "INSERT",
           schema: "public",
           table: "messages",
           filter: `roomId=eq.${selectedRoomId}`,
         },
         (payload) => {
-          if (payload.eventType !== "INSERT") return;
-          const newMessage = payload.new as Message;
-          setMessagesCache((prev) => {
-            const existing = prev[selectedRoomId] || [];
-            if (existing.some((m) => m.id === newMessage.id)) return prev;
-            const updated = [...existing, newMessage].sort(
-              (a, b) =>
-                new Date(a.createdAt).getTime() -
-                new Date(b.createdAt).getTime()
-            );
-            return { ...prev, [selectedRoomId]: updated };
-          });
+          console.log("📨 [REALTIME] Received new message in shell:", payload);
+          const newMessage = payload.new as any;
+          
+          // Update room's latest message immediately
           setRooms((prev) =>
             prev.map((r) =>
               r.id === selectedRoomId
                 ? {
                     ...r,
-                    latestMessage: { content: (payload.new as any).content },
+                    latestMessage: { content: newMessage.content },
                   }
                 : r
             )
           );
+
+          // Add to cache immediately for instant UI update
+          MessageCache.addMessage(selectedRoomId, newMessage);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("🔄 [REALTIME] Shell subscription status:", status);
+        if (status === 'SUBSCRIBED') {
+          console.log("✅ [REALTIME] Shell successfully subscribed to messages for room:", selectedRoomId);
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error("❌ [REALTIME] Shell channel error for room:", selectedRoomId);
+        } else if (status === 'TIMED_OUT') {
+          console.error("❌ [REALTIME] Shell subscription timed out for room:", selectedRoomId);
+        } else if (status === 'CLOSED') {
+          console.log("🔒 [REALTIME] Shell subscription closed for room:", selectedRoomId);
+        }
+      });
+    console.log("🔄 [PERFORMANCE] Subscribed to channel for room:", selectedRoomId);
 
     return () => {
+      console.log("🔄 [PERFORMANCE] Removing channel for room:", selectedRoomId);
       supabase.removeChannel(channel);
     };
   }, [selectedRoomId, supabase]);
-
-  // Load messages for selected room on mount
-  useEffect(() => {
-    if (selectedRoomId) {
-      fetchMessages(selectedRoomId);
-      markRoomRead(selectedRoomId);
-    }
-  }, [selectedRoomId]);
-
-  const selectedRoom = rooms.find((r) => r.id === selectedRoomId);
 
   // Track viewport for mobile vs desktop behavior
   useEffect(() => {
@@ -349,6 +352,8 @@ export default function MessagesClientShell({
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
+
+  const selectedRoom = rooms.find((r) => r.id === selectedRoomId);
 
   const RoomsList = (
     <div className="px-4 space-y-4">
@@ -421,7 +426,6 @@ export default function MessagesClientShell({
                   >
                     <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-sm">
                       {room.logo ? (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={room.logo}
                           alt={room.name}
@@ -456,7 +460,6 @@ export default function MessagesClientShell({
                   >
                     <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-sm">
                       {user.avatar ? (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={user.avatar}
                           alt={`${user.firstName} ${user.lastName}`}
@@ -505,12 +508,11 @@ export default function MessagesClientShell({
               onClick={() => handleRoomSelect(room.id)}
               onMouseEnter={() => handleRoomHover(room.id)}
               className={`cursor-pointer border-transparent hover:border-foreground/10 border w-full text-left flex items-start gap-3 p-3 rounded-lg ${
-                selectedRoomId === room.id ? "" : ""
+                selectedRoomId === room.id ? "bg-primary/10" : ""
               }`}
             >
               <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-sm">
                 {room.logo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={room.logo}
                     alt={room.name}
@@ -542,6 +544,7 @@ export default function MessagesClientShell({
 
   return (
     <div className="h-[calc(100vh-74px)]">
+      <PerformanceMonitor />
       {/* Mobile top bar with trigger to open rooms list */}
       <div className="flex items-center gap-2 border-b border-primary/10 px-4 py-3 md:hidden">
         <button
@@ -591,10 +594,10 @@ export default function MessagesClientShell({
                   <p className="text-foreground/60">Select a conversation</p>
                 </div>
               ) : (
-                <ChatRoom
+                <ChatRoomOptimized
                   key={selectedRoomId}
                   roomId={selectedRoomId}
-                  initialMessages={messagesCache[selectedRoomId] || []}
+                  initialMessages={MessageCache.get(selectedRoomId) || []}
                   onSend={handleSendMessage}
                   currentUserId={currentUserId}
                   roomTitle={selectedRoom.name}
@@ -616,10 +619,10 @@ export default function MessagesClientShell({
               </p>
             </div>
           ) : (
-            <ChatRoom
+            <ChatRoomOptimized
               key={selectedRoomId}
               roomId={selectedRoomId}
-              initialMessages={messagesCache[selectedRoomId] || []}
+              initialMessages={MessageCache.get(selectedRoomId) || []}
               onSend={handleSendMessage}
               currentUserId={currentUserId}
               roomTitle={selectedRoom.name}
