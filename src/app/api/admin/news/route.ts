@@ -3,22 +3,47 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 
-export async function GET() {
-  // Fetch all news items
+export async function GET(request: NextRequest) {
+  // Fetch paginated news items with optional search
   try {
-    const news = await prisma.news.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        creator: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          }
-        }
-      }
-    });
-    return NextResponse.json(news);
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(parseInt(searchParams.get('page') || '1'), 1);
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20'), 1), 100);
+    const search = (searchParams.get('search') || '').trim();
+
+    const where: any = { deletedAt: null };
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [total, items] = await Promise.all([
+      prisma.news.count({ where }),
+      prisma.news.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          creator: {
+            select: { id: true, firstName: true, lastName: true },
+          },
+        },
+      }),
+    ]);
+
+    const totalPages = Math.max(Math.ceil(total / limit), 1);
+    const cacheHeaders = { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } as const;
+
+    return NextResponse.json(
+      {
+        items,
+        pagination: { page, limit, total, totalPages, hasNext: page < totalPages, hasPrev: page > 1 },
+      },
+      { headers: cacheHeaders }
+    );
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: 'Failed to fetch news' }, { status: 500 });
