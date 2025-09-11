@@ -29,7 +29,12 @@ export async function getAdminDashboardStats() {
     // Clients with their contract counts
     prisma.$queryRaw`
       SELECT 
-        c.*,
+        c.id,
+        c.name,
+        c.description,
+        c.logo,
+        c.website,
+        c."updatedAt",
         COALESCE(contract_stats.active_contracts, 0) as active_contracts,
         COALESCE(contract_stats.pending_contracts, 0) as pending_contracts
       FROM clients c
@@ -50,7 +55,10 @@ export async function getAdminDashboardStats() {
     // Recent messages from last 7 days
     prisma.$queryRaw`
       SELECT 
-        m.*,
+        m.id,
+        m.content,
+        m."createdAt",
+        m."userId",
         u."firstName",
         u."lastName",
         u.avatar

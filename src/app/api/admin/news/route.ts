@@ -1,5 +1,6 @@
 // src/app/api/admin/news/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 
@@ -86,7 +87,9 @@ export async function POST(request: NextRequest) {
       },
     });
     
-    return NextResponse.json(news);
+    revalidateTag('news:list');
+    revalidateTag('admin:dashboard');
+    return NextResponse.json(news, { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: 'Failed to create news: ' + (error as Error).message }, { status: 500 });
@@ -138,7 +141,9 @@ export async function PUT(request: NextRequest) {
       },
     });
     
-    return NextResponse.json(news);
+    revalidateTag('news:list');
+    revalidateTag('admin:dashboard');
+    return NextResponse.json(news, { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: 'Failed to update news: ' + (error as Error).message }, { status: 500 });
@@ -168,8 +173,9 @@ export async function DELETE(request: NextRequest) {
     await prisma.news.delete({
       where: { id },
     });
-    
-    return NextResponse.json({ message: 'News deleted successfully' });
+    revalidateTag('news:list');
+    revalidateTag('admin:dashboard');
+    return NextResponse.json({ message: 'News deleted successfully' }, { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: 'Failed to delete news: ' + (error as Error).message }, { status: 500 });

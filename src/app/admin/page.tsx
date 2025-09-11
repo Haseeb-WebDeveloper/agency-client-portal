@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getAdminDashboardStats, getRecentNews } from "@/lib/admin-queries";
+import { Suspense } from "react";
+import { getAdminDashboardStats, getRecentNews } from "@/lib/cached-admin";
 import { requireAdmin } from "@/lib/auth";
 import { StatsCards } from "@/components/admin/stats-cards";
 import { ClientsTable } from "@/components/admin/clients-table";
@@ -8,15 +9,16 @@ import { QuickActions } from "@/components/admin/quick-actions";
 import { getGreeting, getGreetingSubtitle } from "@/utils/greeting";
 import Image from "next/image";
 
+export const revalidate = 60;
+
 export default async function AdminDashboard() {
   // Require admin authentication
   const user = await requireAdmin();
 
-  // Get dashboard data
-  const dashboardData = await getAdminDashboardStats();
-
-  // Fetch news data
-  const newsData = await getRecentNews(5);
+  const [dashboardData, newsData] = await Promise.all([
+    getAdminDashboardStats(),
+    getRecentNews(5),
+  ]);
 
   return (
     <div className="space-y-6 md:px-8 md:py-6 px-4 py-6">
@@ -34,19 +36,26 @@ export default async function AdminDashboard() {
         {/* Left column - Main content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Stats cards */}
-          <StatsCards
-            contracts={dashboardData.contracts}
-            offers={dashboardData.offers}
-          />
+          <Suspense fallback={<div className="min-h-24" />}> 
+            {/* stats are already awaited above, Suspense is a safe guard for future streaming splits */}
+            <StatsCards
+              contracts={dashboardData.contracts}
+              offers={dashboardData.offers}
+            />
+          </Suspense>
 
           {/* Clients table */}
-          <ClientsTable clients={dashboardData.clients} />
+          <Suspense fallback={<div className="min-h-40" />}> 
+            <ClientsTable clients={dashboardData.clients} />
+          </Suspense>
         </div>
 
         {/* Right column - Sidebar */}
         <div className="space-y-6">
           {/* Messages card */}
-          <MessagesCard />
+          <Suspense fallback={<div className="min-h-24" />}> 
+            <MessagesCard />
+          </Suspense>
 
           {/* Recent news card - Redesigned */}
           <div

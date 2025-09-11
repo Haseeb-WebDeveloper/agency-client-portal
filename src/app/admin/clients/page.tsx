@@ -36,7 +36,9 @@ function ClientsContent() {
         ...(sortFilter && { sortBy: sortFilter }),
       });
 
-      const response = await fetch(`/api/admin/clients?${params.toString()}`);
+      const response = await fetch(`/api/admin/clients?${params.toString()}`, {
+        next: { revalidate: 30, tags: ['clients:list'] }
+      });
 
       if (!response.ok) {
         throw new Error("Failed to fetch clients");

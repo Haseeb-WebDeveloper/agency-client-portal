@@ -18,7 +18,6 @@ import { MenuIcon, Search } from "lucide-react";
 import { useCallback } from "react";
 import { createClient as createBrowserSupabaseClient } from "@/utils/supabase/clients";
 
-
 interface AppLayoutProps {
   children: React.ReactNode;
   user: {
