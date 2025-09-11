@@ -1,6 +1,7 @@
 import { requireClient } from "@/lib/auth";
 import { AppLayout } from "@/components/shared/app-layout";
 import { redirect } from "next/navigation";
+import { ClientPerformanceMonitor } from "@/components/client/performance-monitor";
 
 export default async function ClientLayoutWrapper({
   children,
@@ -19,7 +20,12 @@ export default async function ClientLayoutWrapper({
       role: user.role,
     };
 
-    return <AppLayout user={serializedUser}>{children}</AppLayout>;
+    return (
+      <AppLayout user={serializedUser}>
+        {children}
+        <ClientPerformanceMonitor />
+      </AppLayout>
+    );
   } catch (error) {
     // Redirect to login if not authenticated or not client
     redirect("/login");

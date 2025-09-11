@@ -1,13 +1,9 @@
-import NextImage from "next/image";
 import {
   getClientDashboardStats,
   getClientRecentNews,
-} from "@/lib/client-queries";
+} from "@/lib/cached-client";
 import { requireClient } from "@/lib/auth";
-import { OngoingContracts } from "@/components/client/ongoing-contracts";
-import { MessagesCard } from "@/components/client/messages-card";
-import { getGreeting, getGreetingSubtitle } from "@/utils/greeting";
-import ClientDashboardClient from "./client-dashboard-client";
+import OptimizedClientDashboard from "@/components/client/optimized-client-dashboard";
 
 // src/app/client/page.tsx
 
@@ -67,7 +63,7 @@ export default async function ClientDashboard() {
       },
     };
 
-    return <ClientDashboardClient serializedData={serializedData} />;
+    return <OptimizedClientDashboard serializedData={serializedData} />;
   } catch (error) {
     console.error("Error loading client dashboard:", error);
     return (
