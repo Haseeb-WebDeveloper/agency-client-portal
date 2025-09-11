@@ -8,7 +8,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { ClientStatsCards } from "@/components/client/client-stats-cards";
 import { SkeletonLoading } from "@/components/shared/skeleton-loading";
-
+import {
+  getClientDashboardStats,
+  getClientRecentNews,
+} from "@/lib/cached-client";
+import { requireClient } from "@/lib/auth";
+import OptimizedClientDashboard from "@/components/client/optimized-client-dashboard";
 export default function ClientDashboard() {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
@@ -44,48 +49,9 @@ export default function ClientDashboard() {
       }
     };
 
-    fetchData();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="space-y-6 px-8 py-6">
-        {/* Header with greeting */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="h-8 bg-primary/10 rounded w-64 animate-pulse"></div>
-            <div className="h-4 bg-primary/10 rounded w-48 mt-2 animate-pulse"></div>
-          </div>
-        </div>
-
-        {/* Main content grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left column - Main content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Stats cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="h-24 bg-primary/10 rounded-lg animate-pulse"></div>
-              <div className="h-24 bg-primary/10 rounded-lg animate-pulse"></div>
-            </div>
-
-            {/* Ongoing contracts */}
-            <SkeletonLoading type="list" />
-          </div>
-
-          {/* Right column - Sidebar */}
-          <div className="space-y-6">
-            {/* Messages card */}
-            <div className="h-64 bg-primary/10 rounded-lg animate-pulse"></div>
-
-            {/* Recent news card */}
-            <div className="h-64 bg-primary/10 rounded-lg animate-pulse"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
+    return <OptimizedClientDashboard serializedData={serializedData} />;
+  } catch (error) {
+    console.error("Error loading client dashboard:", error);
     return (
       <div className="p-6">
         <h2 className="text-xl font-bold text-red-500">

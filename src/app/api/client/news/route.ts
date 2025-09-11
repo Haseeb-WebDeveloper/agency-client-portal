@@ -1,48 +1,18 @@
-// src/app/api/client/news/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getClientNews } from '@/lib/cached-client';
 import { getCurrentUser } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    // Check client authentication
     const user = await getCurrentUser();
-    if (!user || (user.role !== 'CLIENT' && user.role !== 'AGENCY_MEMBER')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Fetch news data for the client
-    const newsData = await prisma.news.findMany({
-      where: {
-        OR: [
-          { sendToAll: true },
-          { sendTo: { has: user.id } }
-        ],
-        deletedAt: null
-      },
-      orderBy: {
-        createdAt: 'desc'
-      },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        featuredImage: true,
-        content: true,
-        createdAt: true,
-        creator: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true
-          }
-        }
-      }
-    });
-
-    return NextResponse.json(newsData);
+    
+    const cacheHeaders = { 'Cache-Control': 'private, max-age=300, stale-while-revalidate=600' } as const;
+    
+    const news = await getClientNews(user.id);
+    
+    return NextResponse.json(news, { headers: cacheHeaders });
   } catch (error) {
-    console.error(error);
+    console.error('Error fetching client news:', error);
     return NextResponse.json({ error: 'Failed to fetch news' }, { status: 500 });
   }
 }
