@@ -18,7 +18,6 @@ import { MenuIcon, Search } from "lucide-react";
 import { useCallback } from "react";
 import { createClient as createBrowserSupabaseClient } from "@/utils/supabase/clients";
 
-
 interface AppLayoutProps {
   children: React.ReactNode;
   user: {
@@ -74,7 +73,7 @@ export function AppLayout({ children, user }: AppLayoutProps) {
                 width: 100px;
                 height: 100px;
               }"
-              className="object-contain h-12"
+              className="object-contain h-12 w-auto"
             />
           </div>
           <nav className="space-y-2 flex-1">
@@ -95,13 +94,9 @@ export function AppLayout({ children, user }: AppLayoutProps) {
                     <Image
                       src={`/icons/${item.icon}`}
                       alt={item.label}
-                      width={20}
-                      height={20}
-                      className="w-5 h-5"
-                      sizes="@media (max-width: 768px) {
-                        width: 20px;
-                        height: 20px;
-                      }"
+                      width={100}
+                      height={100}
+                      className="w-5 h-5 "
                     />
                     <span>{item.label}</span>
                   </div>
@@ -173,16 +168,17 @@ export function AppLayout({ children, user }: AppLayoutProps) {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="relative flex items-center justify-center w-fit h-fit">
+                {/* <div className="relative flex items-center justify-center w-fit h-fit">
                   <Image
                     src="/icons/notification.svg"
                     alt="Notification"
                     width={20}
                     height={20}
                     className={`${isMobile ? "w-5 h-5" : "w-6 h-6"}`}
+                    style={{ width: "auto", height: "auto" }}
                   />
                   <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full text-xs"></span>
-                </div>
+                </div> */}
                 <Button
                   variant="outline"
                   size="sm"

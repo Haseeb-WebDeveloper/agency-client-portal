@@ -63,7 +63,9 @@ function ContractsContent() {
         ...(statusFilter && { status: statusFilter }),
       });
 
-      const response = await fetch(`/api/admin/contracts?${params.toString()}`);
+      const response = await fetch(`/api/admin/contracts?${params.toString()}`, {
+        next: { revalidate: 300, tags: ['contracts:list'] } // 5 minutes
+      });
 
       if (!response.ok) {
         throw new Error("Failed to fetch contracts");

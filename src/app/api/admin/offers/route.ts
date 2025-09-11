@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest) {
       creator_last_name: o.creator_last_name,
     }));
 
-    const cacheHeaders = { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } as const;
+    const cacheHeaders = { 'Cache-Control': 'private, max-age=300, stale-while-revalidate=600' } as const; // 5min + 10min stale
 
     return NextResponse.json({
       offers: transformedOffers,
@@ -124,6 +125,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    revalidateTag('offers:list');
+    revalidateTag('admin:dashboard');
     return NextResponse.json({
       success: true,
       offer: {
@@ -135,7 +138,7 @@ export async function POST(request: NextRequest) {
         validUntil: offer.validUntil,
         createdAt: offer.createdAt,
       },
-    });
+    }, { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } });
   } catch (error) {
     console.error('Error creating Proposal:', error);
     return NextResponse.json(
