@@ -64,7 +64,9 @@ function OffersContent() {
       // Log the request for debugging
       const url = `/api/admin/offers?${params.toString()}`;
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        next: { revalidate: 30, tags: ['offers:list'] }
+      });
 
       if (!response.ok) {
         // Try to get error message from response

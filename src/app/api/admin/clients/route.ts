@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/auth';
+import { revalidateTag } from 'next/cache';
 
 export async function GET(request: NextRequest) {
   try {
@@ -135,6 +136,9 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    revalidateTag('clients:list');
+    revalidateTag('admin:dashboard');
+    
     return NextResponse.json({
       success: true,
       client: {
@@ -150,7 +154,7 @@ export async function POST(request: NextRequest) {
         lastName: user.lastName,
         email: user.email,
       },
-    });
+    }, { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } });
   } catch (error) {
     console.error('Error creating client:', error);
     return NextResponse.json(

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getContractsWithDetails, getContractsByStatus } from '@/lib/admin-queries';
 import { prisma } from '@/lib/prisma';
+import { revalidateTag } from 'next/cache';
 
 export async function GET(request: NextRequest) {
   try {
@@ -51,6 +52,8 @@ export async function GET(request: NextRequest) {
       creator_last_name: contract.creator_last_name,
     }));
 
+    const cacheHeaders = { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } as const;
+
     return NextResponse.json({
       contracts: transformedContracts,
       pagination: {
@@ -61,7 +64,7 @@ export async function GET(request: NextRequest) {
         hasNext: page < totalPages,
         hasPrev: page > 1,
       },
-    });
+    }, { headers: cacheHeaders });
   } catch (error) {
     console.error('Error fetching contracts:', error);
     return NextResponse.json(
@@ -103,6 +106,9 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    revalidateTag('contracts:list');
+    revalidateTag('admin:dashboard');
+    
     return NextResponse.json({
       success: true,
       contract: {
@@ -115,7 +121,7 @@ export async function POST(request: NextRequest) {
         media: contract.media,
         createdAt: contract.createdAt,
       },
-    });
+    }, { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } });
   } catch (error) {
     console.error('Error creating contract:', error);
     return NextResponse.json(
