@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 interface Contract {
   id: string;
@@ -20,25 +21,25 @@ export function OngoingContracts({ contracts }: OngoingContractsProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'DRAFT':
-        return 'text-figma-warning';
-      case 'ACTIVE':
-        return 'text-figma-primary';
-      case 'PENDING_APPROVAL':
-        return 'text-figma-success';
+      case "DRAFT":
+        return "text-figma-warning";
+      case "ACTIVE":
+        return "text-figma-primary";
+      case "PENDING_APPROVAL":
+        return "text-figma-success";
       default:
-        return 'text-foreground';
+        return "text-foreground";
     }
   };
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'DRAFT':
-        return 'Draft';
-      case 'ACTIVE':
-        return 'Active';
-      case 'PENDING_APPROVAL':
-        return 'Pending Approval';
+      case "DRAFT":
+        return "Draft";
+      case "ACTIVE":
+        return "Active";
+      case "PENDING_APPROVAL":
+        return "Pending Approval";
       default:
         return status;
     }
@@ -69,24 +70,31 @@ export function OngoingContracts({ contracts }: OngoingContractsProps) {
             );
 
             return (
-              <div key={contract.id} className="space-y-3">
+              <Link
+                key={contract.id}
+                href={`/client/contracts/${contract.id}`}
+                className="space-y-3"
+              >
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-medium text-foreground">
                     {contract.title}
                   </h4>
-                  <span className={`text-xs ${getStatusColor(contract.status)}`}>
+                  <span
+                    className={`text-xs ${getStatusColor(contract.status)}`}
+                  >
                     {getStatusLabel(contract.status)}
                   </span>
                 </div>
-                
+
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs text-foreground/60">
                     <span>
-                      {Number(contract.completed_tasks)} of {Number(contract.total_tasks)} tasks completed
+                      {Number(contract.completed_tasks)} of{" "}
+                      {Number(contract.total_tasks)} tasks completed
                     </span>
                     <span>{progressPercentage}%</span>
                   </div>
-                  
+
                   <div className="w-full bg-foreground/10 rounded-full h-2">
                     <div
                       className="bg-gradient-to-r from-figma-primary to-figma-primary-purple-1 h-2 rounded-full transition-all duration-300"
@@ -94,7 +102,7 @@ export function OngoingContracts({ contracts }: OngoingContractsProps) {
                     />
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>

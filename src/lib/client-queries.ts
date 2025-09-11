@@ -115,6 +115,7 @@ export async function getClientDashboardStats(userId: string) {
       avatar: message.avatar,
     },
     room: {
+      id: message.roomId,
       name: 'General', // Default room name
     },
   }));

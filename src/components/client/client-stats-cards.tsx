@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 interface ClientStatsCardsProps {
   contracts: {
@@ -14,7 +15,10 @@ export function ClientStatsCards({ contracts, offers }: ClientStatsCardsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Contracts Card */}
-      <div className="bg-transparent border-primary/20 px-7 py-6 border rounded-lg space-y-8">
+      <Link
+        href="/client/contracts"
+        className="bg-transparent border-primary/20 px-7 py-6 border rounded-lg space-y-8"
+      >
         <div className="flex items-center gap-3">
           <Image
             src="/icons/contract.svg"
@@ -34,10 +38,13 @@ export function ClientStatsCards({ contracts, offers }: ClientStatsCardsProps) {
             </span>
           </div>
         </div>
-      </div>
+      </Link>
 
       {/* Offers to Review Card */}
-      <div className="bg-transparent border-primary/20 px-7 py-6 border rounded-lg space-y-8">
+      <Link
+        href="/client/offers"
+        className="bg-transparent border-primary/20 px-7 py-6 border rounded-lg space-y-8"
+      >
         <div className="flex items-center gap-3">
           <Image
             src="/icons/list.svg"
@@ -52,9 +59,7 @@ export function ClientStatsCards({ contracts, offers }: ClientStatsCardsProps) {
             <span className="figma-h3 leading-[60%] text-figma-primary">
               {offers.toReview}
             </span>
-            <span className="text-sm text-foreground leading-[100%]">
-              New
-            </span>
+            <span className="text-sm text-foreground leading-[100%]">New</span>
           </div>
           <div className="w-px h-8 bg-foreground/20"></div>
           <div className="flex items-end gap-2">
@@ -66,7 +71,7 @@ export function ClientStatsCards({ contracts, offers }: ClientStatsCardsProps) {
             </span>
           </div>
         </div>
-      </div>
+      </Link>
     </div>
   );
 }

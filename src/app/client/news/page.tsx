@@ -1,8 +1,8 @@
 // src/app/client/news/page.tsx
 import { requireClient } from "@/lib/auth";
 import { getClientNews } from "@/lib/client-queries";
+import Image from "next/image";
 import NextImage from "next/image";
-import Link from "next/link";
 
 // Define the news item type
 interface NewsItem {
@@ -37,12 +37,6 @@ export default async function ClientNewsPage() {
     <div className="space-y-6 md:px-8 md:py-6 px-4 py-6">
       <div className="flex items-center justify-between">
         <h1 className="figma-h3">News</h1>
-        <Link
-          href="/client"
-          className="text-sm text-figma-primary hover:text-figma-primary-purple-1 transition-colors"
-        >
-          Back to Dashboard
-        </Link>
       </div>
 
       {error ? (
@@ -65,7 +59,7 @@ export default async function ClientNewsPage() {
               <div className="flex flex-col md:flex-row gap-6">
                 {newsItem.featuredImage && (
                   <div className="md:w-1/3">
-                    <NextImage
+                    <Image
                       src={newsItem.featuredImage}
                       alt={newsItem.title}
                       width={400}

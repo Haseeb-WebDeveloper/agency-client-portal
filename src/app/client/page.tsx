@@ -4,7 +4,6 @@ import {
   getClientRecentNews,
 } from "@/lib/client-queries";
 import { requireClient } from "@/lib/auth";
-import { ClientStatsCards } from "@/components/client/client-stats-cards";
 import { OngoingContracts } from "@/components/client/ongoing-contracts";
 import { MessagesCard } from "@/components/client/messages-card";
 import { getGreeting, getGreetingSubtitle } from "@/utils/greeting";

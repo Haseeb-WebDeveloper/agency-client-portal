@@ -3,7 +3,6 @@
 import { useState, useEffect, useTransition, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { OfferCard } from "@/components/admin/offer-card";
-// import { OffersSearchFilters } from "@/components/admin/offers-search-filters";
 import { OffersPagination } from "@/components/admin/offers-pagination";
 import { MediaFile } from "@/types/models";
 
@@ -161,10 +160,6 @@ function OffersContent() {
           <h1 className="figma-h3">Offers</h1>
         </div>
         <div className="flex items-center gap-3">
-          {/* <OffersSearchFilters
-            onSearch={handleSearch}
-            isLoading={isLoading || isPending}
-          /> */}
           <button
             onClick={() => (window.location.href = "/admin/offers/new")}
             className="w-full md:w-fit cursor-pointer px-6 py-2 bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF] rounded-lg transition-all"

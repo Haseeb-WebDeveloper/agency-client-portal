@@ -3,7 +3,6 @@
 import { useState, useEffect, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { ClientCard } from "@/components/admin/client-card";
-// import { ClientsSearchFilters } from "@/components/admin/clients-search-filters";
 import { ClientsPagination } from "@/components/admin/clients-pagination";
 import { CreateClientModal } from "@/components/admin/create-client-modal";
 import { ClientsData } from "@/types/admin";
@@ -106,10 +105,6 @@ function ClientsContent() {
           <h1 className="figma-h3">Our Clients</h1>
         </div>
         <div className="flex items-center gap-3">
-          {/* <ClientsSearchFilters
-            onSearch={handleSearch}
-            isLoading={isLoading || isPending}
-          /> */}
           <button
             onClick={() => setShowCreateModal(true)}
             className="w-full md:w-fit cursor-pointer px-6 py-2 bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF] rounded-lg transition-all"

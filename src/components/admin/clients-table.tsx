@@ -1,6 +1,6 @@
-import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
+import Link from "next/link";
 
 interface Client {
   id: string;
@@ -16,6 +16,10 @@ interface ClientsTableProps {
 }
 
 export function ClientsTable({ clients }: ClientsTableProps) {
+  // Show only the first 5 clients
+  const visibleClients = clients.slice(0, 5);
+  const showViewAll = clients.length > 2;
+
   return (
     <div className="bg-transparent border-primary/20 space-y-6">
       <div className="overflow-hidden rounded-lg border border-primary/20">
@@ -40,13 +44,16 @@ export function ClientsTable({ clients }: ClientsTableProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-primary/20">
-            {clients.map((client) => (
+            {visibleClients.map((client) => (
               <tr
                 key={client.id}
                 className="hover:bg-primary/5 transition-colors"
               >
                 <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
+                  <Link
+                    href={`/admin/clients/${client.id}`}
+                    className="flex items-center gap-3"
+                  >
                     <Avatar className="w-10 h-10">
                       <AvatarImage src={client.logo || ""} alt={client.name} />
                       <AvatarFallback className="bg-muted text-muted-foreground text-sm font-medium">
@@ -56,7 +63,7 @@ export function ClientsTable({ clients }: ClientsTableProps) {
                     <span className="text-foreground font-medium text-nowrap">
                       {client.name}
                     </span>
-                  </div>
+                  </Link>
                 </td>
                 <td className="px-6 py-4 text-center">
                   <div className="text-lg font-semibold text-foreground">
@@ -90,6 +97,16 @@ export function ClientsTable({ clients }: ClientsTableProps) {
             ))}
           </tbody>
         </table>
+        {showViewAll && (
+          <div className="flex justify-end px-6 py-4">
+            <Link
+              href="/admin/clients"
+              className="text-sm text-foreground/80 hover:underline"
+            >
+              View all clients
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
