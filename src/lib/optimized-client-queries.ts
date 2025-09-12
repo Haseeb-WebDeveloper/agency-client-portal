@@ -232,3 +232,116 @@ export async function getOptimizedClientContracts(params: {
     },
   };
 }
+
+/**
+ * Optimized client offers query with rooms and media
+ */
+export async function getOptimizedClientOffers(params: { 
+  userId: string; 
+  page?: number; 
+  limit?: number; 
+  search?: string; 
+  status?: string; 
+}) {
+  const { userId, page = 1, limit = 15, search = '', status = '' } = params;
+
+  // Get client membership
+  const clientMembership = await prisma.clientMembership.findFirst({
+    where: { userId, isActive: true, deletedAt: null },
+    select: { clientId: true },
+  });
+
+  if (!clientMembership) {
+    return { offers: [], pagination: { page: 1, limit, total: 0, totalPages: 0, hasNext: false, hasPrev: false } };
+  }
+
+  const clientId = clientMembership.clientId;
+
+  // Build optimized query with proper indexing
+  const whereConditions = [`o."clientId" = $1`, `o."deletedAt" IS NULL`];
+  const queryParams: any[] = [clientId];
+  let paramIndex = 1;
+
+  if (status) {
+    paramIndex++;
+    whereConditions.push(`o.status = $${paramIndex}`);
+    queryParams.push(status);
+  }
+
+  if (search) {
+    paramIndex++;
+    const searchPattern = `%${search.toLowerCase()}%`;
+    whereConditions.push(`(
+      LOWER(o.title) LIKE $${paramIndex} OR 
+      LOWER(COALESCE(o.description, '')) LIKE $${paramIndex} OR 
+      EXISTS (
+        SELECT 1 FROM UNNEST(COALESCE(o.tags, '{}'::text[])) t 
+        WHERE LOWER(t) LIKE $${paramIndex}
+      )
+    )`);
+    queryParams.push(searchPattern);
+  }
+
+  const whereClause = whereConditions.join(' AND ');
+
+  // Get total count
+  const countQuery = `
+    SELECT COUNT(*)::int as count
+    FROM offers o
+    WHERE ${whereClause}
+  `;
+
+  const totalResult = await prisma.$queryRawUnsafe<any[]>(countQuery, ...queryParams);
+  const total = totalResult[0]?.count || 0;
+  const totalPages = Math.max(Math.ceil(total / limit), 1);
+  const offset = (page - 1) * limit;
+
+  // Get paginated data with rooms
+  const dataQuery = `
+    SELECT 
+      o.id, o.title, o.description, o.status, o.tags, o.media, o."validUntil", 
+      o."createdAt", o."hasReviewed",
+      COALESCE(
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'id', r.id,
+            'name', r.name,
+            'description', r.description,
+            'type', r.type,
+            'logo', r.logo
+          )
+        ) FILTER (WHERE r.id IS NOT NULL), 
+        '[]'::json
+      ) as rooms
+    FROM offers o
+    LEFT JOIN rooms r ON o.id = r."offerId" AND r."deletedAt" IS NULL
+    WHERE ${whereClause}
+    GROUP BY o.id, o.title, o.description, o.status, o.tags, o.media, o."validUntil", o."createdAt", o."hasReviewed"
+    ORDER BY o."updatedAt" DESC
+    LIMIT ${limit} OFFSET ${offset}
+  `;
+
+  const offers = await prisma.$queryRawUnsafe<any[]>(dataQuery, ...queryParams);
+
+  const transformed = offers.map((o) => ({
+    id: o.id,
+    title: o.title,
+    description: o.description,
+    status: o.status,
+    tags: o.tags || [],
+    media: o.media || null,
+    validUntil: o.validUntil ? new Date(o.validUntil).toISOString() : null,
+    createdAt: new Date(o.createdAt).toISOString(),
+    hasReviewed: o.hasReviewed || false,
+    rooms: o.rooms || [],
+  }));
+
+  return {
+    offers: transformed,
+    pagination: {
+      page, limit, total, totalPages,
+      hasNext: page < totalPages,
+      hasPrev: page > 1,
+    },
+  };
+}

@@ -9,8 +9,19 @@ import {
   Pencil,
   User,
   Mail,
+  Plus,
+  Minus,
 } from "lucide-react";
 import { useAvatarUpload } from "@/hooks/use-avatar-upload";
+
+interface ClientMember {
+  id?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  isNew?: boolean;
+}
 
 interface EditClientModalProps {
   client: {
@@ -39,6 +50,7 @@ interface ClientFormData {
   firstName: string;
   lastName: string;
   email: string;
+  clientMembers: ClientMember[];
 }
 
 const AVATAR_PLACEHOLDER =
@@ -59,6 +71,14 @@ export function EditClientModal({
     firstName: client.teamMembers[0]?.firstName || "",
     lastName: client.teamMembers[0]?.lastName || "",
     email: client.teamMembers[0]?.email || "",
+    clientMembers: client.teamMembers.slice(1).map(member => ({
+      id: member.id,
+      firstName: member.firstName,
+      lastName: member.lastName,
+      email: member.email,
+      role: member.role,
+      isNew: false,
+    })),
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -87,6 +107,36 @@ export function EditClientModal({
 
   const handleInputChange = (field: keyof ClientFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const addClientMember = () => {
+    const newMember: ClientMember = {
+      firstName: "",
+      lastName: "",
+      email: "",
+      role: "member",
+      isNew: true,
+    };
+    setFormData((prev) => ({
+      ...prev,
+      clientMembers: [...prev.clientMembers, newMember],
+    }));
+  };
+
+  const removeClientMember = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      clientMembers: prev.clientMembers.filter((_, i) => i !== index),
+    }));
+  };
+
+  const updateClientMember = (index: number, field: keyof ClientMember, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      clientMembers: prev.clientMembers.map((member, i) =>
+        i === index ? { ...member, [field]: value } : member
+      ),
+    }));
   };
 
   const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -138,11 +188,16 @@ export function EditClientModal({
     formData.name.trim() !== "" &&
     formData.email.trim() !== "" &&
     formData.firstName.trim() !== "" &&
-    formData.lastName.trim() !== "";
+    formData.lastName.trim() !== "" &&
+    formData.clientMembers.every(member => 
+      member.firstName.trim() !== "" && 
+      member.lastName.trim() !== "" && 
+      member.email.trim() !== ""
+    );
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-      <div className="bg-[#18132A] border border-[#2B2346] rounded-xl w-full max-w-lg max-h-[95vh] overflow-y-auto shadow-lg">
+      <div className="bg-[#18132A] border border-[#2B2346] rounded-xl w-full max-w-2xl max-h-[95vh] overflow-y-auto shadow-lg">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#2B2346]">
           <h2 className="text-lg font-bold text-white">Edit Client</h2>
           <button
@@ -309,6 +364,117 @@ export function EditClientModal({
               rows={3}
               className="w-full bg-transparent border border-[#2B2346] rounded-lg px-4 py-2 placeholder:text-white/40 focus:outline-none transition-all resize-none"
             />
+          </div>
+
+          {/* Client Members Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 text-base">
+                <User className="w-4 h-4" />
+                Client Members
+              </label>
+              <button
+                type="button"
+                onClick={addClientMember}
+                className="flex items-center gap-2 text-sm text-[#7C5CFA] hover:text-[#6B42D1] transition-colors"
+                disabled={isLoading || isUploadingAvatar}
+              >
+                <Plus className="w-4 h-4" />
+                Add Member
+              </button>
+            </div>
+
+            {formData.clientMembers.length > 0 && (
+              <div className="space-y-3 max-h-48 overflow-y-auto">
+                {formData.clientMembers.map((member, index) => (
+                  <div
+                    key={index}
+                    className="bg-[#201A36] border border-[#2B2346] rounded-lg p-4 space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-white/60">
+                        Member {index + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeClientMember(index)}
+                        className="text-red-400 hover:text-red-600 transition-colors"
+                        disabled={isLoading || isUploadingAvatar}
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-white/60 mb-1 block">
+                          First Name
+                        </label>
+                        <input
+                          type="text"
+                          value={member.firstName}
+                          onChange={(e) => updateClientMember(index, "firstName", e.target.value)}
+                          placeholder="First Name"
+                          className="w-full bg-transparent border border-[#2B2346] rounded px-3 py-2 text-sm placeholder:text-white/40 focus:outline-none transition-all"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-white/60 mb-1 block">
+                          Last Name
+                        </label>
+                        <input
+                          type="text"
+                          value={member.lastName}
+                          onChange={(e) => updateClientMember(index, "lastName", e.target.value)}
+                          placeholder="Last Name"
+                          className="w-full bg-transparent border border-[#2B2346] rounded px-3 py-2 text-sm placeholder:text-white/40 focus:outline-none transition-all"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-white/60 mb-1 block">
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          value={member.email}
+                          onChange={(e) => updateClientMember(index, "email", e.target.value)}
+                          placeholder="email@example.com"
+                          className="w-full bg-transparent border border-[#2B2346] rounded px-3 py-2 text-sm placeholder:text-white/40 focus:outline-none transition-all"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-white/60 mb-1 block">
+                          Role
+                        </label>
+                        <select
+                          value={member.role}
+                          onChange={(e) => updateClientMember(index, "role", e.target.value)}
+                          className="w-full bg-transparent border border-[#2B2346] rounded px-3 py-2 text-sm focus:outline-none transition-all"
+                        >
+                          <option value="member">Member</option>
+                          <option value="admin">Admin</option>
+                          <option value="viewer">Viewer</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {formData.clientMembers.length === 0 && (
+              <div className="text-center py-8 text-white/40">
+                <User className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No additional members added yet</p>
+                <p className="text-xs">Click "Add Member" to add team members</p>
+              </div>
+            )}
           </div>
 
           <hr className="border-[#2B2346] my-2" />

@@ -57,9 +57,11 @@ export function ClientCard({ client }: ClientCardProps) {
             />
           </div>
         ) : (
-          <span className="text-white font-bold text-sm">
-            {client.name.charAt(0).toUpperCase()}
-          </span>
+          <Avatar className="w-16 h-16">
+            <AvatarFallback className="text-white font-bold text-sm">
+              {client.name.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
         )}
         <div className="flex-1 min-w-0">
           <h3 className="figma-paragraph-bold">{client.name}</h3>
@@ -128,20 +130,20 @@ export function ClientCard({ client }: ClientCardProps) {
       {/* Team Members */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <AvatarStack size={32} className="border-2 border-card">
+          <AvatarStack size={32} className="">
             {displayMembers.map((member) => (
               <Avatar key={member.id}>
                 {member.avatar ? (
-                  <AvatarImage src={member.avatar} alt={member.name} />
+                  <AvatarImage src={member.avatar} alt={member.name} className="w-12 h-12" />
                 ) : null}
-                <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-                  {member.name.charAt(0).toUpperCase()}
+                <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+                  {member.name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
             ))}
             {remainingCount > 0 && (
               <Avatar>
-                <AvatarFallback className="bg-primary text-white text-xs font-medium">
+                <AvatarFallback className="bg-primary text-white text-sm font-medium">
                   +{remainingCount}
                 </AvatarFallback>
               </Avatar>

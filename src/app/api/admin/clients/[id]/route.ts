@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/auth';
+import { createAdminClient } from '@/utils/supabase/admin';
+import { revalidateTag } from 'next/cache';
 
 export async function GET(
   request: NextRequest,
@@ -212,7 +214,8 @@ export async function PUT(
       logo,
       firstName,
       lastName,
-      email
+      email,
+      clientMembers = []
     } = body;
 
     // Validate required fields
@@ -257,6 +260,122 @@ export async function PUT(
         });
       }
     }
+
+    // Handle client members
+    if (clientMembers && clientMembers.length > 0) {
+      const supabaseAdmin = await createAdminClient();
+      
+      // Get existing members to determine which ones to delete
+      const existingMembers = await prisma.clientMembership.findMany({
+        where: {
+          clientId: id,
+          role: { not: 'PRIMARY_CONTACT' }, // Don't touch primary contact
+        },
+        include: {
+          user: true,
+        },
+      });
+
+      // Create a map of existing members by email for easy lookup
+      const existingMembersMap = new Map(
+        existingMembers.map(member => [member.user.email, member])
+      );
+
+      // Process each client member
+      for (const member of clientMembers) {
+        const { firstName, lastName, email, role, isNew } = member;
+
+        if (!firstName || !lastName || !email) {
+          continue; // Skip invalid members
+        }
+
+        const existingMember = existingMembersMap.get(email);
+
+        if (isNew && !existingMember) {
+          // Create new user in Supabase Auth
+          const { data: authData, error: authCreateError } = await supabaseAdmin.auth.admin.createUser({
+            email,
+            email_confirm: true,
+            user_metadata: {
+              first_name: firstName,
+              last_name: lastName,
+              role: 'CLIENT_MEMBER'
+            }
+          });
+
+          if (authCreateError || !authData.user) {
+            console.error('Failed to create user in Supabase Auth:', authCreateError);
+            continue; // Skip this member if auth creation fails
+          }
+
+          // Create user in database
+          const newUser = await prisma.user.create({
+            data: {
+              authId: authData.user.id,
+              firstName,
+              lastName,
+              email,
+              role: 'CLIENT_MEMBER',
+              isActive: true,
+            },
+          });
+
+          // Create client membership
+          await prisma.clientMembership.create({
+            data: {
+              userId: newUser.id,
+              clientId: id,
+              role: role || 'member',
+            },
+          });
+        } else if (existingMember) {
+          // Update existing member
+          await prisma.user.update({
+            where: { id: existingMember.user.id },
+            data: {
+              firstName,
+              lastName,
+              email,
+            },
+          });
+
+          // Update membership role if changed
+          if (role && role !== existingMember.role) {
+            await prisma.clientMembership.update({
+              where: { id: existingMember.id },
+              data: { role },
+            });
+          }
+
+          // Remove from map so we know it's been processed
+          existingMembersMap.delete(email);
+        }
+      }
+
+      // Delete members that are no longer in the list
+      for (const [, member] of existingMembersMap) {
+        // Soft delete the membership
+        await prisma.clientMembership.update({
+          where: { id: member.id },
+          data: { 
+            deletedAt: new Date(),
+            isActive: false,
+          },
+        });
+
+        // Soft delete the user
+        await prisma.user.update({
+          where: { id: member.user.id },
+          data: { 
+            deletedAt: new Date(),
+            isActive: false,
+          },
+        });
+      }
+    }
+
+    revalidateTag('clients:list');
+    revalidateTag('admin:dashboard');
 
     return NextResponse.json({
       success: true,
