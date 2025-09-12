@@ -1,9 +1,26 @@
-import { createClient } from '@/utils/supabase/server';
 import { prisma } from './prisma';
 import { redirect } from 'next/navigation';
 
+// Dynamically import the Supabase client based on context
+async function getSupabaseClient() {
+  try {
+    // Try to import the server client first
+    const { createClient } = await import('@/utils/supabase/server');
+    return await createClient();
+  } catch (error) {
+    // If that fails, fall back to client-side client
+    try {
+      const { createClient } = await import('@/utils/supabase/clients');
+      return createClient();
+    } catch (clientError) {
+      throw new Error('Could not create Supabase client');
+    }
+  }
+}
+
 export async function getCurrentUser() {
-  const supabase = await createClient();
+  // Use dynamic import to avoid importing server-only modules in client components
+  const supabase = await getSupabaseClient();
   
   const {
     data: { user: authUser },

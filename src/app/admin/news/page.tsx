@@ -23,10 +23,18 @@ const AdminNewsPage = async () => {
       </div>
 
       <div className="mt-6">
-        <Suspense fallback={<div className="min-h-96 flex items-center justify-center">Loading news...</div>}>
+        <Suspense
+          fallback={
+            <div className="min-h-96 flex items-center justify-center">
+              Loading news...
+            </div>
+          }
+        >
           <NewsList />
         </Suspense>
       </div>
     </div>
   );
-}
+};
+
+export default AdminNewsPage;

@@ -44,10 +44,14 @@ export async function GET(request: NextRequest) {
         },
       });
 
-    const totalPages = Math.max(Math.ceil(total / limit), 1);
-    const cacheHeaders = { 'Cache-Control': 'private, max-age=300, stale-while-revalidate=600' } as const; // 5min + 10min stale
+      const clients = await prisma.client.findMany({
+        where: { deletedAt: null },
+        select: { id: true, name: true },
+      });
 
-      return NextResponse.json({ news, clients });
+      const cacheHeaders = { 'Cache-Control': 'private, max-age=300, stale-while-revalidate=600' } as const; // 5min + 10min stale
+
+      return NextResponse.json({ news, clients }, { headers: cacheHeaders });
     } catch (error: any) {
       console.error(error);
       const errorMessage = error.message || 'Failed to fetch news';
@@ -225,9 +229,7 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  // Delete a news item
   try {
-    // Get the current authenticated user
     const user = await getCurrentUser();
     
     if (!user) {
@@ -248,15 +250,24 @@ export async function DELETE(request: NextRequest) {
     const id = searchParams.get('id');
     
     if (!id) {
-      return NextResponse.json({ error: 'News ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'News ID is required' }, 
+        { status: 400 }
+      );
     }
     
-    await prisma.news.delete({
+    // Soft delete the news item
+    const news = await prisma.news.update({
       where: { id },
+      data: { 
+        deletedAt: new Date(),
+        deletedBy: user.id
+      },
     });
+    
     revalidateTag('news:list');
     revalidateTag('admin:dashboard');
-    return NextResponse.json({ message: 'News deleted successfully' }, { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } });
+    return NextResponse.json({ message: 'News deleted successfully' });
   } catch (error) {
     console.error(error);
     const errorMessage = error.message || 'Failed to delete news';

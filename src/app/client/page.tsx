@@ -12,8 +12,8 @@ import {
   getClientDashboardStats,
   getClientRecentNews,
 } from "@/lib/cached-client";
-import { requireClient } from "@/lib/auth";
 import OptimizedClientDashboard from "@/components/client/optimized-client-dashboard";
+
 export default function ClientDashboard() {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
@@ -49,9 +49,18 @@ export default function ClientDashboard() {
       }
     };
 
-    return <OptimizedClientDashboard serializedData={serializedData} />;
-  } catch (error) {
-    console.error("Error loading client dashboard:", error);
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <SkeletonLoading />
+      </div>
+    );
+  }
+
+  if (error) {
     return (
       <div className="p-6">
         <h2 className="text-xl font-bold text-red-500">
@@ -77,6 +86,16 @@ export default function ClientDashboard() {
         <p className="text-red-300">Missing required data</p>
       </div>
     );
+  }
+
+  // Check if we should use the optimized version
+  if (typeof window !== "undefined") {
+    const serializedData = {
+      user,
+      dashboardData,
+    };
+
+    return <OptimizedClientDashboard serializedData={serializedData} />;
   }
 
   return (
