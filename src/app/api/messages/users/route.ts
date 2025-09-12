@@ -4,20 +4,14 @@ import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(request: Request) {
   const me = await getCurrentUser();
-  
-  // Handle case where user is not authenticated
   if (!me) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  
   const { searchParams } = new URL(request.url);
   const q = (searchParams.get("q") || "").trim();
   const limit = Number(searchParams.get("limit") || 10);
 
-  const isAdmin = me.role === "PLATFORM_ADMIN" || me.role === "AGENCY_MEMBER";
+  const isAdmin = me?.role === "PLATFORM_ADMIN" || me?.role === "AGENCY_MEMBER";
 
   const where = isAdmin
     ? {

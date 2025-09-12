@@ -18,6 +18,10 @@ export default async function MessagesIndex({
   }
 
   const rooms = await getRoomsWithUnreadOptimized();
+
+  if (!me) {
+    redirect("/login");
+  }
   const isAdmin = me.role === "PLATFORM_ADMIN" || me.role === "AGENCY_MEMBER";
   const resolvedSearchParams = await searchParams;
   const selectedRoomId = resolvedSearchParams.roomId;

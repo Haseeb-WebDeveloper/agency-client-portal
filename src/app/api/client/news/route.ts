@@ -5,15 +5,9 @@ import { getCurrentUser } from '@/lib/auth';
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
-    
-    // Handle case where user is not authenticated
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+  if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    
     const cacheHeaders = { 'Cache-Control': 'private, max-age=300, stale-while-revalidate=600' } as const;
     
     const news = await getClientNews(user.id);

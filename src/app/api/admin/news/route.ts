@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
     revalidateTag('news:list');
     revalidateTag('admin:dashboard');
     return NextResponse.json(news, { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     const errorMessage = typeof error === 'object' && error !== null && 'message' in error
       ? (error as { message?: string }).message
@@ -223,7 +223,7 @@ export async function PUT(request: NextRequest) {
     revalidateTag('news:list');
     revalidateTag('admin:dashboard');
     return NextResponse.json(news, { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     const errorMessage = typeof error === 'object' && error !== null && 'message' in error
       ? (error as { message?: string }).message
@@ -264,14 +264,14 @@ export async function DELETE(request: NextRequest) {
     const news = await prisma.news.update({
       where: { id },
       data: { 
-        deletedAt: new Date()
+         deletedAt: new Date()
       },
     });
     
     revalidateTag('news:list');
     revalidateTag('admin:dashboard');
     return NextResponse.json({ message: 'News deleted successfully' });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     const errorMessage = typeof error === 'object' && error !== null && 'message' in error
       ? (error as { message?: string }).message
