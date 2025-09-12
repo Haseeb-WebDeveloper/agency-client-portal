@@ -11,14 +11,14 @@ export async function PATCH(
     
     const { id } = await params;
     const user = await getCurrentUser();
-    console.log('Current user:', user.id);
+    console.log('Current user:', user?.id);
     
     const membership = await prisma.clientMembership.findFirst({
-      where: { userId: user.id, isActive: true, deletedAt: null },
+      where: { userId: user?.id, isActive: true, deletedAt: null },
       select: { clientId: true },
     });
 
-    if (!membership) {
+    if (!membership || !user) {
       console.log('No membership found for user');
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }

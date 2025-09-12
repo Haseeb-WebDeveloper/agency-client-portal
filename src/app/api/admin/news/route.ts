@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
     revalidateTag('news:list');
     revalidateTag('admin:dashboard');
     return NextResponse.json(news, { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     const errorMessage = error.message || 'Failed to create news';
     return NextResponse.json({ error: 'Failed to create news: ' + errorMessage }, { status: 500 });
@@ -221,7 +221,7 @@ export async function PUT(request: NextRequest) {
     revalidateTag('news:list');
     revalidateTag('admin:dashboard');
     return NextResponse.json(news, { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     const errorMessage = error.message || 'Failed to update news';
     return NextResponse.json({ error: 'Failed to update news: ' + errorMessage }, { status: 500 });
@@ -261,14 +261,14 @@ export async function DELETE(request: NextRequest) {
       where: { id },
       data: { 
         deletedAt: new Date(),
-        deletedBy: user.id
+        updatedBy: user.id,
       },
     });
     
     revalidateTag('news:list');
     revalidateTag('admin:dashboard');
     return NextResponse.json({ message: 'News deleted successfully' });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     const errorMessage = error.message || 'Failed to delete news';
     return NextResponse.json({ error: 'Failed to delete news: ' + errorMessage }, { status: 500 });
