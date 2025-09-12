@@ -125,7 +125,7 @@ export default function ClientDashboard() {
         {/* Right column - Sidebar */}
         <div className="space-y-6">
           {/* Messages card */}
-          <MessagesCard messages={dashboardData.recentMessages} />
+          <MessagesCard />
 
           {/* Recent news card - styled like admin */}
           <div

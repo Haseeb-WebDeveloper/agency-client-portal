@@ -4,6 +4,15 @@ import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(request: Request) {
   const me = await getCurrentUser();
+  
+  // Handle case where user is not authenticated
+  if (!me) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+  
   const { searchParams } = new URL(request.url);
   const q = (searchParams.get("q") || "").trim();
   const limit = Number(searchParams.get("limit") || 10);
@@ -51,5 +60,3 @@ export async function GET(request: Request) {
 
   return NextResponse.json({ items });
 }
-
-

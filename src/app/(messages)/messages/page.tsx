@@ -1,6 +1,7 @@
 import { getRoomsWithUnreadOptimized } from "@/actions/messages-optimized";
 import { getCurrentUser } from "@/lib/auth";
 import MessagesOptimizedShell from "@/components/messages/messages-optimized-shell";
+import { redirect } from "next/navigation";
 
 interface MessagesPageProps {
   searchParams: Promise<{ roomId?: string }>;
@@ -8,6 +9,12 @@ interface MessagesPageProps {
 
 export default async function MessagesIndex({ searchParams }: MessagesPageProps) {
   const me = await getCurrentUser();
+  
+  // Redirect to login if user is not authenticated
+  if (!me) {
+    redirect('/login');
+  }
+  
   const rooms = await getRoomsWithUnreadOptimized();
   const isAdmin = me.role === "PLATFORM_ADMIN" || me.role === "AGENCY_MEMBER";
   const resolvedSearchParams = await searchParams;
