@@ -15,6 +15,7 @@ This page explains how the messaging feature works end‑to‑end across server 
 ### Data fetching (server)
 
 In `messages/page.tsx`:
+
 - Fetch current user: `getCurrentUser()`.
 - Fetch the user's rooms list: `listMyRooms()`.
 - If `searchParams.room` is present:
@@ -43,6 +44,7 @@ These come from `src/actions/messaging.ts` (Server Actions) and run on the serve
 ### ChatRoom live updates (client)
 
 `src/components/admin/chat-room.tsx` is a Client Component that:
+
 - Initializes Supabase client: `createClient()`.
 - Hydrates initial messages from the server prop `initialMessages`.
 - Subscribes to realtime Postgres changes on table `messages` filtered by `roomId`:
@@ -51,6 +53,8 @@ These come from `src/actions/messaging.ts` (Server Actions) and run on the serve
   - DELETE: remove the message.
 - Manages presence for "typing" indicators using a separate presence channel per room (`presence:room:<roomId>`):
   - Tracks `typing: true/false` and derives a map of active typers.
+
+**Note**: For Realtime to work properly, Row Level Security (RLS) policies must be enabled on the messages table. See [RLS_SETUP.md](../RLS_SETUP.md) for setup instructions.
 
 ### Sending messages (client → server)
 
@@ -80,4 +84,3 @@ These come from `src/actions/messaging.ts` (Server Actions) and run on the serve
 
 - The current split leverages Server Components for initial data and Client Components for interactivity and realtime.
 - For even smoother transitions, consider adding loading states/skeletons or moving the selected room panel into a purely client‑side loader that fetches messages via an API route.
-

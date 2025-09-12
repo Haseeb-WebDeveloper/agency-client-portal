@@ -27,7 +27,7 @@ export function OffersPagination({
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6">
       {/* Results Info */}
       <div className="text-sm text-foreground/60">
-        Showing {startItem} to {endItem} of {total} offers
+        Showing {startItem} to {endItem} of {total} Proposals
       </div>
 
       {/* Pagination Controls */}

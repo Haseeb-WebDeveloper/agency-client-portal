@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminDashboardStats } from '@/lib/admin-queries';
+import { getClientDashboardStats } from '@/lib/client-queries';
 import { getCurrentUser } from '@/lib/auth';
 
 // Helper function to convert BigInt values to strings
@@ -31,17 +31,14 @@ function convertBigIntToString(obj: any): any {
 
 export async function GET(request: NextRequest) {
   try {
-    // Check admin authentication
+    // Check client authentication
     const user = await getCurrentUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized: User not found' }, { status: 401 });
-    }
-    if (user.role !== 'PLATFORM_ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized: User is not an admin' }, { status: 403 });
+    if (!user || (user.role !== 'CLIENT' && user.role !== 'AGENCY_MEMBER')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get dashboard data
-    const dashboardData = await getAdminDashboardStats();
+    const dashboardData = await getClientDashboardStats(user.id);
     
     // Convert any BigInt values to strings to avoid serialization errors
     const serializedData = convertBigIntToString(dashboardData);
@@ -49,7 +46,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(serializedData);
   } catch (error: any) {
     console.error('Error fetching dashboard stats:', error);
-    // Return a more detailed error message
     const errorMessage = error.message || 'Failed to fetch dashboard stats';
     return NextResponse.json(
       { error: errorMessage },

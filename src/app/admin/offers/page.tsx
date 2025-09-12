@@ -133,7 +133,7 @@ function OffersContent() {
       <div className="space-y-6 md:px-8 md:py-6 px-4 py-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="figma-h3">Your Offers</h1>
+            <h1 className="figma-h3">Your Proposals</h1>
           </div>
         </div>
         <div className="flex items-center justify-center py-12">
@@ -142,7 +142,7 @@ function OffersContent() {
               <span className="text-destructive text-xl">!</span>
             </div>
             <h3 className="text-lg font-medium text-foreground mb-2">
-              Error Loading Offers
+              Error Loading Proposals
             </h3>
             <p className="text-foreground/60 mb-4">{error}</p>
             <button onClick={() => fetchOffers()} className="figma-btn-primary">
@@ -159,14 +159,14 @@ function OffersContent() {
       {/* Header with Search and Filter */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex-1">
-          <h1 className="figma-h3">Offers</h1>
+          <h1 className="figma-h3">Proposals</h1>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => (window.location.href = "/admin/offers/new")}
             className="w-full md:w-fit cursor-pointer px-6 py-2 bg-gradient-to-r from-[#6B42D1] to-[#FF2AFF] rounded-lg transition-all"
           >
-            Create Offer
+            Create Proposal
           </button>
         </div>
       </div>
@@ -231,7 +231,7 @@ function OffersContent() {
                 <span className="text-primary text-2xl">📋</span>
               </div>
               <h3 className="text-lg font-medium text-foreground mb-2">
-                No Offers Found
+                No Proposals Found
               </h3>
               <p className="text-foreground/90 mb-4">
                 {search || status
@@ -260,7 +260,7 @@ export default function OffersPage() {
         <div className="space-y-6 md:px-8 md:py-6 px-4 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="figma-h3">Your Offers</h1>
+              <h1 className="figma-h3">Your Proposals</h1>
             </div>
           </div>
           <div className="flex items-center justify-center py-12">

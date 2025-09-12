@@ -140,9 +140,9 @@ export async function POST(request: NextRequest) {
       },
     }, { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } });
   } catch (error) {
-    console.error('Error creating offer:', error);
+    console.error('Error creating Proposal:', error);
     return NextResponse.json(
-      { error: 'Failed to create offer' },
+      { error: 'Failed to create Proposal' },
       { status: 500 }
     );
   }

@@ -49,13 +49,13 @@ export function QuickActions() {
           >
             <Image
               src="/icons/lists.svg"
-              alt="Create offers"
+              alt="Create Proposals"
               width={20}
               height={20}
             />
             <div className="flex flex-col">
               <span className="text-sm font-medium text-foreground">
-                Create offers
+                Create Proposals
               </span>
               <span className="text-xs text-foreground/90">
                 Lorem ipsum dolor sit

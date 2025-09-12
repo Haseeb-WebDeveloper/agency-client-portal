@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { getAdminDashboardStats, getRecentNews } from "@/lib/cached-admin";
-import { requireAdmin } from "@/lib/auth";
 import { StatsCards } from "@/components/admin/stats-cards";
 import { ClientsTable } from "@/components/admin/clients-table";
 import { MessagesCard } from "@/components/admin/messages-card";
@@ -11,8 +10,10 @@ import Image from "next/image";
 
 export const revalidate = 300; // 5 minutes
 
-export default async function AdminDashboard() {
-  // Require admin authentication
+// Server Component for data fetching and authentication
+async function AdminDashboardServer() {
+  // Import auth functions inside the Server Component
+  const { requireAdmin } = await import("@/lib/auth");
   const user = await requireAdmin();
 
   const [dashboardData, newsData] = await Promise.all([
@@ -36,8 +37,7 @@ export default async function AdminDashboard() {
         {/* Left column - Main content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Stats cards */}
-          <Suspense fallback={<div className="min-h-24" />}> 
-            {/* stats are already awaited above, Suspense is a safe guard for future streaming splits */}
+          <Suspense fallback={<div className="min-h-24" />}>
             <StatsCards
               contracts={dashboardData.contracts}
               offers={dashboardData.offers}
@@ -45,7 +45,7 @@ export default async function AdminDashboard() {
           </Suspense>
 
           {/* Clients table */}
-          <Suspense fallback={<div className="min-h-40" />}> 
+          <Suspense fallback={<div className="min-h-40" />}>
             <ClientsTable clients={dashboardData.clients} />
           </Suspense>
         </div>
@@ -53,7 +53,7 @@ export default async function AdminDashboard() {
         {/* Right column - Sidebar */}
         <div className="space-y-6">
           {/* Messages card */}
-          <Suspense fallback={<div className="min-h-24" />}> 
+          <Suspense fallback={<div className="min-h-24" />}>
             <MessagesCard />
           </Suspense>
 
@@ -82,7 +82,7 @@ export default async function AdminDashboard() {
                   No news posted yet.
                 </div>
               )}
-              {newsData.slice(0, 2).map((newsItem, idx) => (
+              {newsData.slice(0, 2).map((newsItem: any, idx: number) => (
                 <Link
                   key={newsItem.id}
                   href={`/admin/news/edit/${newsItem.id}`}
@@ -131,5 +131,14 @@ export default async function AdminDashboard() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Client Component wrapper
+export default function AdminDashboard() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AdminDashboardServer />
+    </Suspense>
   );
 }

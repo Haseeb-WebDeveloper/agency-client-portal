@@ -160,7 +160,7 @@ export default function OfferPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="figma-h3">
-            {isNew ? "Create New Offer" : "Edit Offer"}
+            {isNew ? "Create New Proposal" : "Edit Proposal"}
           </h1>
           {!isNew && offer && (
             <p className="text-foreground/60 mt-1">

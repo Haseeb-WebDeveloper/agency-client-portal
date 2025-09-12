@@ -19,7 +19,7 @@ export const adminSidebarItems = [
   },
   {
     id: "offers",
-    label: "Offers",
+    label: "Proposals",
     icon: "offer.svg",
     href: "/admin/offers",
   },
@@ -41,7 +41,7 @@ export const clientSidebarItems = [
   },
   {
     id: "offers",
-    label: "Offers",
+    label: "Proposals",
     icon: "offer.svg",
     href: "/client/offers",
   },

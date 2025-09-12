@@ -28,7 +28,10 @@ import {
 } from "@/actions/messages-client";
 import { ChatLoading } from "@/components/shared/chat-loading";
 import { MessageCache } from "@/lib/message-cache";
-import { sendMessageOptimized, getMessagesOptimized } from "@/actions/messages-optimized";
+import {
+  sendMessageOptimized,
+  getMessagesOptimized,
+} from "@/actions/messages-optimized";
 
 type UserLite = {
   id: string;
@@ -124,7 +127,9 @@ export default function ChatRoomOptimized({
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  const [fallbackTimeout, setFallbackTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [fallbackTimeout, setFallbackTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
 
   // Load room info and check admin status
   useEffect(() => {
@@ -132,7 +137,7 @@ export default function ChatRoomOptimized({
       try {
         setIsLoading(true);
         console.log("📡 [SERVER ACTION] Loading room info for:", roomId);
-        
+
         const [roomData, usersData] = await Promise.all([
           getRoomInfoAction(roomId),
           getAvailableUsersAction(),
@@ -197,10 +202,12 @@ export default function ChatRoomOptimized({
     );
     setMessages(merged);
     setIsAtBottom(true);
-    
+
     // If no messages, try to load from server action
     if (merged.length === 0 && roomId) {
-      console.log("📡 [SERVER ACTION] No initial messages, loading from server action");
+      console.log(
+        "📡 [SERVER ACTION] No initial messages, loading from server action"
+      );
       loadMessagesFromServer();
     }
   }, [initialMessages, roomId]);
@@ -211,33 +218,65 @@ export default function ChatRoomOptimized({
       console.log("📡 [SERVER ACTION] Loading messages for room:", roomId);
       const result = await getMessagesOptimized(roomId, null, 50);
       const serverMessages = result.items || [];
-      
+
       if (serverMessages.length > 0) {
         // Convert Date objects to strings to match Message type
-        const convertedMessages = serverMessages.map(msg => ({
+        const convertedMessages = serverMessages.map((msg) => ({
           ...msg,
-          createdAt: msg.createdAt instanceof Date ? msg.createdAt.toISOString() : msg.createdAt,
-          updatedAt: msg.updatedAt instanceof Date ? msg.updatedAt.toISOString() : msg.updatedAt,
-          attachments: msg.attachments?.map(att => ({
-            ...att,
-            createdAt: att.createdAt instanceof Date ? att.createdAt.toISOString() : att.createdAt,
-            updatedAt: att.updatedAt instanceof Date ? att.updatedAt.toISOString() : att.updatedAt,
-          })) || [],
-          parent: msg.parent ? {
-            ...msg.parent,
-            createdAt: msg.parent.createdAt instanceof Date ? msg.parent.createdAt.toISOString() : msg.parent.createdAt,
-            updatedAt: msg.parent.updatedAt instanceof Date ? msg.parent.updatedAt.toISOString() : msg.parent.updatedAt,
-            attachments: (msg.parent as any).attachments?.map((att: any) => ({
+          createdAt:
+            msg.createdAt instanceof Date
+              ? msg.createdAt.toISOString()
+              : msg.createdAt,
+          updatedAt:
+            msg.updatedAt instanceof Date
+              ? msg.updatedAt.toISOString()
+              : msg.updatedAt,
+          attachments:
+            msg.attachments?.map((att) => ({
               ...att,
-              createdAt: att.createdAt instanceof Date ? att.createdAt.toISOString() : att.createdAt,
-              updatedAt: att.updatedAt instanceof Date ? att.updatedAt.toISOString() : att.updatedAt,
+              createdAt:
+                att.createdAt instanceof Date
+                  ? att.createdAt.toISOString()
+                  : att.createdAt,
+              updatedAt:
+                att.updatedAt instanceof Date
+                  ? att.updatedAt.toISOString()
+                  : att.updatedAt,
             })) || [],
-          } : null,
+          parent: msg.parent
+            ? {
+                ...msg.parent,
+                createdAt:
+                  msg.parent.createdAt instanceof Date
+                    ? msg.parent.createdAt.toISOString()
+                    : msg.parent.createdAt,
+                updatedAt:
+                  msg.parent.updatedAt instanceof Date
+                    ? msg.parent.updatedAt.toISOString()
+                    : msg.parent.updatedAt,
+                attachments:
+                  (msg.parent as any).attachments?.map((att: any) => ({
+                    ...att,
+                    createdAt:
+                      att.createdAt instanceof Date
+                        ? att.createdAt.toISOString()
+                        : att.createdAt,
+                    updatedAt:
+                      att.updatedAt instanceof Date
+                        ? att.updatedAt.toISOString()
+                        : att.updatedAt,
+                  })) || [],
+              }
+            : null,
         }));
-        
+
         setMessages(convertedMessages);
         MessageCache.set(roomId, convertedMessages);
-        console.log("✅ [SERVER ACTION] Loaded", convertedMessages.length, "messages from server");
+        console.log(
+          "✅ [SERVER ACTION] Loaded",
+          convertedMessages.length,
+          "messages from server"
+        );
       }
     } catch (error) {
       console.error("❌ [SERVER ACTION] Error loading messages:", error);
@@ -284,8 +323,11 @@ export default function ChatRoomOptimized({
   // Optimized message sending with comprehensive logging
   const clientSend = async (formData: FormData) => {
     const startTime = performance.now();
-    console.log("🚀 [PERFORMANCE] Starting message send at:", new Date().toISOString());
-    
+    console.log(
+      "🚀 [PERFORMANCE] Starting message send at:",
+      new Date().toISOString()
+    );
+
     const content = String(formData.get("content") || "").trim();
     if (!content && uploadedFiles.length === 0) return;
 
@@ -309,26 +351,41 @@ export default function ChatRoomOptimized({
 
     try {
       setIsSending(true);
-      
+
       // Add optimistic message immediately
       const optimisticTime = performance.now();
-      setMessages(prev => [...prev, optimisticMessage]);
+      setMessages((prev) => [...prev, optimisticMessage]);
       MessageCache.addMessage(roomId, optimisticMessage);
-      console.log("⚡ [PERFORMANCE] Optimistic update completed in:", performance.now() - optimisticTime, "ms");
-      
+      console.log(
+        "⚡ [PERFORMANCE] Optimistic update completed in:",
+        performance.now() - optimisticTime,
+        "ms"
+      );
+
       // Scroll to bottom
       setTimeout(() => scrollToBottom("smooth"), 100);
 
       // Send to server with detailed logging - USING SERVER ACTION!
       const serverStartTime = performance.now();
-      console.log("📤 [PERFORMANCE] Starting server action at:", new Date().toISOString());
-      
+      console.log(
+        "📤 [PERFORMANCE] Starting server action at:",
+        new Date().toISOString()
+      );
+
       // Use server action instead of API route
-      const result = await sendMessageOptimized(roomId, content, replyTo?.id || null);
-      
+      const result = await sendMessageOptimized(
+        roomId,
+        content,
+        replyTo?.id || null
+      );
+
       const serverEndTime = performance.now();
-      console.log("📥 [PERFORMANCE] Server action completed in:", serverEndTime - serverStartTime, "ms");
-      
+      console.log(
+        "📥 [PERFORMANCE] Server action completed in:",
+        serverEndTime - serverStartTime,
+        "ms"
+      );
+
       // Clear input and files
       if (inputRef.current) {
         inputRef.current.value = "";
@@ -339,18 +396,20 @@ export default function ChatRoomOptimized({
 
       // Don't remove optimistic message here - let realtime handle it
       // The optimistic message will be replaced when the real message arrives via realtime
-      
+
       // Immediate refresh after a short delay to ensure message appears
       setTimeout(async () => {
         console.log("🔄 [IMMEDIATE] Refreshing messages to ensure they appear");
         await loadMessagesFromServer();
       }, 1000);
-      
+
       // Fallback: if realtime doesn't work, refresh messages after a longer delay
       const timeout = setTimeout(async () => {
-        const stillOptimistic = messages.some(m => m.id === tempId);
+        const stillOptimistic = messages.some((m) => m.id === tempId);
         if (stillOptimistic) {
-          console.log("🔄 [FALLBACK] Realtime didn't work, refreshing messages manually");
+          console.log(
+            "🔄 [FALLBACK] Realtime didn't work, refreshing messages manually"
+          );
           await loadMessagesFromServer();
         }
         setFallbackTimeout(null);
@@ -359,11 +418,10 @@ export default function ChatRoomOptimized({
 
       const totalTime = performance.now() - startTime;
       console.log("✅ [PERFORMANCE] Total message send time:", totalTime, "ms");
-
     } catch (error) {
       console.error("❌ [PERFORMANCE] Error sending message:", error);
       // Remove optimistic message on error
-      setMessages(prev => prev.filter(m => m.id !== tempId));
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
       MessageCache.removeMessage(roomId, tempId);
     } finally {
       setIsSending(false);
@@ -382,11 +440,14 @@ export default function ChatRoomOptimized({
       const end = inputRef.current.selectionEnd || 0;
       const text = inputRef.current.value;
       const newText = text.slice(0, start) + emoji + text.slice(end);
-      
+
       inputRef.current.value = newText;
-      inputRef.current.setSelectionRange(start + emoji.length, start + emoji.length);
+      inputRef.current.setSelectionRange(
+        start + emoji.length,
+        start + emoji.length
+      );
       inputRef.current.focus();
-      
+
       onInputChange();
     }
     setIsEmojiOpen(false);
@@ -428,7 +489,7 @@ export default function ChatRoomOptimized({
 
     try {
       console.log("✏️ [SERVER ACTION] Editing message:", editingId);
-      
+
       // Use server action instead of API route
       const response = await fetch(`/api/messages/${editingId}`, {
         method: "PATCH",
@@ -437,14 +498,17 @@ export default function ChatRoomOptimized({
       });
 
       if (response.ok) {
-        setMessages(prev =>
-          prev.map(m =>
+        setMessages((prev) =>
+          prev.map((m) =>
             m.id === editingId
               ? { ...m, content: editDraft.trim(), isEdited: true }
               : m
           )
         );
-        MessageCache.updateMessage(roomId, editingId, { content: editDraft.trim(), isEdited: true });
+        MessageCache.updateMessage(roomId, editingId, {
+          content: editDraft.trim(),
+          isEdited: true,
+        });
         setEditingId(null);
         setEditDraft("");
         console.log("✅ [SERVER ACTION] Message edited successfully");
@@ -458,13 +522,13 @@ export default function ChatRoomOptimized({
   const handleDelete = async (messageId: string) => {
     try {
       console.log("🗑️ [SERVER ACTION] Deleting message:", messageId);
-      
+
       const response = await fetch(`/api/messages/${messageId}`, {
         method: "DELETE",
       });
 
       if (response.ok) {
-        setMessages(prev => prev.filter(m => m.id !== messageId));
+        setMessages((prev) => prev.filter((m) => m.id !== messageId));
         MessageCache.removeMessage(roomId, messageId);
         console.log("✅ [SERVER ACTION] Message deleted successfully");
       }
@@ -477,7 +541,7 @@ export default function ChatRoomOptimized({
   useEffect(() => {
     if (!roomId) return;
     console.log("🔄 [PERFORMANCE] Subscribed to channel for room:", roomId);
-    
+
     const channel = supabase
       .channel(`messages:${roomId}`, {
         config: {
@@ -496,55 +560,92 @@ export default function ChatRoomOptimized({
         },
         (payload) => {
           console.log("📨 [REALTIME] Received new message:", payload);
-          
+
           // Clear fallback timeout since realtime is working
           if (fallbackTimeout) {
             clearTimeout(fallbackTimeout);
             setFallbackTimeout(null);
-            console.log("🔄 [REALTIME] Cleared fallback timeout - realtime is working");
+            console.log(
+              "🔄 [REALTIME] Cleared fallback timeout - realtime is working"
+            );
           }
-          
+
           const newMessage = payload.new as any;
-          
+
           // Convert Date objects to strings to match Message type
           const convertedMessage = {
             ...newMessage,
-            createdAt: newMessage.createdAt instanceof Date ? newMessage.createdAt.toISOString() : newMessage.createdAt,
-            updatedAt: newMessage.updatedAt instanceof Date ? newMessage.updatedAt.toISOString() : newMessage.updatedAt,
-            attachments: newMessage.attachments?.map((att: any) => ({
-              ...att,
-              createdAt: att.createdAt instanceof Date ? att.createdAt.toISOString() : att.createdAt,
-              updatedAt: att.updatedAt instanceof Date ? att.updatedAt.toISOString() : att.updatedAt,
-            })) || [],
-            parent: newMessage.parent ? {
-              ...newMessage.parent,
-              createdAt: newMessage.parent.createdAt instanceof Date ? newMessage.parent.createdAt.toISOString() : newMessage.parent.createdAt,
-              updatedAt: newMessage.parent.updatedAt instanceof Date ? newMessage.parent.updatedAt.toISOString() : newMessage.parent.updatedAt,
-              attachments: (newMessage.parent as any).attachments?.map((att: any) => ({
+            createdAt:
+              newMessage.createdAt instanceof Date
+                ? newMessage.createdAt.toISOString()
+                : newMessage.createdAt,
+            updatedAt:
+              newMessage.updatedAt instanceof Date
+                ? newMessage.updatedAt.toISOString()
+                : newMessage.updatedAt,
+            attachments:
+              newMessage.attachments?.map((att: any) => ({
                 ...att,
-                createdAt: att.createdAt instanceof Date ? att.createdAt.toISOString() : att.createdAt,
-                updatedAt: att.updatedAt instanceof Date ? att.updatedAt.toISOString() : att.updatedAt,
+                createdAt:
+                  att.createdAt instanceof Date
+                    ? att.createdAt.toISOString()
+                    : att.createdAt,
+                updatedAt:
+                  att.updatedAt instanceof Date
+                    ? att.updatedAt.toISOString()
+                    : att.updatedAt,
               })) || [],
-            } : null,
+            parent: newMessage.parent
+              ? {
+                  ...newMessage.parent,
+                  createdAt:
+                    newMessage.parent.createdAt instanceof Date
+                      ? newMessage.parent.createdAt.toISOString()
+                      : newMessage.parent.createdAt,
+                  updatedAt:
+                    newMessage.parent.updatedAt instanceof Date
+                      ? newMessage.parent.updatedAt.toISOString()
+                      : newMessage.parent.updatedAt,
+                  attachments:
+                    (newMessage.parent as any).attachments?.map((att: any) => ({
+                      ...att,
+                      createdAt:
+                        att.createdAt instanceof Date
+                          ? att.createdAt.toISOString()
+                          : att.createdAt,
+                      updatedAt:
+                        att.updatedAt instanceof Date
+                          ? att.updatedAt.toISOString()
+                          : att.updatedAt,
+                    })) || [],
+                }
+              : null,
           };
-          
+
           // Add to messages if not already present, or replace optimistic message
-          setMessages(prev => {
-            const exists = prev.some(m => m.id === convertedMessage.id);
+          setMessages((prev) => {
+            const exists = prev.some((m) => m.id === convertedMessage.id);
             if (exists) {
               console.log("📨 [REALTIME] Message already exists, skipping");
               return prev;
             }
-            
-            console.log("📨 [REALTIME] Adding new message to UI:", convertedMessage.id);
-            
-            // Remove any optimistic messages for this user (they might have sent multiple messages)
-            const filtered = prev.filter(m => !(m.isOptimistic && m.userId === convertedMessage.userId));
-            
-            const updated = [...filtered, convertedMessage].sort(
-              (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+
+            console.log(
+              "📨 [REALTIME] Adding new message to UI:",
+              convertedMessage.id
             );
-            
+
+            // Remove any optimistic messages for this user (they might have sent multiple messages)
+            const filtered = prev.filter(
+              (m) => !(m.isOptimistic && m.userId === convertedMessage.userId)
+            );
+
+            const updated = [...filtered, convertedMessage].sort(
+              (a, b) =>
+                new Date(a.createdAt).getTime() -
+                new Date(b.createdAt).getTime()
+            );
+
             // Update cache
             MessageCache.set(roomId, updated);
             return updated;
@@ -553,35 +654,57 @@ export default function ChatRoomOptimized({
       )
       .subscribe((status) => {
         console.log("🔄 [REALTIME] Subscription status:", status);
-        if (status === 'SUBSCRIBED') {
-          console.log("✅ [REALTIME] Successfully subscribed to messages for room:", roomId);
-        } else if (status === 'CHANNEL_ERROR') {
+        if (status === "SUBSCRIBED") {
+          console.log(
+            "✅ [REALTIME] Successfully subscribed to messages for room:",
+            roomId
+          );
+        } else if (status === "CHANNEL_ERROR") {
           console.error("❌ [REALTIME] Channel error for room:", roomId);
-          console.error("🔍 [REALTIME] This is likely due to missing RLS policies on the messages table");
-          console.error("💡 [REALTIME] Please enable RLS and create policies for the messages table");
-          
+          console.error(
+            "🔍 [REALTIME] This is likely due to missing RLS policies on the messages table"
+          );
+          console.error(
+            "💡 [REALTIME] Please enable RLS and create policies for the messages table"
+          );
+          console.error(
+            "📝 [REALTIME] Run the RLS policies SQL script located at: src/lib/rls-policies.sql"
+          );
+          console.error(
+            "🔗 [REALTIME] For more information, see: https://supabase.com/docs/guidelines-and-limitations/realtime"
+          );
+
           // Set up fallback polling when realtime fails
           if (!fallbackTimeout) {
-            console.log("🔄 [FALLBACK] Setting up fallback polling due to realtime error");
+            console.log(
+              "🔄 [FALLBACK] Setting up fallback polling due to realtime error"
+            );
             const fallback = setTimeout(() => {
-              console.log("🔄 [FALLBACK] Refreshing messages due to realtime failure");
+              console.log(
+                "🔄 [FALLBACK] Refreshing messages due to realtime failure"
+              );
               loadMessagesFromServer();
             }, 3000); // 3 second fallback
             setFallbackTimeout(fallback);
           }
-        } else if (status === 'TIMED_OUT') {
-          console.error("❌ [REALTIME] Subscription timed out for room:", roomId);
-          
+        } else if (status === "TIMED_OUT") {
+          console.error(
+            "❌ [REALTIME] Subscription timed out for room:",
+            roomId
+          );
+
           // Set up fallback polling when realtime times out
           if (!fallbackTimeout) {
-            console.log("🔄 [FALLBACK] Setting up fallback polling due to timeout");
+            console.log(
+              "🔄 [FALLBACK] Setting up fallback polling due to timeout"
+            );
             const fallback = setTimeout(() => {
               console.log("🔄 [FALLBACK] Refreshing messages due to timeout");
               loadMessagesFromServer();
             }, 3000);
             setFallbackTimeout(fallback);
           }
-        } else if (status === 'CLOSED') {
+        } else if (status === "CLOSED") {
           console.log("🔒 [REALTIME] Subscription closed for room:", roomId);
         }
       });
@@ -590,7 +713,7 @@ export default function ChatRoomOptimized({
     return () => {
       console.log("🔄 [PERFORMANCE] Removing channel for room:", roomId);
       supabase.removeChannel(channel);
-      
+
       // Clear any pending fallback timeout
       if (fallbackTimeout) {
         clearTimeout(fallbackTimeout);
@@ -602,13 +725,13 @@ export default function ChatRoomOptimized({
   // Periodic fallback mechanism to ensure messages are refreshed
   useEffect(() => {
     if (!roomId) return;
-    
+
     // Set up periodic refresh every 10 seconds as a safety net
     const interval = setInterval(() => {
       console.log("🔄 [PERIODIC] Refreshing messages as safety net");
       loadMessagesFromServer();
     }, 10000); // 10 seconds
-    
+
     return () => {
       clearInterval(interval);
     };
@@ -677,7 +800,8 @@ export default function ChatRoomOptimized({
               <Avatar className="w-8 h-8 flex-shrink-0">
                 <AvatarImage src={message.user?.avatar || ""} />
                 <AvatarFallback>
-                  {message.user?.firstName?.[0]}{message.user?.lastName?.[0]}
+                  {message.user?.firstName?.[0]}
+                  {message.user?.lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
             )}
@@ -698,14 +822,13 @@ export default function ChatRoomOptimized({
                   message.userId === currentUserId
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted"
-                } ${
-                  message.isOptimistic ? "opacity-70" : ""
-                }`}
+                } ${message.isOptimistic ? "opacity-70" : ""}`}
               >
                 {message.parent && (
                   <div className="mb-2 p-2 bg-background/20 rounded-lg border-l-2 border-primary/30">
                     <p className="text-xs text-foreground/60 mb-1">
-                      Replying to {message.parent.user?.firstName} {message.parent.user?.lastName}
+                      Replying to {message.parent.user?.firstName}{" "}
+                      {message.parent.user?.lastName}
                     </p>
                     <p className="text-sm truncate">{message.parent.content}</p>
                   </div>
@@ -716,13 +839,21 @@ export default function ChatRoomOptimized({
                 {message.attachments && message.attachments.length > 0 && (
                   <div className="mt-2 space-y-2">
                     {message.attachments.map((attachment) => (
-                      <div key={attachment.id} className="flex items-center gap-2">
+                      <div
+                        key={attachment.id}
+                        className="flex items-center gap-2"
+                      >
                         {attachment.mimeType.startsWith("image/") ? (
                           <img
                             src={attachment.filePath}
                             alt={attachment.fileName}
                             className="max-w-48 max-h-48 rounded-lg cursor-pointer"
-                            onClick={() => handleImagePreview(attachment.filePath, attachment.fileName)}
+                            onClick={() =>
+                              handleImagePreview(
+                                attachment.filePath,
+                                attachment.fileName
+                              )
+                            }
                           />
                         ) : (
                           <a
@@ -731,14 +862,21 @@ export default function ChatRoomOptimized({
                             rel="noopener noreferrer"
                             className="flex items-center gap-2 p-2 bg-background/20 rounded-lg hover:bg-background/30 transition-colors"
                           >
-                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <svg
+                              className="w-4 h-4"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                            >
                               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                               <polyline points="14,2 14,8 20,8" />
                               <line x1="16" y1="13" x2="8" y2="13" />
                               <line x1="16" y1="17" x2="8" y2="17" />
                               <polyline points="10,9 9,9 8,9" />
                             </svg>
-                            <span className="text-sm">{attachment.fileName}</span>
+                            <span className="text-sm">
+                              {attachment.fileName}
+                            </span>
                           </a>
                         )}
                       </div>
@@ -805,7 +943,12 @@ export default function ChatRoomOptimized({
               onClick={() => setReplyTo(null)}
               className="text-foreground/60 hover:text-foreground"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <svg
+                className="w-4 h-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
@@ -834,27 +977,37 @@ export default function ChatRoomOptimized({
                 }
               }}
             />
-            
+
             <div className="absolute right-2 bottom-2 flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => setIsEmojiOpen(!isEmojiOpen)}
                 className="p-1 hover:bg-secondary/20 rounded transition-colors"
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
                   <circle cx="12" cy="12" r="10" />
                   <path d="M8 14s1.5 2 4 2 4-2 4-2" />
                   <line x1="9" y1="9" x2="9.01" y2="9" />
                   <line x1="15" y1="9" x2="15.01" y2="9" />
                 </svg>
               </button>
-              
+
               <button
                 type="button"
                 onClick={handleFileSelect}
                 className="p-1 hover:bg-secondary/20 rounded transition-colors"
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <polyline points="14,2 14,8 20,8" />
                   <line x1="16" y1="13" x2="8" y2="13" />
@@ -882,14 +1035,22 @@ export default function ChatRoomOptimized({
         {uploadedFiles.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
             {uploadedFiles.map((file, index) => (
-              <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+              <div
+                key={index}
+                className="flex items-center gap-2 p-2 bg-muted rounded-lg"
+              >
                 <span className="text-sm truncate max-w-32">{file.name}</span>
                 <button
                   type="button"
                   onClick={() => removeFile(index)}
                   className="text-destructive hover:text-destructive/80"
                 >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <svg
+                    className="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                  >
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
                   </svg>
@@ -927,7 +1088,10 @@ export default function ChatRoomOptimized({
 
       {/* Image Preview Modal */}
       {previewImage && (
-        <Dialog open={!!previewImage} onOpenChange={() => setPreviewImage(null)}>
+        <Dialog
+          open={!!previewImage}
+          onOpenChange={() => setPreviewImage(null)}
+        >
           <DialogContent className="max-w-4xl">
             <img
               src={previewImage.url}

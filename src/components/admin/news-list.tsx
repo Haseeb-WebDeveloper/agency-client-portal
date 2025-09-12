@@ -196,9 +196,7 @@ const NewsList = () => {
 
               {/* Content Section */}
               <div
-                className={`${
-                  item.featuredImage ? "lg:w-2/3" : "w-full"
-                } p-6 `}
+                className={`${item.featuredImage ? "lg:w-2/3" : "w-full"} p-6 `}
               >
                 <h2 className="text-2xl font-bold  mb-3 transition-colors">
                   {item.title}

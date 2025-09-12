@@ -71,7 +71,7 @@ export default function RoomInfoModal({
   const [isPending, startTransition] = useTransition();
   const [showAddMembers, setShowAddMembers] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  
+
   const { uploadFiles, uploadedFiles, removeFile, clearFiles, isUploading } =
     useFileUpload({ folder: "agency-portal/rooms" });
 
@@ -101,7 +101,7 @@ export default function RoomInfoModal({
   };
 
   const handleAddMember = (userId: string) => {
-    setSelectedUsers(prev => [...prev, userId]);
+    setSelectedUsers((prev) => [...prev, userId]);
   };
 
   const handleRemoveMember = (userId: string) => {
@@ -109,18 +109,19 @@ export default function RoomInfoModal({
       // Don't allow removing the last member in a DM
       return;
     }
-    setSelectedUsers(prev => prev.filter(id => id !== userId));
+    setSelectedUsers((prev) => prev.filter((id) => id !== userId));
   };
 
   const getInitials = (user: { firstName?: string; lastName?: string }) => {
-    const first = user.firstName?.[0] || '';
-    const last = user.lastName?.[0] || '';
-    return `${first}${last}`.toUpperCase() || '?';
+    const first = user.firstName?.[0] || "";
+    const last = user.lastName?.[0] || "";
+    return `${first}${last}`.toUpperCase() || "?";
   };
 
   const filteredUsers = availableUsers.filter(
-    user => !roomInfo?.participants.some(p => p.id === user.id) && 
-             !selectedUsers.includes(user.id)
+    (user) =>
+      !roomInfo?.participants.some((p) => p.id === user.id) &&
+      !selectedUsers.includes(user.id)
   );
 
   return (
@@ -135,9 +136,11 @@ export default function RoomInfoModal({
           <div className="flex items-center gap-4">
             <div className="relative">
               <Avatar className="w-20 h-20">
-                <AvatarImage src={uploadedFiles[0]?.url || roomInfo?.logo || ""} />
+                <AvatarImage
+                  src={uploadedFiles[0]?.url || roomInfo?.logo || ""}
+                />
                 <AvatarFallback className="text-lg">
-                  {roomInfo?.name?.slice(0, 2).toUpperCase() || 'R'}
+                  {roomInfo?.name?.slice(0, 2).toUpperCase() || "R"}
                 </AvatarFallback>
               </Avatar>
               {isAdmin && (
@@ -145,7 +148,9 @@ export default function RoomInfoModal({
                   size="sm"
                   variant="outline"
                   className="absolute -bottom-1 -right-1 w-6 h-6 p-0 rounded-full"
-                  onClick={() => document.getElementById('room-logo-upload')?.click()}
+                  onClick={() =>
+                    document.getElementById("room-logo-upload")?.click()
+                  }
                   disabled={isUploading}
                 >
                   {isUploading ? (
@@ -199,7 +204,7 @@ export default function RoomInfoModal({
           <div>
             <Label>Room Type</Label>
             <Badge variant="secondary" className="mt-1">
-              {roomInfo?.type?.replace('_', ' ').toLowerCase()}
+              {roomInfo?.type?.replace("_", " ").toLowerCase()}
             </Badge>
           </div>
 
@@ -222,7 +227,7 @@ export default function RoomInfoModal({
             <div className="space-y-2">
               {roomInfo?.participants.map((member) => (
                 <div
-                  key={member.id}
+                  key={`participant-${member.id}`}
                   className="flex items-center justify-between p-3 border rounded-lg"
                 >
                   <div className="flex items-center gap-3">
@@ -268,7 +273,7 @@ export default function RoomInfoModal({
               <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
                 {filteredUsers.map((user) => (
                   <div
-                    key={user.id}
+                    key={`user-${user.id}`}
                     className="flex items-center justify-between p-2 border rounded-lg hover:bg-foreground/5"
                   >
                     <div className="flex items-center gap-3">
@@ -280,10 +285,10 @@ export default function RoomInfoModal({
                       </Avatar>
                       <div>
                         <p className="text-sm font-medium">
-                          {user.firstName || ''} {user.lastName || ''}
+                          {user.firstName || ""} {user.lastName || ""}
                         </p>
                         <p className="text-xs text-foreground/60">
-                          {user.email || ''}
+                          {user.email || ""}
                         </p>
                       </div>
                     </div>
@@ -311,18 +316,22 @@ export default function RoomInfoModal({
               <Label>Selected to Add ({selectedUsers.length})</Label>
               <div className="mt-2 flex flex-wrap gap-2">
                 {selectedUsers.map((userId) => {
-                  const user = availableUsers.find(u => u.id === userId);
+                  const user = availableUsers.find((u) => u.id === userId);
                   if (!user) return null;
                   return (
                     <Badge
-                      key={userId}
+                      key={`selected-${userId}`}
                       variant="secondary"
                       className="flex items-center gap-1"
                     >
-                      {user.firstName || ''} {user.lastName || ''}
+                      {user.firstName || ""} {user.lastName || ""}
                       <X
                         className="w-3 h-3 cursor-pointer"
-                        onClick={() => setSelectedUsers(prev => prev.filter(id => id !== userId))}
+                        onClick={() =>
+                          setSelectedUsers((prev) =>
+                            prev.filter((id) => id !== userId)
+                          )
+                        }
                       />
                     </Badge>
                   );
@@ -337,11 +346,12 @@ export default function RoomInfoModal({
               Cancel
             </Button>
             {isAdmin && (
-              <Button
-                onClick={handleSave}
-                disabled={isPending || isUploading}
-              >
-                {isPending ? "Saving..." : isUploading ? "Uploading..." : "Save Changes"}
+              <Button onClick={handleSave} disabled={isPending || isUploading}>
+                {isPending
+                  ? "Saving..."
+                  : isUploading
+                  ? "Uploading..."
+                  : "Save Changes"}
               </Button>
             )}
           </div>

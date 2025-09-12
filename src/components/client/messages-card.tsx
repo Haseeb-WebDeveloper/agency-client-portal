@@ -1,37 +1,76 @@
-import { MessagesCardShared, MessagesCardItem } from "@/components/shared/messages-card";
+"use client";
 
-interface Message {
-  id: string;
-  content: string;
-  createdAt: string;
-  user: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    avatar?: string | null;
-  };
-  room: {
-    id?: string;
-    name: string;
-  };
-}
+import { useState, useEffect } from "react";
+import { MessagesCardShared } from "@/components/shared/messages-card";
 
-interface MessagesCardProps {
-  messages: Message[];
-}
+export function MessagesCard() {
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export function MessagesCard({ messages }: MessagesCardProps) {
-  const truncate = (content: string, maxLength: number = 100) =>
-    content.length <= maxLength ? content : content.substring(0, maxLength) + "...";
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/client/messages/rooms");
+        if (!response.ok) {
+          throw new Error("Failed to fetch messages");
+        }
+        const data = await response.json();
+        setRooms(data);
+      } catch (err) {
+        setError((err as Error).message || "Failed to load messages");
+        console.error("Error loading messages:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const items: MessagesCardItem[] = messages.map((message) => ({
-    id: message.id,
-    title: `${message.user.firstName} ${message.user.lastName}`,
-    subtitle: truncate(message.content),
-    avatarUrl: message.user.avatar || undefined,
-    avatarFallback: `${message.user.firstName.charAt(0)}${message.user.lastName.charAt(0)}`.toUpperCase(),
-    href: `/messages${message.room?.id ? `?roomId=${message.room.id}` : ""}`,
+    fetchRooms();
+  }, []);
+
+  if (loading) {
+    return (
+      <div
+        className="bg-transparent border border-primary/20 rounded-xl p-0 shadow-md"
+        style={{ minWidth: 320 }}
+      >
+        <div className="flex items-center justify-between px-5 pt-4 pb-2">
+          <div className="h-6 bg-primary/10 rounded w-24 animate-pulse"></div>
+        </div>
+        <div className="space-y-4 p-5">
+          <div className="h-16 bg-primary/10 rounded animate-pulse"></div>
+          <div className="h-16 bg-primary/10 rounded animate-pulse"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div
+        className="bg-transparent border border-primary/20 rounded-xl p-5 shadow-md"
+        style={{ minWidth: 320 }}
+      >
+        <p className="text-red-500">Error loading messages: {error}</p>
+      </div>
+    );
+  }
+
+  // Calculate total unseen messages across all rooms
+  const totalUnseen = rooms.reduce(
+    (sum: number, r: any) => sum + (r.unseenCount || 0),
+    0
+  );
+
+  const items = rooms.map((r: any) => ({
+    id: r.id,
+    title: r.name,
+    subtitle: r.latestMessage?.content || "No messages yet",
+    avatarUrl: r.logo || null,
+    avatarFallback: r.name.slice(0, 2).toUpperCase(),
+    href: `/messages?roomId=${r.id}`,
   }));
 
-  return <MessagesCardShared items={items} />;
+  return <MessagesCardShared items={items} totalUnseen={totalUnseen} />;
 }
