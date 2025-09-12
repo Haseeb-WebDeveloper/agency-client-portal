@@ -161,8 +161,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(news, { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } });
   } catch (error: any) {
     console.error(error);
-    const errorMessage = error.message || 'Failed to create news';
-    return NextResponse.json({ error: 'Failed to create news: ' + errorMessage }, { status: 500 });
+    const errorMessage = typeof error === 'object' && error !== null && 'message' in error
+      ? (error as { message?: string }).message
+      : undefined;
+    return NextResponse.json({ error: 'Failed to create news: ' + (errorMessage || 'Failed to create news') }, { status: 500 });
   }
 }
 
@@ -223,7 +225,9 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(news, { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } });
   } catch (error: any) {
     console.error(error);
-    const errorMessage = error.message || 'Failed to update news';
+    const errorMessage = typeof error === 'object' && error !== null && 'message' in error
+      ? (error as { message?: string }).message
+      : 'Failed to update news';
     return NextResponse.json({ error: 'Failed to update news: ' + errorMessage }, { status: 500 });
   }
 }
@@ -260,8 +264,7 @@ export async function DELETE(request: NextRequest) {
     const news = await prisma.news.update({
       where: { id },
       data: { 
-        deletedAt: new Date(),
-        updatedBy: user.id,
+         deletedAt: new Date()
       },
     });
     
@@ -270,7 +273,9 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ message: 'News deleted successfully' });
   } catch (error: any) {
     console.error(error);
-    const errorMessage = error.message || 'Failed to delete news';
+    const errorMessage = typeof error === 'object' && error !== null && 'message' in error
+      ? (error as { message?: string }).message
+      : 'Failed to delete news';
     return NextResponse.json({ error: 'Failed to delete news: ' + errorMessage }, { status: 500 });
   }
 }
