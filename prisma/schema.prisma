@@ -427,6 +427,7 @@ enum ContractStatus {
 enum OfferStatus {
   DRAFT
   SENT
+  SEEN
   ACCEPTED
   DECLINED
   EXPIRED

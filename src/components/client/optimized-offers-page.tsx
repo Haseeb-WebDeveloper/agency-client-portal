@@ -4,7 +4,16 @@ import { memo, useState, useEffect, useTransition, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { OffersPagination } from "@/components/admin/offers-pagination";
 import { ClientOfferCard } from "@/components/client/offer-card";
+import { OffersPerformanceMonitor } from "@/components/client/offers-performance-monitor";
 import { fetchClientData, invalidateClientCache } from "@/lib/client-cache-strategy";
+
+interface Room {
+  id: string;
+  name: string;
+  description: string | null;
+  type: string;
+  logo: string | null;
+}
 
 interface Offer {
   id: string;
@@ -15,6 +24,8 @@ interface Offer {
   media: any[] | null;
   validUntil: string | null;
   createdAt: string;
+  hasReviewed: boolean;
+  rooms: Room[];
 }
 
 interface OffersResponse {
@@ -66,10 +77,10 @@ const EmptyState = memo(() => (
 EmptyState.displayName = 'EmptyState';
 
 // Memoized offers list
-const OffersList = memo(({ offers }: { offers: Offer[] }) => (
+const OffersList = memo(({ offers, onOfferUpdated }: { offers: Offer[], onOfferUpdated?: (offerId: string) => void }) => (
   <div className="space-y-4">
     {offers.map((offer) => (
-      <ClientOfferCard key={offer.id} offer={offer} />
+      <ClientOfferCard key={offer.id} offer={offer} onOfferUpdated={onOfferUpdated} />
     ))}
   </div>
 ));
@@ -82,6 +93,7 @@ export default function OptimizedOffersPage() {
   const [data, setData] = useState<OffersResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [performanceMetrics, setPerformanceMetrics] = useState<any>(null);
 
   const page = parseInt(searchParams.get("page") || "1");
   const search = searchParams.get("search") || "";
@@ -150,6 +162,14 @@ export default function OptimizedOffersPage() {
     fetchOffers();
   }, [fetchOffers]);
 
+  // Handle offer update (when offer is marked as seen)
+  const handleOfferUpdated = useCallback((offerId: string) => {
+    console.log('Offer updated, refreshing data for offer:', offerId);
+    // Invalidate cache and refresh
+    invalidateClientCache('offers');
+    fetchOffers();
+  }, [fetchOffers]);
+
   return (
     <div className="space-y-6 md:px-8 md:py-6 px-4 py-6">
       <div className="flex items-center justify-between">
@@ -189,7 +209,7 @@ export default function OptimizedOffersPage() {
       {/* Offers List */}
       {data && data.offers.length > 0 && (
         <>
-          <OffersList offers={data.offers} />
+          <OffersList offers={data.offers} onOfferUpdated={handleOfferUpdated} />
           {data?.offers.length > 5 && (
             <OffersPagination
               currentPage={data.pagination.page}
@@ -202,6 +222,13 @@ export default function OptimizedOffersPage() {
           )}
         </>
       )}
+
+      {/* Performance Monitor */}
+      <OffersPerformanceMonitor
+        offersCount={data?.offers.length || 0}
+        mediaCount={data?.offers.reduce((acc, offer) => acc + (offer.media?.length || 0), 0) || 0}
+        onMetricsUpdate={setPerformanceMetrics}
+      />
     </div>
   );
 }
