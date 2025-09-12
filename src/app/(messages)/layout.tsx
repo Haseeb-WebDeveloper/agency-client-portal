@@ -8,18 +8,16 @@ export default async function MessagesLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
-
-  if (!user) {
+ if (!user) {
     redirect("/login");
   }
-
   const serializedUser = {
-    id: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    avatar: user.avatar,
-    role: user.role,
-    isActive: user.isActive,
+    id: user?.id,
+    firstName: user?.firstName,
+    lastName: user?.lastName,
+    avatar: user?.avatar,
+    role: user?.role,
+    isActive: user?.isActive,
   };
 
   return <AppLayout user={serializedUser}>{children}</AppLayout>;

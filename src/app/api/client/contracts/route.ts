@@ -14,9 +14,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Resolve clientId for this user via membership
     const membership = await prisma.clientMembership.findFirst({
-      where: { userId: user.id, isActive: true, deletedAt: null },
+      where: { userId: user?.id, isActive: true, deletedAt: null },
       select: { clientId: true },
     });
 
