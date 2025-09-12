@@ -11,7 +11,6 @@ export async function GET(request: NextRequest) {
     const cacheHeaders = {
       "Cache-Control": "private, max-age=300, stale-while-revalidate=600",
     } as const;
-
     const news = await getClientNews(user.id);
 
     return NextResponse.json(news, { headers: cacheHeaders });
