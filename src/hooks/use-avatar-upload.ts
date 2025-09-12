@@ -12,8 +12,8 @@ export function useAvatarUpload(options: UseAvatarUploadOptions = {}) {
   const [uploadedFile, setUploadedFile] = useState<MediaFile | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
 
-  const uploadFile = async (file: File) => {
-    if (!file) return;
+  const uploadFile = async (file: File): Promise<MediaFile | null> => {
+    if (!file) return null;
 
     setIsUploading(true);
     
@@ -45,6 +45,7 @@ export function useAvatarUpload(options: UseAvatarUploadOptions = {}) {
       
       setUploadedFile(uploadedFileData);
       options.onSuccess?.(uploadedFileData);
+      return uploadedFileData; // Return the data so it can be used in the component
     } catch (error) {
       console.error('Upload error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Upload failed';

@@ -57,11 +57,11 @@ LoadingSkeleton.displayName = 'LoadingSkeleton';
 
 // Memoized empty state
 const EmptyState = memo(() => (
-  <div className="rounded-lg border border-primary/20 bg-card p-16 text-center">
-    <p className="figma-h4">
+  <div className=" p-16 text-center">
+    <p className="text-2xl">
       There is nothing here to show <em>yet</em>
     </p>
-    <p className="mt-2 text-foreground/60">
+    <p className="mt-2 text-foreground/80 max-w-2xl mx-auto">
       As soon as Figmenta sets up your agreements, you'll be able to view,
       download, and manage them in this space.
     </p>
@@ -160,13 +160,13 @@ export default function OptimizedContractsPage() {
       <div className="flex items-center justify-between">
         <h1 className="figma-h3">Your Contracts</h1>
         <div className="flex items-center gap-4">
-          <button
+          {/* <button
             onClick={refreshData}
             className="text-sm text-foreground/60 hover:text-foreground transition-colors"
             title="Refresh data"
           >
             🔄 Refresh
-          </button>
+          </button> */}
           <ContractsSearchFilters
             onSearch={handleSearch}
             isLoading={isLoading || isPending}

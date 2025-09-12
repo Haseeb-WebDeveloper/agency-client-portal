@@ -106,7 +106,10 @@ export function AppLayout({ children, user }: AppLayoutProps) {
           </nav>
           <div className="pr-3">
             <div className="w-full h-[1px] bg-sidebar-border"></div>
-            <div className="py-4 pl-4 flex items-center gap-3">
+            <Link
+              href={user.role === "PLATFORM_ADMIN" || user.role === "AGENCY_MEMBER" ? "/admin/profile" : "/client/profile"}
+              className="py-4 pl-4 flex items-center gap-3 hover:bg-sidebar-accent/20 rounded-lg transition-colors"
+            >
               <Avatar className="w-8 h-8">
                 <AvatarImage
                   src={user.avatar || ""}
@@ -116,14 +119,19 @@ export function AppLayout({ children, user }: AppLayoutProps) {
                   {user.firstName.charAt(0)}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium text-sidebar-foreground">
-                {user.firstName}
-              </span>
-            </div>
+              <div className="flex-1 min-w-0">
+                <span className="text-sm font-medium text-sidebar-foreground block truncate">
+                  {user.firstName} {user.lastName}
+                </span>
+                <span className="text-xs text-sidebar-foreground/70">
+                  View Profile
+                </span>
+              </div>
+            </Link>
           </div>
         </div>
       ),
-    [items, pathname, user.avatar, user.firstName, handleNavigation]
+    [items, pathname, user.avatar, user.firstName, user.lastName, user.role, handleNavigation]
   );
 
   return (

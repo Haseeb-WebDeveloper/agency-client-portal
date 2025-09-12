@@ -30,6 +30,7 @@ export const adminSidebarItems = [
     href: "/admin/contracts",
   },
   { id: "news", label: "News", icon: "news.svg", href: "/admin/news" },
+  { id: "profile", label: "Profile", icon: "members.svg", href: "/admin/profile" },
 ];
 
 export const clientSidebarItems = [
@@ -57,4 +58,5 @@ export const clientSidebarItems = [
     icon: "messages.svg",
     href: "/messages",
   },
+  { id: "profile", label: "Profile", icon: "members.svg", href: "/client/profile" },
 ];
