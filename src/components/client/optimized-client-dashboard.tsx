@@ -57,49 +57,55 @@ interface SerializedData {
 }
 
 // Memoized news item component for better performance
-const NewsItem = memo(({ newsItem, index, total }: { 
-  newsItem: any; 
-  index: number; 
-  total: number; 
-}) => (
-  <Link
-    key={newsItem.id}
-    href={`/client/news/${newsItem.id}`}
-    className={`flex items-center px-5 py-4 ${
-      index !== total - 1 ? "border-b border-primary/20" : ""
-    } group`}
-    style={{ textDecoration: "none" }}
-  >
-    {/* Image */}
-    {newsItem.featuredImage ? (
-      <div className="flex-shrink-0 w-20 h-14 rounded overflow-hidden bg-primary/20">
-        <Image
-          src={newsItem.featuredImage}
-          alt={newsItem.title}
-          width={80}
-          height={56}
-          className="object-cover w-20 h-14"
-          loading="lazy"
-        />
+const NewsItem = memo(
+  ({
+    newsItem,
+    index,
+    total,
+  }: {
+    newsItem: any;
+    index: number;
+    total: number;
+  }) => (
+    <Link
+      key={newsItem.id}
+      href={`/client/news/${newsItem.id}`}
+      className={`flex items-center px-5 py-4 ${
+        index !== total - 1 ? "border-b border-primary/20" : ""
+      } group`}
+      style={{ textDecoration: "none" }}
+    >
+      {/* Image */}
+      {newsItem.featuredImage ? (
+        <div className="flex-shrink-0 w-20 h-14 rounded overflow-hidden bg-primary/20">
+          <Image
+            src={newsItem.featuredImage}
+            alt={newsItem.title}
+            width={80}
+            height={56}
+            className="object-cover w-20 h-14"
+            loading="lazy"
+          />
+        </div>
+      ) : (
+        <div className="w-20 h-14 bg-gradient-to-r from-primary to-primary/20 rounded flex items-center justify-center flex-shrink-0">
+          <span className="text-xs text-foreground">Featured</span>
+        </div>
+      )}
+      {/* Title */}
+      <div className="ml-4 flex-1">
+        <div className="text-base font-medium leading-tight text-foreground">
+          {newsItem.title}
+        </div>
+        <div className="text-xs text-foreground/60 mt-1 line-clamp-2">
+          {newsItem.description}
+        </div>
       </div>
-    ) : (
-      <div className="w-20 h-14 bg-gradient-to-r from-primary to-primary/20 rounded flex items-center justify-center flex-shrink-0">
-        <span className="text-xs text-foreground">Featured</span>
-      </div>
-    )}
-    {/* Title */}
-    <div className="ml-4 flex-1">
-      <div className="text-base font-medium leading-tight text-foreground">
-        {newsItem.title}
-      </div>
-      <div className="text-xs text-foreground/60 mt-1 line-clamp-2">
-        {newsItem.description}
-      </div>
-    </div>
-  </Link>
-));
+    </Link>
+  )
+);
 
-NewsItem.displayName = 'NewsItem';
+NewsItem.displayName = "NewsItem";
 
 // Memoized recent news card
 const RecentNewsCard = memo(({ recentNews }: { recentNews: any[] }) => (
@@ -128,11 +134,11 @@ const RecentNewsCard = memo(({ recentNews }: { recentNews: any[] }) => (
         </div>
       )}
       {recentNews.slice(0, 2).map((newsItem, idx) => (
-        <NewsItem 
+        <NewsItem
           key={newsItem.id}
-          newsItem={newsItem} 
-          index={idx} 
-          total={recentNews.slice(0, 2).length} 
+          newsItem={newsItem}
+          index={idx}
+          total={recentNews.slice(0, 2).length}
         />
       ))}
     </div>
@@ -148,22 +154,26 @@ const RecentNewsCard = memo(({ recentNews }: { recentNews: any[] }) => (
   </div>
 ));
 
-RecentNewsCard.displayName = 'RecentNewsCard';
+RecentNewsCard.displayName = "RecentNewsCard";
 
 // Performance monitoring component
 const PerformanceMonitor = memo(() => {
-  const [stats, setStats] = useState({ totalEntries: 0, memoryUsage: '0 KB', hitRate: 0 });
+  const [stats, setStats] = useState({
+    totalEntries: 0,
+    memoryUsage: "0 KB",
+    hitRate: 0,
+  });
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'P') {
-        setIsVisible(prev => !prev);
+      if (e.ctrlKey && e.shiftKey && e.key === "P") {
+        setIsVisible((prev) => !prev);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   useEffect(() => {
@@ -184,7 +194,7 @@ const PerformanceMonitor = memo(() => {
       <div>Entries: {stats.totalEntries}</div>
       <div>Memory: {stats.memoryUsage}</div>
       <div>Hit Rate: {stats.hitRate}%</div>
-      <button 
+      <button
         onClick={() => ClientCache.clear()}
         className="mt-2 px-2 py-1 bg-red-600 rounded text-xs"
       >
@@ -194,7 +204,7 @@ const PerformanceMonitor = memo(() => {
   );
 });
 
-PerformanceMonitor.displayName = 'PerformanceMonitor';
+PerformanceMonitor.displayName = "PerformanceMonitor";
 
 export default function OptimizedClientDashboard({
   serializedData,
@@ -210,13 +220,13 @@ export default function OptimizedClientDashboard({
   // Prefetch data for better navigation
   useEffect(() => {
     // Prefetch contracts and offers data
-    fetchClientData('/api/client/contracts?page=1&limit=9', {
-      cacheKey: 'contracts_page_1',
+    fetchClientData("/api/client/contracts?page=1&limit=9", {
+      cacheKey: "contracts_page_1",
       ttl: 5 * 60 * 1000, // 5 minutes
     }).catch(console.error);
 
-    fetchClientData('/api/client/offers?page=1&limit=15', {
-      cacheKey: 'offers_page_1',
+    fetchClientData("/api/client/offers?page=1&limit=15", {
+      cacheKey: "offers_page_1",
       ttl: 5 * 60 * 1000, // 5 minutes
     }).catch(console.error);
   }, []);

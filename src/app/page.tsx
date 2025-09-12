@@ -1,15 +1,15 @@
-import { getCurrentUser } from '@/lib/auth';
-import { UserRole } from '@/types/enums';
-import { redirect } from 'next/navigation';
+import { getCurrentUser } from "@/lib/auth";
+import { UserRole } from "@/types/enums";
+import { redirect } from "next/navigation";
 
 export default async function Home() {
   const user = await getCurrentUser();
-  
+
   // If user is not authenticated, redirect to login
   if (!user) {
-    redirect('/login');
+    redirect("/login");
   }
-  
+
   // Redirect based on user role
   if (user?.role === UserRole.PLATFORM_ADMIN) {
     redirect('/admin');
@@ -17,6 +17,6 @@ export default async function Home() {
     redirect('/client');
   } else {
     // For other roles (like AGENCY_MEMBER), redirect to unauthorized
-    redirect('/unauthorized');
+    redirect("/unauthorized");
   }
 }

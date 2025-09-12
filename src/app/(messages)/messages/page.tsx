@@ -7,14 +7,16 @@ interface MessagesPageProps {
   searchParams: Promise<{ roomId?: string }>;
 }
 
-export default async function MessagesIndex({ searchParams }: MessagesPageProps) {
+export default async function MessagesIndex({
+  searchParams,
+}: MessagesPageProps) {
   const me = await getCurrentUser();
-  
+
   // Redirect to login if user is not authenticated
   if (!me) {
-    redirect('/login');
+    redirect("/login");
   }
-  
+
   const rooms = await getRoomsWithUnreadOptimized();
 
   if (!me) {
