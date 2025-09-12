@@ -4,11 +4,12 @@ import { getCurrentUser } from '@/lib/auth';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    console.log('PATCH /api/client/offers/[id]/seen called with offerId:', params.id);
+    console.log('PATCH /api/client/offers/[id]/seen called with offerId:', (await params).id);
     
+    const { id } = await params;
     const user = await getCurrentUser();
     console.log('Current user:', user.id);
     
@@ -23,12 +24,17 @@ export async function PATCH(
     }
 
     console.log('User membership clientId:', membership.clientId);
-    const offerId = params.id;
+    const offerId = id;
+
+    if (!offerId) {
+      console.log('Offer ID is required');
+      return NextResponse.json({ error: 'Offer ID is required' }, { status: 400 });
+    }
 
     // Verify the offer belongs to the user's client
     const offer = await prisma.offer.findFirst({
       where: {
-        id: offerId,
+        id,
         clientId: membership.clientId,
         deletedAt: null,
       },
@@ -43,7 +49,7 @@ export async function PATCH(
 
     // Update the offer to mark as seen
     const updatedOffer = await prisma.offer.update({
-      where: { id: offerId },
+      where: { id },
       data: {
         hasReviewed: true,
         status: offer.status === 'SENT' ? 'SEEN' : offer.status,
