@@ -16,18 +16,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { MediaFile } from "@/types/models";
+import { FilePreview } from "@/components/shared/file-preview";
 import {
   Calendar,
   Upload,
   X,
-  FileText,
-  Image,
-  Video,
-  File,
   DollarSign,
   Clock,
   Target,
-  Plus,
 } from "lucide-react";
 
 interface Client {
@@ -167,11 +163,11 @@ function CustomTagInput({
 
   return (
     <div className="relative">
-      <div className="flex flex-wrap gap-2 p-3 border border-input rounded-md bg-background min-h-[40px]">
+      <div className="flex flex-wrap gap-2 p-1 border border-input rounded-md min-h-[40px]">
         {tags.map((tag, index) => (
           <Badge
             key={index}
-            variant="secondary"
+            variant="outline"
             className="flex items-center gap-1 px-2 py-1"
           >
             {tag}
@@ -339,18 +335,6 @@ export function ContractForm({
     }
   };
 
-  const getFileIcon = (type: string) => {
-    switch (type) {
-      case "image":
-        return <Image className="w-4 h-4" />;
-      case "video":
-        return <Video className="w-4 h-4" />;
-      case "pdf":
-        return <FileText className="w-4 h-4" />;
-      default:
-        return <File className="w-4 h-4" />;
-    }
-  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
@@ -568,39 +552,20 @@ export function ContractForm({
 
           {/* Uploaded Files */}
           {uploadedFiles.length > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-4">
               <h4 className="text-sm font-medium text-foreground">
-                Uploaded Files
+                Uploaded Files ({uploadedFiles.length})
               </h4>
-              <div className="space-y-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {uploadedFiles.map((file, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 border border-primary/20 rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      {getFileIcon(file.type)}
-                      <div>
-                        <p className="text-sm font-medium text-foreground">
-                          {file.name}
-                        </p>
-                        <p className="text-xs text-foreground/60 capitalize">
-                          {file.type} •{" "}
-                          {file.size
-                            ? `${(file.size / 1024).toFixed(1)} KB`
-                            : "Unknown size"}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFile(index)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  <FilePreview 
+                    key={index} 
+                    file={file} 
+                    index={index} 
+                    onRemove={removeFile}
+                    showActions={true}
+                    size="md"
+                  />
                 ))}
               </div>
             </div>

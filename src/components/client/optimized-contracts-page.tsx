@@ -15,6 +15,9 @@ interface Contract {
   tags: string[];
   progressPercentage: number;
   mediaFilesCount: number;
+  media: any[] | null;
+  hasReviewed: boolean;
+  rooms: any[];
   createdAt: string;
 }
 

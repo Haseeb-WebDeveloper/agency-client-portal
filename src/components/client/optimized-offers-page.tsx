@@ -4,7 +4,7 @@ import { memo, useState, useEffect, useTransition, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { OffersPagination } from "@/components/admin/offers-pagination";
 import { ClientOfferCard } from "@/components/client/offer-card";
-import { OffersPerformanceMonitor } from "@/components/client/offers-performance-monitor";
+// import { OffersPerformanceMonitor } from "@/components/client/offers-performance-monitor";
 import { fetchClientData, invalidateClientCache } from "@/lib/client-cache-strategy";
 
 interface Room {

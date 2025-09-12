@@ -123,9 +123,9 @@ export function AppLayout({ children, user }: AppLayoutProps) {
                 <span className="text-sm font-medium text-sidebar-foreground block truncate">
                   {user.firstName} {user.lastName}
                 </span>
-                <span className="text-xs text-sidebar-foreground/70">
-                  View Profile
-                </span>
+                {/* <span className="text-xs text-sidebar-foreground/70">
+                 {user.role}
+                </span> */}
               </div>
             </Link>
           </div>
