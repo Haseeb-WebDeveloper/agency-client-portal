@@ -5,6 +5,14 @@ import { getCurrentUser } from '@/lib/auth';
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
+    
+    // Handle case where user is not authenticated
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     // Resolve clientId for this user via membership
     const membership = await prisma.clientMembership.findFirst({
@@ -96,5 +104,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to fetch contracts' }, { status: 500 });
   }
 }
-
-

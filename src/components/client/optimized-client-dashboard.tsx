@@ -249,7 +249,7 @@ export default function OptimizedClientDashboard({
           {/* Right column - Sidebar */}
           <div className="space-y-6">
             {/* Messages card */}
-            <MessagesCard messages={dashboardData.recentMessages} />
+            <MessagesCard />
 
             {/* Recent news card */}
             <RecentNewsCard recentNews={dashboardData.recentNews} />
