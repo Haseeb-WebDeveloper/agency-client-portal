@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { useState, useCallback } from "react";
 import { MediaFile } from "@/types/models";
-import { format, formatDistanceToNow } from "date-fns";
-import { Calendar, FileText, MessageCircle, Sparkles } from "lucide-react";
-import Link from "next/link";
+import { format } from "date-fns";
+import { Calendar, FileText, Sparkles } from "lucide-react";
+import { EnhancedOfferModal } from "./enhanced-offer-modal";
+
+interface Room {
+  id: string;
+  name: string;
+  description: string | null;
+  type: string;
+  logo: string | null;
+}
 
 interface Offer {
   id: string;
@@ -22,10 +23,13 @@ interface Offer {
   media: MediaFile[] | null | any; // Make it more flexible to handle different data types
   validUntil: string | null;
   createdAt: string;
+  hasReviewed: boolean;
+  rooms: Room[];
 }
 
 interface OfferCardProps {
   offer: Offer;
+  onOfferUpdated?: (offerId: string) => void;
 }
 
 const statusConfig = {
@@ -66,12 +70,41 @@ const statusConfig = {
   },
 };
 
-export function ClientOfferCard({ offer }: OfferCardProps) {
+export function ClientOfferCard({ offer, onOfferUpdated }: OfferCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const statusInfo =
     statusConfig[offer.status as keyof typeof statusConfig] ||
     statusConfig.PENDING;
   const StatusIcon = statusInfo.icon;
+
+  const handleMarkAsSeen = useCallback(async (offerId: string) => {
+    try {
+      console.log('Marking offer as seen:', offerId);
+      const response = await fetch(`/api/client/offers/${offerId}/seen`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('API Error:', errorData);
+        throw new Error(`Failed to mark offer as seen: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Offer marked as seen successfully:', result);
+      
+      // Notify parent component to refresh the offer
+      if (onOfferUpdated) {
+        onOfferUpdated(offerId);
+      }
+    } catch (error) {
+      console.error('Error marking offer as seen:', error);
+      throw error;
+    }
+  }, []);
 
   return (
     <>
@@ -80,8 +113,12 @@ export function ClientOfferCard({ offer }: OfferCardProps) {
         onClick={() => setIsModalOpen(true)}
       >
         {/* Status Badge - Top Right */}
-        <div className="absolute bottom-[101%] right-2 px-3 py-1 bg-gradient-to-tr from-[#FF2AFF] to-[#6B42D1] rounded-t-sm text-xs font-medium flex items-center gap-2">
-          <span>Pending</span>
+        <div className={`absolute bottom-[101%] right-2 px-3 py-1 rounded-t-sm text-xs font-medium flex items-center gap-2 ${
+          offer.hasReviewed 
+            ? 'bg-gradient-to-tr from-green-500 to-green-600 text-white' 
+            : 'bg-gradient-to-tr from-[#FF2AFF] to-[#6B42D1] text-white'
+        }`}>
+          <span>{offer.hasReviewed ? 'Seen' : 'New'}</span>
         </div>
         {/* Left Section - Main Content */}
         <div className="lg:w-[40%] p-5 space-y-6">
@@ -132,16 +169,12 @@ export function ClientOfferCard({ offer }: OfferCardProps) {
         </div>
       </div>
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">{offer.title}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6">
-            <p className="text-muted-foreground">{offer.description}</p>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <EnhancedOfferModal
+        offer={offer}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onMarkAsSeen={handleMarkAsSeen}
+      />
     </>
   );
 }

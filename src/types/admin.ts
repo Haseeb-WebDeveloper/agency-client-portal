@@ -15,6 +15,7 @@ export interface Client {
   lastActivity: string;
   teamMembers: TeamMember[];
   totalTeamMembers: number;
+  activeTeamMembers?: number;
 }
 
 export interface ClientsData {

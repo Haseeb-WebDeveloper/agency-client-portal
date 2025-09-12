@@ -36,17 +36,70 @@ export async function GET(request: NextRequest) {
          FROM contracts co
          WHERE co."deletedAt" IS NULL
          GROUP BY co."clientId"
+       ),
+       team_stats AS (
+         SELECT cm."clientId",
+                COUNT(*) AS total_members,
+                SUM(CASE WHEN cm."isActive" = true AND u."deletedAt" IS NULL THEN 1 ELSE 0 END) AS active_members
+         FROM client_memberships cm
+         JOIN users u ON cm."userId" = u.id
+         WHERE cm."deletedAt" IS NULL
+         GROUP BY cm."clientId"
        )
        SELECT c.id, c.name, c.description, c.logo, c.website, c."updatedAt",
               COALESCE(cs.active_contracts, 0)  AS active_contracts,
-              COALESCE(cs.pending_contracts, 0) AS pending_contracts
+              COALESCE(cs.pending_contracts, 0) AS pending_contracts,
+              COALESCE(ts.total_members, 0) AS total_members,
+              COALESCE(ts.active_members, 0) AS active_members
        FROM clients c
        LEFT JOIN contract_stats cs ON c.id = cs."clientId"
+       LEFT JOIN team_stats ts ON c.id = ts."clientId"
        ${whereSql}
        ORDER BY c."updatedAt" DESC
        LIMIT ${limit} OFFSET ${offset}`,
       ...params
     );
+
+    // Get team members for each client
+    const clientIds = rows.map(client => client.id);
+    const teamMembersData = clientIds.length > 0 ? await prisma.clientMembership.findMany({
+      where: {
+        clientId: { in: clientIds },
+        deletedAt: null,
+        isActive: true,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    }) : [];
+
+    // Group team members by client ID
+    const teamMembersByClient = teamMembersData.reduce((acc, membership) => {
+      const clientId = membership.clientId;
+      if (!acc[clientId]) {
+        acc[clientId] = [];
+      }
+      acc[clientId].push({
+        id: membership.user.id,
+        name: `${membership.user.firstName} ${membership.user.lastName}`,
+        avatar: membership.user.avatar ? 
+          (membership.user.avatar.startsWith('http') ? 
+            membership.user.avatar : 
+            `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/${membership.user.avatar}`
+          ) : null,
+      });
+      return acc;
+    }, {} as Record<string, Array<{ id: string; name: string; avatar: string | null }>>);
 
     const clientsData = rows.map((client) => ({
       id: client.id,
@@ -57,8 +110,9 @@ export async function GET(request: NextRequest) {
       activeContracts: parseInt(client.active_contracts) || 0,
       pendingOffers: parseInt(client.pending_contracts) || 0,
       lastActivity: client.updatedAt ? new Date(client.updatedAt).toISOString() : new Date().toISOString(),
-      teamMembers: [],
-      totalTeamMembers: 0,
+      teamMembers: teamMembersByClient[client.id] || [],
+      totalTeamMembers: parseInt(client.total_members) || 0,
+      activeTeamMembers: parseInt(client.active_members) || 0,
     }));
 
     const cacheHeaders = { 'Cache-Control': 'private, max-age=300, stale-while-revalidate=600' } as const; // 5min + 10min stale
@@ -96,7 +150,8 @@ export async function POST(request: NextRequest) {
       logo,
       firstName,
       lastName,
-      email
+      email,
+      clientMembers = []
     } = body;
 
     // Validate required fields
@@ -174,19 +229,53 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Send magic link to the newly created user
-    // const supabase = await createClient();
-    // const { error: magicLinkError } = await supabase.auth.signInWithOtp({
-    //   email,
-    //   options: {
-    //     emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?redirectTo=/client`
-    //   }
-    // });
+    // Handle additional client members
+    if (clientMembers && clientMembers.length > 0) {
+      for (const member of clientMembers) {
+        const { firstName: memberFirstName, lastName: memberLastName, email: memberEmail, role: memberRole } = member;
 
-    // if (magicLinkError) {
-    //   console.warn('Failed to send magic link:', magicLinkError.message);
-    //   // Don't fail the entire operation, just log the warning
-    // }
+        if (!memberFirstName || !memberLastName || !memberEmail) {
+          continue; // Skip invalid members
+        }
+
+        // Create user in Supabase Auth
+        const { data: memberAuthData, error: memberAuthCreateError } = await supabaseAdmin.auth.admin.createUser({
+          email: memberEmail,
+          email_confirm: true,
+          user_metadata: {
+            first_name: memberFirstName,
+            last_name: memberLastName,
+            role: 'CLIENT_MEMBER'
+          }
+        });
+
+        if (memberAuthCreateError || !memberAuthData.user) {
+          console.error('Failed to create member user in Supabase Auth:', memberAuthCreateError);
+          continue; // Skip this member if auth creation fails
+        }
+
+        // Create member user in database
+        const memberUser = await prisma.user.create({
+          data: {
+            authId: memberAuthData.user.id,
+            firstName: memberFirstName,
+            lastName: memberLastName,
+            email: memberEmail,
+            role: 'CLIENT_MEMBER',
+            isActive: true,
+          },
+        });
+
+        // Create client membership for member
+        await prisma.clientMembership.create({
+          data: {
+            userId: memberUser.id,
+            clientId: client.id,
+            role: memberRole || 'member',
+          },
+        });
+      }
+    }
 
     revalidateTag('clients:list');
     revalidateTag('admin:dashboard');
