@@ -43,7 +43,6 @@ export async function GET(request: NextRequest) {
          o.status,
          o.tags,
          o.media,
-         o."validUntil",
          o."createdAt",
          c.name AS client_name,
          c.logo AS client_logo,
@@ -65,7 +64,6 @@ export async function GET(request: NextRequest) {
       status: o.status,
       tags: o.tags || [],
       media: o.media || null,
-      validUntil: o.validUntil ? new Date(o.validUntil).toISOString() : null,
       createdAt: new Date(o.createdAt).toISOString(),
       client_name: o.client_name,
       client_logo: o.client_logo,
@@ -103,7 +101,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, description, status, clientId, media, validUntil } = body;
+    const { title, description, status, clientId, media } = body;
 
     if (!title || !clientId) {
       return NextResponse.json(
@@ -120,7 +118,6 @@ export async function POST(request: NextRequest) {
         status: status || 'DRAFT',
         clientId,
         media: media || undefined,
-        validUntil: validUntil ? new Date(validUntil) : null,
         hasReviewed: false,
       },
     });
@@ -135,7 +132,6 @@ export async function POST(request: NextRequest) {
         description: offer.description,
         status: offer.status,
         media: offer.media,
-        validUntil: offer.validUntil,
         createdAt: offer.createdAt,
       },
     }, { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } });

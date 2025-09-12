@@ -18,7 +18,6 @@ interface Offer {
   status: string;
   tags: string[];
   media: MediaFile[] | null | any; // Make it more flexible to handle different data types
-  validUntil: string | null;
   createdAt: string;
   client_name: string;
   client_logo: string | null;
@@ -33,48 +32,47 @@ interface OfferCardProps {
 const statusConfig = {
   DRAFT: {
     label: "Draft",
-    color: "bg-gray-800 text-gray-300 border-gray-600",
+    color: "",
     icon: null,
   },
   SENT: {
-    label: "New!",
-    color: "bg-blue-600 text-white border-blue-500",
+    label: "Pending Review",
+    color: "text-destructive",
+    icon: null,
+  },
+  SEEN: {
+    label: "Seen",
+    color: "bg-gradient-to-tr from-[#FF2AFF] to-[#6B42D1]",
     icon: Sparkles,
   },
   ACCEPTED: {
     label: "Accepted",
-    color: "bg-green-600 text-white border-green-500",
+    color: "text-success",
     icon: null,
   },
   DECLINED: {
     label: "Declined",
-    color: "bg-red-600 text-white border-red-500",
+    color: "text-destructive",
     icon: null,
   },
   EXPIRED: {
     label: "Expired",
-    color: "bg-gray-800 text-gray-300 border-gray-600",
+    color: "text-muted-foreground",
     icon: null,
   },
   WITHDRAWN: {
     label: "Withdrawn",
-    color: "bg-gray-800 text-gray-300 border-gray-600",
-    icon: null,
-  },
-  PENDING: {
-    label: "Pending Review",
-    color: "bg-gray-800 text-white border-gray-600",
+    color: "text-muted-foreground",
     icon: null,
   },
 };
 
 
 export function OfferCard({ offer }: OfferCardProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const statusInfo =
-    statusConfig[offer.status as keyof typeof statusConfig] ||
-    statusConfig.PENDING;
-  const StatusIcon = statusInfo.icon;
+    statusConfig[offer.status as keyof typeof statusConfig]
+
+  console.log(offer);
 
   return (
     <>
@@ -84,8 +82,8 @@ export function OfferCard({ offer }: OfferCardProps) {
         // onClick={handleCardClick}
       >
         {/* Status Badge - Top Right */}
-        <div className="absolute bottom-[101%] right-2  px-3 py-1 bg-gradient-to-tr from-[#FF2AFF] to-[#6B42D1] rounded-t-sm text-xs font-medium flex items-center gap-2">
-          <span>Pending</span>
+        <div className={`absolute border-t border-l border-r bottom-[101%] right-2 px-3.5 py-1.5 ${statusInfo.color} rounded-t-sm text-xs font-medium flex items-center gap-2`}>
+          <span>{statusInfo.label}</span>
         </div>
         {/* Left Section - Main Content */}
         <div className="lg:w-[40%] p-5 space-y-6">

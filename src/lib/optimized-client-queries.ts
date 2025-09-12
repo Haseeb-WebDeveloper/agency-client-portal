@@ -299,7 +299,7 @@ export async function getOptimizedClientOffers(params: {
   // Get paginated data with rooms
   const dataQuery = `
     SELECT 
-      o.id, o.title, o.description, o.status, o.tags, o.media, o."validUntil", 
+      o.id, o.title, o.description, o.status, o.tags, o.media, 
       o."createdAt", o."hasReviewed",
       COALESCE(
         json_agg(
@@ -316,7 +316,7 @@ export async function getOptimizedClientOffers(params: {
     FROM offers o
     LEFT JOIN rooms r ON o.id = r."offerId" AND r."deletedAt" IS NULL
     WHERE ${whereClause}
-    GROUP BY o.id, o.title, o.description, o.status, o.tags, o.media, o."validUntil", o."createdAt", o."hasReviewed"
+    GROUP BY o.id, o.title, o.description, o.status, o.tags, o.media, o."createdAt", o."hasReviewed"
     ORDER BY o."updatedAt" DESC
     LIMIT ${limit} OFFSET ${offset}
   `;
@@ -330,7 +330,6 @@ export async function getOptimizedClientOffers(params: {
     status: o.status,
     tags: o.tags || [],
     media: o.media || null,
-    validUntil: o.validUntil ? new Date(o.validUntil).toISOString() : null,
     createdAt: new Date(o.createdAt).toISOString(),
     hasReviewed: o.hasReviewed || false,
     rooms: o.rooms || [],

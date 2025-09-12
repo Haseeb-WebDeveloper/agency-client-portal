@@ -22,7 +22,6 @@ interface Offer {
   status: string;
   tags: string[];
   media: any[] | null;
-  validUntil: string | null;
   createdAt: string;
   hasReviewed: boolean;
   rooms: Room[];
@@ -175,13 +174,13 @@ export default function OptimizedOffersPage() {
       <div className="flex items-center justify-between">
         <h1 className="figma-h3">Your Offers</h1>
         <div className="flex items-center gap-4">
-          <button
+          {/* <button
             onClick={refreshData}
             className="text-sm text-foreground/60 hover:text-foreground transition-colors"
             title="Refresh data"
           >
             🔄 Refresh
-          </button>
+          </button> */}
           {/* Add search filters if needed */}
         </div>
       </div>
@@ -224,11 +223,11 @@ export default function OptimizedOffersPage() {
       )}
 
       {/* Performance Monitor */}
-      <OffersPerformanceMonitor
+      {/* <OffersPerformanceMonitor
         offersCount={data?.offers.length || 0}
         mediaCount={data?.offers.reduce((acc, offer) => acc + (offer.media?.length || 0), 0) || 0}
         onMetricsUpdate={setPerformanceMetrics}
-      />
+      /> */}
     </div>
   );
 }
