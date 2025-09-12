@@ -13,7 +13,6 @@ interface Offer {
   status: string;
   tags: string[];
   media: MediaFile[] | null;
-  validUntil: string | null;
   createdAt: string;
   client_name: string;
   client_logo: string | null;

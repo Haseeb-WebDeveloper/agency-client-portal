@@ -244,7 +244,6 @@ Activities (M) ←→ (1) Rooms (optional context)
 | status | OfferStatus | DEFAULT DRAFT | Offer status |
 | value | Decimal(10,2) | NULL | Offer value |
 | currency | String | DEFAULT "USD" | Currency code |
-| validUntil | DateTime | NULL | Offer expiration |
 | hasReviewed | Boolean | DEFAULT false | Review status |
 | createdAt | DateTime | DEFAULT now() | Creation timestamp |
 | updatedAt | DateTime | AUTO UPDATE | Last update timestamp |
@@ -255,7 +254,6 @@ Activities (M) ←→ (1) Rooms (optional context)
 **Indexes**:
 - `clientId`
 - `status`
-- `validUntil`
 - `hasReviewed`
 - `deletedAt`
 

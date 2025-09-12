@@ -7,6 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { MediaFile } from "@/types/models";
 import {
@@ -17,9 +24,10 @@ import {
   Video,
   File,
   UploadIcon,
-  Target,
-  Plus,
+  Download,
+  Eye,
 } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@radix-ui/react-avatar";
 
 interface Client {
   id: string;
@@ -35,7 +43,6 @@ interface OfferFormProps {
     status: string;
     tags: string[];
     media: MediaFile[] | null;
-    validUntil: string | null;
     clientId: string;
     room?: {
       id: string;
@@ -143,11 +150,11 @@ function CustomTagInput({
 
   return (
     <div className="relative">
-      <div className="flex flex-wrap gap-2 p-3 border border-input rounded-md bg-background min-h-[40px]">
+      <div className="flex flex-wrap gap-2 p-1 border border-input rounded-md min-h-[40px]">
         {tags.map((tag, index) => (
           <Badge
             key={index}
-            variant="secondary"
+            variant="outline"
             className="flex items-center gap-1 px-2 py-1"
           >
             {tag}
@@ -209,9 +216,6 @@ export function OfferForm({
     description: offer?.description || "",
     status: "SENT",
     clientId: offer?.clientId || "",
-    validUntil: offer?.validUntil
-      ? new Date(offer.validUntil).toISOString().split("T")[0]
-      : "",
     createRoom: !!offer?.room,
     roomName: offer?.room?.name || (offer?.title ? `Proposal: ${offer.title}` : ""),
     roomLogo: offer?.room?.logo || null,
@@ -222,6 +226,9 @@ export function OfferForm({
 
   // Tags state for custom tag input
   const [tags, setTags] = useState<string[]>(offer?.tags || []);
+  
+  // File preview modal state
+  const [previewFile, setPreviewFile] = useState<MediaFile | null>(null);
 
   // Handle tags change
   const handleTagsChange = (newTags: string[]) => {
@@ -367,7 +374,6 @@ export function OfferForm({
         ...formData,
         tags: formData.selectedTags,
         media: uploadedFiles.length > 0 ? uploadedFiles : null,
-        validUntil: formData.validUntil ? new Date(formData.validUntil) : null,
         messaging: {
           createRoom: formData.createRoom,
           roomName: formData.roomName || `Proposal: ${formData.title}`,
@@ -392,6 +398,122 @@ export function OfferForm({
       default:
         return <File className="w-4 h-4" />;
     }
+  };
+
+  const handleDownload = (file: MediaFile) => {
+    const link = document.createElement('a');
+    link.href = file.url;
+    link.download = file.name || 'download';
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handlePreview = (file: MediaFile) => {
+    setPreviewFile(file);
+  };
+
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return 'Unknown size';
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
+  };
+
+  // File Preview Component
+  const FilePreview = ({ file, index }: { file: MediaFile; index: number }) => {
+    const renderPreview = () => {
+      switch (file.type) {
+        case 'image':
+          return (
+            <div className="relative group">
+              <img
+                src={file.url}
+                alt={file.name || 'Preview'}
+                className="w-full h-20 object-cover rounded-lg border border-border"
+                onClick={() => handlePreview(file)}
+              />
+            </div>
+          );
+        case 'video':
+          return (
+            <div className="relative group">
+              <video
+                src={file.url}
+                className="w-20 h-20 object-cover rounded-lg border border-border"
+                muted
+                onClick={() => handlePreview(file)}
+              />
+            </div>
+          );
+        case 'pdf':
+          return (
+            <div 
+              className="w-20 h-20 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+              onClick={() => handlePreview(file)}
+            >
+              <FileText className="w-8 h-8 text-red-600 dark:text-red-400" />
+              <span className="text-xs text-red-600 dark:text-red-400 mt-1">PDF</span>
+            </div>
+          );
+        default:
+          return (
+            <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg flex flex-col items-center justify-center">
+              {getFileIcon(file.type)}
+              <span className="text-xs text-gray-600 dark:text-gray-400 mt-1 text-center px-1">
+                {file.type.toUpperCase()}
+              </span>
+            </div>
+          );
+      }
+    };
+
+    return (
+      <div className="relative group">
+        {renderPreview()}
+        <div className="mt-2 space-y-1">
+          <p className="text-xs font-medium text-foreground truncate max-w-[80px]" title={file.name}>
+            {file.name || 'Unknown file'}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {formatFileSize(file.size)}
+          </p>
+        </div>
+        <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="h-6 w-6 p-0"
+            onClick={() => handlePreview(file)}
+            title="Preview"
+          >
+            <Eye className="w-3 h-3" />
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="h-6 w-6 p-0"
+            onClick={() => handleDownload(file)}
+            title="Download"
+          >
+            <Download className="w-3 h-3" />
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            className="h-6 w-6 p-0"
+            onClick={() => removeFile(index)}
+            title="Remove"
+          >
+            <X className="w-3 h-3" />
+          </Button>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -431,52 +553,32 @@ export function OfferForm({
               <Label htmlFor="clientId" className="figma-paragraph">
                 Client *
               </Label>
-              <div className="relative">
-                <select
-                  id="clientId"
-                  value={formData.clientId}
-                  onChange={(e) => handleInputChange("clientId", e.target.value)}
-                  required
-                  className="cursor-pointer block w-full px-3 py-2 border border-input rounded-md text-foreground bg-background focus:outline-none appearance-none"
-                  style={{
-                    WebkitAppearance: "none",
-                    MozAppearance: "none",
-                    appearance: "none",
-                    backgroundColor: "#1B1B2C", 
-                  }}
-                >
-                  <option value="" disabled>
-                    Select a client
-                  </option>
+              <Select
+                value={formData.clientId || ""}
+                onValueChange={(value) => handleInputChange("clientId", value)}
+                required
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a client" />
+                </SelectTrigger>
+                <SelectContent>
                   {clients.map((client) => (
-                    <option className="cursor-pointer" key={client.id} value={client.id}>
-                      {client.name}
-                    </option>
+                    <SelectItem key={client.id} value={client.id}>
+                      <div className="flex items-center gap-2">
+                        {client.logo && (
+                          <Avatar className="w-5 h-5">
+                            <AvatarImage src={client.logo} alt={client.name} />
+                            <AvatarFallback>{client.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                        )}
+                        <span>{client.name}</span>
+                      </div>
+                    </SelectItem>
                   ))}
-                </select>
-                {/* Custom dropdown image (chevron) */}
-                <span className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center">
-                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                    <path d="M6 8L10 12L14 8" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </span>
-              </div>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="validUntil" className="figma-paragraph">
-                Valid Until
-              </Label>
-              <Input
-                id="validUntil"
-                type="date"
-                value={formData.validUntil}
-                onChange={(e) =>
-                  handleInputChange("validUntil", e.target.value)
-                }
-                className="bg-transparent"
-              />
-            </div>
           </div>
         </div>
       </div>
@@ -505,11 +607,16 @@ export function OfferForm({
                 <div className="flex items-center gap-4">
                   {formData.roomLogo ? (
                     <div className="relative">
-                      <img
+                      <Avatar className="w-20 h-20">
+                      <AvatarImage
                         src={formData.roomLogo}
                         alt="Room logo preview"
                         className="w-20 h-20 object-cover rounded-full"
                       />
+                      <AvatarFallback>
+                        {formData.roomName.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
                       <Button
                         type="button"
                         variant="ghost"
@@ -577,7 +684,6 @@ export function OfferForm({
       {/* Service Tags */}
       <div className="">
         <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Target className="w-5 h-5" />
           Service Tags
         </h3>
         <div className="space-y-2">
@@ -625,39 +731,13 @@ export function OfferForm({
 
           {/* Uploaded Files */}
           {uploadedFiles.length > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-4">
               <h4 className="text-sm font-medium text-foreground">
-                Uploaded Files
+                Uploaded Files ({uploadedFiles.length})
               </h4>
-              <div className="space-y-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {uploadedFiles.map((file, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 border border-primary/20 rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      {getFileIcon(file.type)}
-                      <div>
-                        <p className="text-sm font-medium text-foreground">
-                          {file.name}
-                        </p>
-                        <p className="text-xs text-foreground/60 capitalize">
-                          {file.type} •{" "}
-                          {file.size
-                            ? `${(file.size / 1024).toFixed(1)} KB`
-                            : "Unknown size"}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFile(index)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  <FilePreview key={index} file={file} index={index} />
                 ))}
               </div>
             </div>
@@ -683,6 +763,79 @@ export function OfferForm({
           {isLoading ? "Saving..." : offer ? "Update Proposal" : "Create Proposal"}
         </Button>
       </div>
+
+      {/* File Preview Modal */}
+      {previewFile && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg max-w-4xl max-h-[90vh] w-full relative">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold truncate">
+                {previewFile.name || 'File Preview'}
+              </h3>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDownload(previewFile)}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setPreviewFile(null)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="p-4 overflow-auto max-h-[calc(90vh-80px)]">
+              {previewFile.type === 'image' && (
+                <img
+                  src={previewFile.url}
+                  alt={previewFile.name || 'Preview'}
+                  className="max-w-full max-h-full object-contain mx-auto"
+                />
+              )}
+              {previewFile.type === 'video' && (
+                <video
+                  src={previewFile.url}
+                  controls
+                  className="max-w-full max-h-full mx-auto"
+                >
+                  Your browser does not support the video tag.
+                </video>
+              )}
+              {previewFile.type === 'pdf' && (
+                <iframe
+                  src={previewFile.url}
+                  className="w-full h-[70vh] border-0 rounded"
+                  title={previewFile.name || 'PDF Preview'}
+                />
+              )}
+              {previewFile.type !== 'image' && previewFile.type !== 'video' && previewFile.type !== 'pdf' && (
+                <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                  {getFileIcon(previewFile.type)}
+                  <p className="mt-2 text-lg font-medium">{previewFile.type.toUpperCase()}</p>
+                  <p className="text-sm">Preview not available for this file type</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() => handleDownload(previewFile)}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download to view
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

@@ -200,7 +200,6 @@ model Offer {
   title       String
   description String?
   status      OfferStatus @default(DRAFT)
-  validUntil  DateTime?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   createdBy   String?
@@ -216,7 +215,6 @@ model Offer {
 
   @@index([clientId])
   @@index([status])
-  @@index([validUntil])
   @@index([hasReviewed])
   @@index([updatedAt])
   @@index([title])

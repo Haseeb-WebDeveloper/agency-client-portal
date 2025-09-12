@@ -19,7 +19,6 @@ interface Offer {
   status: string;
   tags: string[];
   media: MediaFile[] | null;
-  validUntil: string | null;
   clientId: string;
   hasReviewed: boolean;
   createdAt: string;

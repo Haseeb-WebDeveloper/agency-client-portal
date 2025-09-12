@@ -45,7 +45,6 @@ interface Offer {
   title: string;
   description: string;
   status: string;
-  validUntil: string | null;
   hasReviewed: boolean;
   createdAt: string;
   updatedAt: string;

@@ -151,7 +151,6 @@ export interface Offer {
   description?: string | null;
   status: OfferStatus;
   media?: MediaFile[] | null;
-  validUntil?: Date | null;
   hasReviewed: boolean; 
   createdAt: Date;
   updatedAt: Date;

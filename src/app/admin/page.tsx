@@ -21,6 +21,7 @@ async function AdminDashboardServer() {
     getRecentNews(5),
   ]);
 
+
   return (
     <div className="space-y-6 md:px-8 md:py-6 px-4 py-6">
       {/* Header with greeting and quick actions */}

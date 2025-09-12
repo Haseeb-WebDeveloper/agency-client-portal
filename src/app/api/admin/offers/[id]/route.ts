@@ -44,7 +44,6 @@ export async function GET(
       status: offer.status,
       tags: offer.tags || [],
       media: offer.media,
-      validUntil: offer.validUntil,
       hasReviewed: offer.hasReviewed,
       createdAt: offer.createdAt,
       updatedAt: offer.updatedAt,
@@ -78,7 +77,7 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const { title, description, status, clientId, media, validUntil, hasReviewed, tags } = body;
+    const { title, description, status, clientId, media,  hasReviewed, tags } = body;
 
     if (!title || !clientId) {
       return NextResponse.json(
@@ -97,7 +96,6 @@ export async function PUT(
         clientId,
         tags: tags || [],
         media: media || undefined,
-        validUntil: validUntil ? new Date(validUntil) : null,
         hasReviewed: hasReviewed || false,
       },
     });
@@ -111,7 +109,6 @@ export async function PUT(
         status: offer.status,
         tags: offer.tags || [],
         media: offer.media || null,
-        validUntil: offer.validUntil,
         hasReviewed: offer.hasReviewed,
         updatedAt: offer.updatedAt,
       },
