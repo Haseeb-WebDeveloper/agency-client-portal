@@ -5,6 +5,20 @@ import { getOptimizedClientOffers } from '@/lib/optimized-client-queries';
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
+    
+    // Handle case where user is not authenticated
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    
+    // const membership = await prisma.clientMembership.findFirst({
+    //   where: { userId: user.id, isActive: true, deletedAt: null },
+    //   select: { clientId: true },
+    // });
+
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -32,5 +46,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to fetch offers' }, { status: 500 });
   }
 }
-
-

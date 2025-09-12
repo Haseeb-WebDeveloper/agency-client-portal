@@ -19,5 +19,6 @@ export default async function MessagesLayout({
     role: user?.role,
     isActive: user?.isActive,
   };
+
   return <AppLayout user={serializedUser}>{children}</AppLayout>;
 }
